@@ -1,0 +1,696 @@
+<style>
+:root{
+  color-scheme: light;
+  --blue:#2563eb; --blue-dark:#1e40af; --bg:#f4f6fb; --card:#ffffff;
+  --ink:#1f2937; --sub:#6b7280; --line:#e5e7eb; --green:#16a34a; --amber:#d97706;
+  --purple:#7c3aed; --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 14px rgba(15,23,42,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.app{max-width:920px;margin:0 auto;padding:24px 20px 80px}
+.tabs{display:flex;gap:8px;background:var(--card);padding:6px;border-radius:999px;box-shadow:var(--shadow);width:fit-content;margin:0 auto 24px}
+.tab{padding:10px 22px;border-radius:999px;border:none;background:transparent;font-weight:600;font-size:14px;color:var(--sub);cursor:pointer;transition:.15s}
+.tab.active{background:var(--blue);color:#fff}
+.view{display:none}
+.view.active{display:block}
+
+/* ---- shared card/header ---- */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px;margin-bottom:16px}
+.hero{text-align:center;padding:36px 20px}
+.hero h1{font-size:26px;margin:0 0 8px}
+.hero p{color:var(--sub);font-size:15px;line-height:1.6;max-width:520px;margin:0 auto}
+.pill{display:inline-block;background:#eef2ff;color:var(--blue-dark);font-size:12px;font-weight:700;letter-spacing:.03em;padding:4px 12px;border-radius:999px;margin-bottom:14px}
+
+/* ---- RP wizard ---- */
+.progress-wrap{margin-bottom:22px}
+.progress-track{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),#60a5fa);border-radius:99px;transition:width .3s}
+.progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:6px}
+.section-tag{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.step-title{font-size:20px;font-weight:700;margin:0 0 4px}
+.step-sub{color:var(--sub);font-size:13px;margin:0 0 22px}
+.field{margin-bottom:22px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.field:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.q-label{font-weight:600;font-size:15px;margin-bottom:4px;line-height:1.5}
+.q-help{font-size:12.5px;color:var(--sub);margin-bottom:10px;line-height:1.5}
+.q-note{font-size:11.5px;color:var(--amber);background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 10px;margin-top:8px;display:inline-block}
+.locpicker{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.loc-search{border:none;border-bottom:1px solid var(--line);border-radius:0;background:#fff}
+.loc-map{height:150px;position:relative;cursor:crosshair;background-color:#eef2f7;background-image:linear-gradient(#dbe3ee 1px,transparent 1px),linear-gradient(90deg,#dbe3ee 1px,transparent 1px);background-size:22px 22px}
+.loc-pin{position:absolute;width:16px;height:16px;background:#ef4444;border:2px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg) translate(-50%,-100%);box-shadow:0 1px 4px rgba(0,0,0,.3);display:none}
+.loc-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12px;pointer-events:none;text-align:center;padding:0 20px}
+.loc-fields{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+.loc-fields input{border:none;border-radius:0;background:#fff}
+.loc-fields input:first-child{border-right:1px solid var(--line)}
+
+input[type=text],input[type=number],input[type=time],select,textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-family:inherit;background:#fafafa
+}
+textarea{resize:vertical;min-height:60px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.opt-row{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:1.5px solid var(--line);border-radius:10px;padding:9px 14px;font-size:13.5px;cursor:pointer;background:#fff;transition:.15s;user-select:none}
+.opt.checked{border-color:var(--blue);background:#eef2ff;color:var(--blue-dark);font-weight:600}
+.opt input{display:none}
+
+.likert-table{width:100%;border-collapse:collapse;font-size:13px}
+.likert-table td{padding:8px 4px;text-align:center}
+.likert-table .lbl{text-align:left;padding-right:10px;font-size:13.5px;line-height:1.4;width:46%}
+.likert-scale{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:var(--sub);background:#fff}
+.likert-scale.checked{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+.likert-head{font-size:10.5px;color:var(--sub)}
+
+/* house picker */
+.house-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.house-card{border:2px solid var(--line);border-radius:14px;padding:18px;text-align:center;cursor:pointer;transition:.15s;color:var(--sub)}
+.house-card:hover{border-color:#c7d2fe}
+.house-card.selected{border-color:var(--blue);background:#eef2ff;color:var(--blue-dark)}
+.house-card svg{width:64px;height:64px;margin-bottom:8px}
+.house-card .h-label{font-weight:700;font-size:14px}
+
+/* avatars / character creation */
+.avatar-row{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;padding:20px 0;min-height:110px;align-items:flex-end}
+.avatar{cursor:pointer;text-align:center;transition:.15s}
+.avatar:hover{transform:translateY(-3px)}
+.avatar svg{display:block;margin:0 auto}
+.avatar .status-dot{width:9px;height:9px;border-radius:50%;background:#d1d5db;display:inline-block;margin-right:4px}
+.avatar.done .status-dot{background:var(--green)}
+.avatar-name{font-size:12px;font-weight:600;margin-top:4px;color:var(--ink)}
+.avatar-role{font-size:10.5px;color:var(--sub)}
+.empty-hint{color:var(--sub);font-size:13px;text-align:center;padding:20px}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-head{position:sticky;top:0;background:#fff;padding:20px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;z-index:2}
+.modal-head h3{margin:0;font-size:17px}
+.modal-close{border:none;background:#f3f4f6;width:30px;height:30px;border-radius:50%;font-weight:700;cursor:pointer;color:var(--sub)}
+.modal-body{padding:20px 24px}
+
+.chip-select{display:flex;flex-wrap:wrap;gap:8px}
+.chip-select .chip{border:1.5px solid var(--line);border-radius:999px;padding:7px 14px 7px 8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;background:#fff}
+.chip-select .chip.active{border-color:var(--blue);background:#eef2ff;color:var(--blue-dark)}
+.chip-select .chip .dot{width:8px;height:8px;border-radius:50%;background:#d1d5db}
+.chip-select .chip.active .dot{background:var(--blue)}
+
+.member-chip{display:inline-flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:999px;padding:6px 12px 6px 6px;font-size:13px;font-weight:600;margin:0 6px 6px 0}
+.add-btn{border:1.5px dashed var(--line);border-radius:10px;padding:9px 16px;background:transparent;color:var(--blue);font-weight:600;font-size:13px;cursor:pointer}
+.stop-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.stop-item{display:flex;align-items:center;gap:10px;background:#fafafa;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stop-item .idx{width:22px;height:22px;border-radius:50%;background:var(--blue-dark);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.remove{margin-left:auto;color:#ef4444;cursor:pointer;font-size:12px;font-weight:700}
+.drag-handle{margin-left:8px;color:var(--sub);font-size:11px;cursor:grab;border:1px solid var(--line);border-radius:6px;padding:2px 6px;background:#fff;user-select:none}
+.stop-item.drag-over{outline:2px dashed var(--blue)}
+.confirm-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:13px;color:#166534}
+.prompt-box{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:20px;text-align:center}
+.prompt-box h4{margin:0 0 14px;font-size:16px}
+.segment-card{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+.segment-title{font-size:12.5px;font-weight:700;color:var(--blue-dark);margin-bottom:10px}
+.escort-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px;margin-top:10px}
+.escort-box .tag{font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;margin-bottom:8px;display:block}
+
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
+.btn{padding:12px 26px;border-radius:10px;border:none;font-weight:700;font-size:14px;cursor:pointer}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue-dark)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--sub)}
+.btn-ghost:hover{color:var(--ink)}
+
+/* ---- SP game ---- */
+.sp-progress{display:flex;justify-content:center;gap:8px;margin-bottom:18px}
+.sp-progress .dot{width:30px;height:6px;border-radius:99px;background:var(--line)}
+.sp-progress .dot.active{background:var(--purple)}
+.sp-progress .dot.done{background:#c4b5fd}
+.sp-round-label{text-align:center;color:var(--sub);font-size:13px;font-weight:600;margin-bottom:4px}
+.sp-question{text-align:center;font-size:19px;font-weight:700;margin:0 0 26px}
+.option-row{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.opt-card{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:20px;cursor:pointer;transition:.15s;box-shadow:var(--shadow);position:relative}
+.opt-card:hover{border-color:#c7d2fe;transform:translateY(-2px)}
+.opt-card.selected{border-color:var(--purple);background:#faf5ff}
+.opt-card .icon{font-size:13px;font-weight:800;letter-spacing:.03em;color:var(--purple);margin-bottom:8px}
+.opt-card .opt-title{font-weight:700;font-size:15.5px;margin-bottom:12px}
+.attr-row{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:8px;color:var(--ink)}
+.attr-row .ic{width:20px;text-align:center;flex-shrink:0;color:var(--sub);font-size:11px}
+.attr-row b{margin-left:auto;font-weight:700}
+.danger-bar{display:flex;gap:2px;margin-left:auto}
+.danger-bar span{width:6px;height:12px;border-radius:2px;background:var(--line)}
+.danger-bar span.on{background:#ef4444}
+.pick-badge{position:absolute;top:-10px;right:14px;background:var(--purple);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;display:none}
+.opt-card.selected .pick-badge{display:block}
+.sp-footer{text-align:center;margin-top:26px;color:var(--sub);font-size:12.5px}
+.debrief-list{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:560px;margin:0 auto}
+.summary-box{background:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:16px;margin-top:18px;font-size:13.5px}
+</style>
+
+<div class="app">
+  <div class="tabs">
+    <button class="tab active" data-tab="rp">RP Survey</button>
+    <button class="tab" data-tab="sp">SP Survey (interactive)</button>
+  </div>
+
+  <!-- ================= RP VIEW ================= -->
+  <div class="view active" id="view-rp">
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="rp-fill"></div></div>
+      <div class="progress-label"><span id="rp-step-name">Welcome</span><span id="rp-step-count">0 / 14</span></div>
+    </div>
+    <div class="card" id="rp-card"></div>
+  </div>
+
+  <!-- ================= SP VIEW ================= -->
+  <div class="view" id="view-sp">
+    <div class="card" id="sp-card"></div>
+  </div>
+
+  <!-- ================= CHARACTER MODAL ================= -->
+  <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <div class="modal-head"><h3 id="modal-title">Character</h3><button class="modal-close" onclick="closeModal()">X</button></div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= TAB SWITCH ================= */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+t.dataset.tab).classList.add('active');
+}));
+
+/* ================= SHARED HELPERS ================= */
+const A = {};
+function val(id,d){return A[id]!==undefined?A[id]:d;}
+
+function likert(container,name,items,scaleLabels){
+  let rows = items.map((it,i)=>{
+    let cells = [1,2,3,4,5].map(s=>{
+      const key = name+'_'+i;
+      const checked = val(key)==s ? 'checked':'';
+      return `<td><span class="likert-scale ${checked}" onclick="setLikert('${key}',${s},this)">${s}</span></td>`;
+    }).join('');
+    return `<tr><td class="lbl">${it}</td>${cells}</tr>`;
+  }).join('');
+  return `<table class="likert-table"><tr><td></td><td class="likert-head" colspan="5" style="text-align:center">${scaleLabels||'1 = low &nbsp;&nbsp;&nbsp; 5 = high'}</td></tr>${rows}</table>`;
+}
+window.setLikert = (key,val_,el)=>{ A[key]=val_; el.parentElement.parentElement.querySelectorAll('.likert-scale').forEach(s=>s.classList.remove('checked')); el.classList.add('checked'); };
+
+function opts(name,options,multi){
+  return `<div class="opt-row">` + options.map(o=>{
+    const checked = multi ? (val(name+'_'+o,false)?'checked':'') : (val(name)===o?'checked':'');
+    return `<label class="opt ${checked}" onclick="pickOpt(this,'${name}','${o}',${!!multi})">${o}</label>`;
+  }).join('') + `</div>`;
+}
+window.pickOpt = (el,name,o,multi)=>{
+  if(multi){ const k=name+'_'+o; A[k]=!A[k]; el.classList.toggle('checked'); }
+  else { A[name]=o; el.parentElement.querySelectorAll('.opt').forEach(x=>x.classList.remove('checked')); el.classList.add('checked'); renderRP(); }
+};
+
+function locPicker(id){
+  return `<div class="locpicker">
+    <input class="loc-search" type="text" placeholder="Search for a place or address..." oninput="A['${id}_search']=this.value">
+    <div class="loc-map" onclick="dropPin(event,this,'${id}')">
+      <div class="loc-hint">Click anywhere on the map to drop a pin (demo map, not real geodata)</div>
+      <div class="loc-pin"></div>
+    </div>
+    <div class="loc-fields">
+      <input type="text" placeholder="Place name (e.g. Home, Office Building B)" oninput="A['${id}_name']=this.value">
+      <input type="text" placeholder="Address / nearest landmark" oninput="A['${id}_addr']=this.value">
+    </div>
+  </div>`;
+}
+window.dropPin = (ev,mapEl,id)=>{
+  const rect = mapEl.getBoundingClientRect();
+  const x = ev.clientX-rect.left, y = ev.clientY-rect.top;
+  const pin = mapEl.querySelector('.loc-pin');
+  pin.style.left = x+'px'; pin.style.top = y+'px'; pin.style.display='block';
+  const hint = mapEl.querySelector('.loc-hint'); if(hint) hint.style.display='none';
+  A[id+'_x']=x; A[id+'_y']=y;
+};
+
+/* house icons (inline SVG, no external assets) */
+const HOUSE_SVG = `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><polygon points="32,8 58,28 6,28"/><rect x="12" y="28" width="40" height="26"/><rect x="27" y="38" width="10" height="16"/></svg>`;
+const APT_SVG = `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><rect x="14" y="8" width="36" height="48"/><line x1="22" y1="18" x2="28" y2="18"/><line x1="36" y1="18" x2="42" y2="18"/><line x1="22" y1="30" x2="28" y2="30"/><line x1="36" y1="30" x2="42" y2="30"/><line x1="22" y1="42" x2="28" y2="42"/><line x1="36" y1="42" x2="42" y2="42"/><rect x="27" y="48" width="10" height="8"/></svg>`;
+
+function houseCard(type,label,svg){
+  const sel = val('residence_type')===type ? 'selected' : '';
+  return `<div class="house-card ${sel}" onclick="A['residence_type']='${type}';renderRP()">${svg}<div class="h-label">${label}</div></div>`;
+}
+
+/* ================= CHARACTERS (Section 1+2 as character creation) ================= */
+let characters = []; // {id,kind:'adult'|'child',data:{}}
+let charSeq = 0;
+let nAdultsTarget = 2, nChildrenTarget = 1;
+let activeCharId = null;
+
+function cval(ch,key,d){ return A[ch.id+'_'+key]!==undefined ? A[ch.id+'_'+key] : d; }
+function isCharDone(ch){ return !!A[ch.id+'_name'] && A[ch.id+'_age']!==undefined; }
+
+function createCharacters(){
+  characters = [];
+  charSeq = 0;
+  for(let i=0;i<nAdultsTarget;i++){ charSeq++; characters.push({id:'ch'+charSeq, kind:'adult'}); }
+  for(let i=0;i<nChildrenTarget;i++){ charSeq++; characters.push({id:'ch'+charSeq, kind:'child'}); }
+  renderRP();
+}
+
+function avatarSVG(ch){
+  const done = isCharDone(ch);
+  const color = done ? '#2563eb' : '#9ca3af';
+  const isChild = ch.kind==='child';
+  const scale = isChild ? 0.75 : 1;
+  const w = 46*scale, h = 70*scale;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 46 70">
+    <circle cx="23" cy="14" r="12" fill="${color}"/>
+    <rect x="8" y="28" width="30" height="38" rx="10" fill="${color}"/>
+  </svg>`;
+}
+
+function renderAvatarRow(){
+  if(characters.length===0) return `<div class="empty-hint">Set the counts above, then press "Create household members" to generate everyone as characters.</div>`;
+  return `<div class="avatar-row">${characters.map(ch=>{
+    const done = isCharDone(ch);
+    const name = A[ch.id+'_name'] || (ch.kind==='adult'?'Adult':'Child');
+    const role = A[ch.id+'_role'] || (ch.kind==='adult'?'Tap to set up':'Tap to set up');
+    return `<div class="avatar ${done?'done':''}" onclick="openModal('${ch.id}')">
+      ${avatarSVG(ch)}
+      <div class="avatar-name"><span class="status-dot"></span>${name}</div>
+      <div class="avatar-role">${role}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function openModal(id){
+  activeCharId = id;
+  document.getElementById('modal-overlay').classList.add('open');
+  renderModal();
+}
+window.closeModal = ()=>{ activeCharId=null; document.getElementById('modal-overlay').classList.remove('open'); renderAvatarSectionOnly(); };
+
+function renderModal(){
+  const ch = characters.find(c=>c.id===activeCharId);
+  if(!ch) return;
+  const p = ch.id;
+  document.getElementById('modal-title').textContent = (A[p+'_name']||('New '+ch.kind)) + ' - Individual Information';
+  const eduField = ch.kind==='adult'
+    ? `<div class="field"><div class="q-label">Highest education level</div>${opts(p+'_edu',['Junior high or lower','Senior high or equivalent','Undergraduate degree','Graduate degree','Postgraduate degree'])}</div>`
+    : `<div class="field"><div class="q-label">Current education level</div>${opts(p+'_edu',['Not attending any school','Pre-school','Elementary school','Junior high or equivalent','Senior high or equivalent','Undergraduate degree'])}</div>
+       <div class="field"><div class="q-label">If school-going: specific grade</div>${opts(p+'_grade',['P1-P6','M1-M3','M4-M6'])}</div>`;
+  const employField = ch.kind==='adult'
+    ? `<div class="field"><div class="q-label">Employment status</div>${opts(p+'_employ',['Full-time','Part-time','Self-employed','Not employed (incl. retired)'])}</div>
+       <div class="field"><div class="q-label">Work start / end time (if employed)</div><div class="grid2"><input type="time"><input type="time"></div></div>
+       <div class="field"><div class="q-label">Primary workplace location</div>${locPicker(p+'_work')}</div>`
+    : `<div class="field"><div class="q-label">School start / end time (if school-going)</div><div class="grid2"><input type="time"><input type="time"></div></div>
+       <div class="field"><div class="q-label">School location</div>${locPicker(p+'_school')}</div>`;
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="field"><div class="q-label">Nickname / initial</div><input type="text" value="${A[p+'_name']||''}" oninput="A['${p}_name']=this.value;renderAvatarSectionOnly();document.getElementById('modal-title').textContent=this.value+' - Individual Information'" placeholder="e.g. Somchai, Child A"></div>
+    <div class="field"><div class="q-label">Role in household</div>${opts(p+'_role',['Father','Mother','Child','Grandfather','Grandmother','Non-relative (e.g. helper)'])}</div>
+    <div class="field"><div class="q-label">Age (years)</div><input type="number" value="${A[p+'_age']!==undefined?A[p+'_age']:''}" oninput="A['${p}_age']=this.value;renderAvatarSectionOnly()" placeholder="e.g. 34" style="width:140px"></div>
+    <div class="field"><div class="q-label">Gender</div>${opts(p+'_gender',['Male','Female','Other'])}</div>
+    ${eduField}
+    ${employField}
+    <div class="field"><div class="q-label">Driving license</div>
+      <div class="opt-row"><label class="opt ${cval(ch,'lic_car',false)?'checked':''}" onclick="A['${p}_lic_car']=!A['${p}_lic_car'];this.classList.toggle('checked')">Car</label>
+      <label class="opt ${cval(ch,'lic_moto',false)?'checked':''}" onclick="A['${p}_lic_moto']=!A['${p}_lic_moto'];this.classList.toggle('checked')">Motorbike</label></div></div>
+    <div class="nav-row"><span></span><button class="btn btn-primary" onclick="closeModal()">Save &amp; close</button></div>
+  `;
+}
+function renderAvatarSectionOnly(){
+  const el = document.getElementById('avatar-row-slot');
+  if(el) el.innerHTML = renderAvatarRow();
+}
+
+/* travel diary state */
+let stops = [{place:'Home'},{place:'School'},{place:'Home'}];
+let tripPerson = null;
+
+function personChipRow(selectedId,onClickName){
+  if(characters.length===0) return `<div class="q-note">No household members yet - go back and create them first.</div>`;
+  return `<div class="chip-select">${characters.map(ch=>{
+    const name = A[ch.id+'_name'] || (ch.kind==='adult'?'Adult':'Child');
+    const active = selectedId===ch.id ? 'active':'';
+    return `<div class="chip ${active}" onclick="${onClickName}('${ch.id}')"><span class="dot"></span>${name}</div>`;
+  }).join('')}</div>`;
+}
+window.setTripPerson = (id)=>{ tripPerson = id; renderRP(); };
+window.toggleCompanion = (id)=>{ const k='companion_'+id; A[k]=!A[k]; renderRP(); };
+
+let tripConfirmed = false;
+let segIdx = 0;
+let showTripDonePrompt = false;
+let dragSrcIdx = null;
+window.dragStart = (i)=>{ dragSrcIdx = i; };
+window.dropStop = (i)=>{
+  if(dragSrcIdx===null || dragSrcIdx===i) return;
+  const item = stops.splice(dragSrcIdx,1)[0];
+  stops.splice(i,0,item);
+  dragSrcIdx = null;
+  tripConfirmed = false;
+  renderRP();
+};
+function resetTripState(){
+  tripPerson = null; stops = [{place:'Home'},{place:'School'},{place:'Home'}];
+  tripConfirmed = false; segIdx = 0; showTripDonePrompt = false;
+}
+
+let lastSavedAt = null;
+window.tempSave = ()=>{ lastSavedAt = new Date().toLocaleTimeString(); renderRP(); };
+function tempSaveBtn(){
+  return `<button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="tempSave()">${lastSavedAt?'Draft saved '+lastSavedAt:'Save draft'}</button>`;
+}
+
+/* ================= RP STEPS ================= */
+const rpSteps = [
+{name:'Welcome', render:()=>`
+  <div class="hero"><span class="pill">TDS - School Escorting Survey</span>
+  <h1>Before you begin</h1>
+  <p>This survey has 5 parts: Household Information, Individual Information, Travel Diary, Escorting Behavior &amp; Safety, and School Choice. It takes about 15-20 minutes. All answers are kept confidential.</p></div>`},
+
+{name:'Household - House & Location', tag:'Section 1 - Household Information', render:()=>`
+  <div class="field"><div class="q-label">What type of residence do you currently live in?</div>
+    <div class="house-grid">${houseCard('Landed house','Landed house',HOUSE_SVG)}${houseCard('Apartment/Condo','Apartment / Condominium',APT_SVG)}</div></div>
+  <div class="field"><div class="q-label">Where is the location of your home?</div>
+    <div class="q-help">If you have more than 1 home, pick the one you primarily use on weekdays.</div>
+    ${locPicker('home')}</div>
+  <div class="grid2">
+    <div class="field"><div class="q-label">How long has your family stayed in this house?</div>
+      <input type="number" placeholder="years"></div>
+    <div class="field"><div class="q-label">Do you own or rent your home?</div>
+      ${opts('own_rent',['Own','Rent','Company-provided','Other'])}</div>
+  </div>
+  <div class="field"><div class="q-label">Walk time from home to nearest BTS/MRT station</div>
+    ${opts('walk_station',['<5 min','5-10','10-15','15-20','>20 min','None nearby'])}</div>`},
+
+{name:'Household - Vehicles & Income', tag:'Section 1 - Household Information', render:()=>`
+  <div class="grid2">
+    <div class="field"><div class="q-label">Registered cars in household</div>${opts('n_cars',['0','1','2','3 or more'])}</div>
+    <div class="field"><div class="q-label">Registered motorbikes in household</div>${opts('n_bikes',['0','1','2','3 or more'])}</div>
+  </div>
+  <div class="field"><div class="q-label">Does your household hold a Rabbit Card or MRT Card?</div>${opts('transit_card',['Yes','No'])}</div>
+  <div class="field"><div class="q-label">Household's average monthly income in 2026 (all sources, before tax)</div>
+    ${opts('income',['<15,000','15,000-30,000','30,000-50,000','50,000-100,000','>100,000'])}</div>`},
+
+{name:'Household - Create Your Household', tag:'Section 1 + 2 - Household &amp; Individual Information', render:()=>`
+  <div class="q-help">Set how many adults and children live in the household, then create everyone as a character. Tap each character afterwards to fill in their own Individual Information (age, education, work, driving license, and so on).</div>
+  <div class="grid2">
+    <div class="field"><div class="q-label">How many adults in total?</div>${opts('n_adults_pick',['1','2','3','4','5 or more'])}
+      <input type="hidden" id="sync-adults">
+    </div>
+    <div class="field"><div class="q-label">How many children in total?</div>${opts('n_children_pick',['1','2','3 or more'])}
+      <div class="q-note">Around 3 children is enough</div></div>
+  </div>
+  <div class="nav-row" style="margin-top:0"><span></span>
+    <button class="add-btn" onclick="
+      nAdultsTarget = parseInt((A['n_adults_pick']||'2').replace(/[^0-9]/g,''))||1;
+      nChildrenTarget = parseInt((A['n_children_pick']||'1').replace(/[^0-9]/g,''))||1;
+      createCharacters();
+    ">+ Create household members</button>
+  </div>
+  <div id="avatar-row-slot">${renderAvatarRow()}</div>`},
+
+{name:'Travel Diary - Register a Trip', tag:'Section 3 - Trip Roster &amp; Morning Schedule', render:()=>`
+  <div class="field"><div class="q-label">Whose trip diary is this?</div>${personChipRow(tripPerson,'setTripPerson')}</div>
+  ${tripPerson?`
+  <div class="q-note">The questions below refer to [date], the day covered by this trip diary. Who traveled together on each leg is asked later, per segment, in Trip Details.</div>
+  <div class="grid2">
+    <div class="field"><div class="q-label">Sleep time (night before [date])</div><input type="time"></div>
+    <div class="field"><div class="q-label">Wake time (on [date])</div><input type="time"></div>
+  </div>
+  <div class="field"><div class="q-label">Work / school start time (typical weekday)</div><input type="time" style="width:160px"></div>
+  <div class="field"><div class="q-label">List every place visited on [date], in order</div>
+    <div class="q-help">Include short stops like drop-offs, pick-ups, or mode transfers. Drag the handle on the right to reorder a stop.</div>
+    <div class="stop-list">${stops.map((s,i)=>`<div class="stop-item" draggable="true" ondragstart="dragStart(${i})" ondragover="event.preventDefault()" ondrop="dropStop(${i})"><span class="idx">${String.fromCharCode(65+i)}</span>
+      <input type="text" value="${s.place}" oninput="stops[${i}].place=this.value;tripConfirmed=false" style="border:none;background:transparent;flex:1">
+      ${stops.length>2?`<span class="remove" onclick="stops.splice(${i},1);tripConfirmed=false;renderRP()">Remove</span>`:''}
+      <span class="drag-handle">Move</span></div>`).join('')}</div>
+    <button class="add-btn" onclick="stops.splice(stops.length-1,0,{place:''});tripConfirmed=false;renderRP()">+ Add a stop</button>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="tripConfirmed=true;renderRP()">Save trip</button></div>
+    ${tripConfirmed?`<div class="confirm-box"><b>${stops.length-1} segment(s) saved:</b><br>${stops.slice(0,-1).map((s,i)=>(s.place||'?')+' -&gt; '+(stops[i+1].place||'?')).join('<br>')}<br><span style="font-size:12px">Check this looks right, then press Next to fill in each segment's details.</span></div>`:''}
+  </div>
+  <div class="field"><div class="q-label">Maintenance time (typical weekday, minimum vs preferred)</div>
+    <table class="likert-table"><tr><td></td><td class="likert-head">Minimum (min)</td><td class="likert-head">Preferred (min)</td></tr>
+    <tr><td class="lbl">Sleeping</td><td colspan="2" style="font-size:12px;color:var(--sub);text-align:left">Calculated automatically from the sleep/wake time above</td></tr>
+    ${['Getting ready/bathing','Breakfast','Escorting children','Other'].map(a=>`<tr><td class="lbl">${a}</td><td><input type="number" style="width:70px"></td><td><input type="number" style="width:70px"></td></tr>`).join('')}
+    </table></div>
+  `:'<div class="empty-hint">Pick a household member above to start their trip diary.</div>'}`},
+
+{name:'Travel Diary - Trip Details', tag:'Section 3 - Trip Details (per segment)', customNav:true, render:()=>{
+  if(!tripPerson) return `<div class="empty-hint">Go back and register a trip first.</div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="rpIdx--;renderRP()">&lt;- Back</button>${tempSaveBtn()}<span></span></div>`;
+
+  const totalSegs = Math.max(0, stops.length-1);
+
+  if(showTripDonePrompt || totalSegs===0){
+    return `<div class="prompt-box"><h4>Does anyone else in the household have a trip on [date] too?</h4>
+      <div class="nav-row" style="justify-content:center;gap:14px">
+        <button class="btn btn-primary" onclick="resetTripState();rpIdx=rpSteps.findIndex(s=>s.name==='Travel Diary - Register a Trip');renderRP()">Yes, register their trip</button>
+        <button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="showTripDonePrompt=false;rpIdx++;renderRP()">No, continue</button>
+      </div></div>`;
+  }
+
+  const i = segIdx;
+  const purposeKey='purpose_'+i;
+  const isEscort = (val(purposeKey)||'').indexOf('Escorting')>=0 || (val(purposeKey)||'').indexOf('drop-off')>=0 || (val(purposeKey)||'').indexOf('pick-up')>=0;
+  const seg = `<div class="q-help">Segment ${i+1} of ${totalSegs}</div>
+    <div class="segment-card"><div class="segment-title">${stops[i].place||'?'} -&gt; ${stops[i+1].place||'?'}</div>
+    <div class="grid2">
+      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">Departure time</div><input type="time"></div>
+      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">Arrival time</div><input type="time"></div>
+    </div>
+    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">Who traveled with you on this segment?</div>
+      <div class="opt-row">${characters.filter(c=>c.id!==tripPerson).map(c=>{
+        const nm = A[c.id+'_name']||(c.kind==='adult'?'Adult':'Child');
+        const key = 'seg'+i+'_companion_'+c.id;
+        const on = val(key,false)?'checked':'';
+        return `<label class="opt ${on}" onclick="A['${key}']=!A['${key}'];this.classList.toggle('checked')">${nm}</label>`;
+      }).join('') || '<span class="q-help">No other household members yet.</span>'}</div></div>
+    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">Travel mode (main mode for this segment)</div>
+      ${opts('mode_'+i,['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'])}</div>
+    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">Did you use more than one way of getting there? If yes, list them in order</div>
+      ${opts('multimode_'+i,['No, one mode only','Yes'])}<input type="text" placeholder="e.g. walk, then bus, then train" style="margin-top:8px"></div>
+    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">If BTS or MRT: boarding station / alighting station</div>
+      <div class="grid2"><input type="text" placeholder="Boarding station"><input type="text" placeholder="Alighting station"></div></div>
+    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">If by car: were you the driver or a passenger?</div>
+      ${opts('driverpax_'+i,['Driver','Passenger'])}</div>
+    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">Main purpose of this trip</div>
+      ${opts(purposeKey,['Commuting to work','Going to school (drop-off)','Going to school (for children)','Return home','Return to workplace','Return to school (pick-up)','Escorting (other)','Shopping','Leisure','Medical-related','Other private purpose','Business/work-related'])}</div>
+    ${isEscort?`
+    <div class="escort-box"><span class="tag">Escort trip - extra detail</span>
+      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">Taking the child TO school, or bringing them FROM school?</div>
+        ${opts('escdir_'+i,['To school','From school'])}</div>
+      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">Drop-off / pick-up point</div>${locPicker('dropoff_'+i)}</div>
+      <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">After arriving, how long do you usually wait?</div><input type="number" placeholder="minutes" style="width:140px"></div>
+    </div>`:''}
+    <div class="field" style="border:none;padding:0;margin-top:10px"><div class="q-label" style="font-size:13px">Fare/cost (THB, 0 if free)</div><input type="number" style="width:120px"></div>
+    </div>`;
+
+  const backAction = i>0 ? `segIdx=${i-1};renderRP()` : `rpIdx--;renderRP()`;
+  const nextAction = i<totalSegs-1 ? `segIdx=${i+1};renderRP()` : `showTripDonePrompt=true;renderRP()`;
+  const nextLabel = i<totalSegs-1 ? 'Next segment ->' : 'Finish trip ->';
+  return `${seg}<div class="nav-row">
+    <button class="btn btn-ghost" onclick="${backAction}">&lt;- Back</button>
+    ${tempSaveBtn()}
+    <button class="btn btn-primary" onclick="${nextAction}">${nextLabel}</button>
+  </div>`;
+}},
+
+{name:'Escorting - Habit', tag:'Section 4 - School Escorting Habit', render:()=>`
+  <div class="field"><div class="q-label">Q1. Do you typically escort your children to school on regular weekdays?</div>${opts('q1',['Yes','No'])}</div>
+  ${val('q1')==='No'?'':`<div class="field"><div class="q-label">Q2. Any school-going children who go independently on regular weekdays?</div>${opts('q2',['Yes','No'])}</div>`}
+  <div class="field"><div class="q-label">Which children are escorted to school on most weekdays?</div>
+    <div class="opt-row">${characters.filter(c=>c.kind==='child').map(c=>`<label class="opt">${A[c.id+'_name']||'Child'}</label>`).join('')||'<span class="q-help">No child characters created yet.</span>'}</div></div>
+  <div class="field"><div class="q-label">Which adults usually do the escorting?</div>
+    <div class="opt-row">${characters.filter(c=>c.kind==='adult').map(c=>`<label class="opt">${A[c.id+'_name']||'Adult'}</label>`).join('')||'<span class="q-help">No adult characters created yet.</span>'}</div></div>
+  <div class="field"><div class="q-label">How often does escorting happen in a week?</div>
+    <div class="q-help">Morning</div>${opts('esc_morning_days',['Mon','Tue','Wed','Thu','Fri'],true)}
+    <div class="q-help" style="margin-top:8px">Afternoon</div>${opts('esc_afternoon_days',['Mon','Tue','Wed','Thu','Fri'],true)}</div>`},
+
+{name:'Escorting - Decision (why)', tag:'Section 4 - School Escorting Decision', render:()=>`
+  <div class="field"><div class="q-label">What makes you decide to escort [name of child]? (repeat per escorted child)</div>
+    ${likert(null,'escort_reason',['Concern about stranger harassment/kidnapping','Concern about bullies','Concern about traffic accident','No safe route to travel','Child lacks navigation skills','Child not physically fit','Child cannot recognize danger / seek help'],'1 = not at all concerned - 5 = extremely concerned')}</div>
+  <div class="field"><div class="q-label">Rate your concern on the following</div>
+    ${likert(null,'escort_concern',['Vehicle speeds too fast near school','Safe footpaths along the route','Road crossings are safe','Traffic volume is a hazard','Motorcycles/vendors block footpaths','Worried about theft/robbery','Area feels safe from crime','Area feels safe after 3pm','Worried about crime on public transport'])}</div>
+  <div class="field"><div class="q-label">How crowded does public transport feel during school-commute hours?</div>${opts('crowding',['1','2','3','4','5'])}</div>
+  <div class="field"><div class="q-label">Worried that crowding could put my child at risk (harassment, theft, separation)</div>${opts('crowding_risk',['1','2','3','4','5'])}</div>
+  <div class="field"><div class="q-label">At what age will/did you let your children travel independently to school?</div><input type="number" placeholder="years old" style="width:140px"></div>
+  <div class="field"><div class="q-label">If NOT escorting - what makes you decide not to? (repeat per non-escorted child)</div>
+    ${likert(null,'not_escort_reason',['Route/environment is safe enough','Current travel mode is relatively safe','Child is still too young'],'1 = strongly disagree - 5 = strongly agree')}</div>
+  <div class="field"><div class="q-label">Single main reason for not escorting</div>${opts('main_reason',['Old enough','School bus available','Sibling/friend accompanies','No car','Too costly','Work schedule conflict','Walking distance','Other'])}</div>`},
+
+{name:'Escorting - Threat & Coping (PMT)', tag:'Section 4 - Protection Motivation', render:()=>`
+  <div class="field"><div class="q-label">How serious/likely it feels</div>
+    ${likert(null,'pmt_severity',['If something bad happened, it would be very serious for our family','It is likely my child would run into danger travelling alone'])}</div>
+  <div class="field"><div class="q-label">How well the child/system could cope</div>
+    ${likert(null,'pmt_coping',['My child knows how to use BTS/MRT/bus safely','My child could handle it if something unexpected happened','If safety improvements were made, PT would genuinely be safe','My child is already familiar with the route, even without an adult'])}</div>
+  <div class="field"><div class="q-label">Would you currently allow this child to travel by BTS/MRT/bus completely alone?</div>
+    ${opts('allow_independent',['Yes, already does','Yes, I would allow it','No, not under current conditions','No, never regardless'])}</div>
+  <div class="field"><div class="q-label">If "No, not under current conditions": which would most change your mind? (top 3)</div>
+    ${opts('change_mind',['Slower traffic','Safer footpaths','Proper crossing at school gate','CCTV at stations','Security guard near school','Less crowding','Fare <=10 THB','Location tracking','School buddy system','Other'],true)}</div>
+  <div class="field"><div class="q-label">Minimum safety needed before allowing independent travel (rate separately)</div>
+    ${likert(null,'min_safety',['Traffic danger','Crime/stranger risk'],'1 = any level is fine - 5 = must feel very safe')}</div>`},
+
+{name:'Escorting - Travel Mode', tag:'Section 4 - Travel Mode', render:()=>`
+  <div class="field"><div class="q-label">How do you typically escort your children? (main mode)</div>
+    ${opts('escort_mode',['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi','MRT','BTS','Bus'])}</div>
+  <div class="field"><div class="q-label">Why this mode? (top 3)</div>
+    ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare'],true)}</div>
+  <div class="field"><div class="q-label">Has your child ever used BTS Skytrain on their own, without an adult?</div>${opts('used_bts_alone',['Yes','No'])}</div>
+  <div class="field"><div class="q-label">Has your child ever used MRT on their own, without an adult?</div>${opts('used_mrt_alone',['Yes','No'])}</div>
+  <div class="field"><div class="q-label">Has your child ever used a city bus on their own, without an adult?</div>${opts('used_bus_alone',['Yes','No'])}</div>
+  <div class="field"><div class="q-label">How safe does it feel to escort your child by motorcycle (vs by car)?</div>${opts('moto_safety',['1','2','3','4','5'])}</div>
+  <div class="field"><div class="q-label">If child travels by school bus/songthaew/moto-taxi, how much do you trust the driver?</div>${opts('driver_trust',['1','2','3','4','5'])}</div>`},
+
+{name:'Escorting - Route & Air Quality', tag:'Section 4 - Route Physical Characteristics', render:()=>`
+  <div class="q-note">Drop-off/pick-up point is now captured directly on the escort trip segment in Section 3.</div>
+  <div class="field"><div class="q-label">Does the route require crossing a major road (4+ lanes)?</div>${opts('major_road',['Yes','No','Unsure'])}</div>
+  <div class="field"><div class="q-label">Is there a pedestrian bridge/signal at that crossing?</div>${opts('crossing_aid',['Yes','No','N/A'])}</div>
+  <div class="field"><div class="q-label">Unobstructed footpaths for most of the route?</div>${opts('footpath',['Full','Partial','None'])}</div>
+  <div class="field"><div class="q-label">Any incident (near-accident, theft, harassment) on this route in the past year?</div>${opts('incident',['Yes','No','Prefer not to say'])}</div>
+  <div class="field"><div class="q-label">Does PM2.5/dust affect how you choose your child's travel mode?</div>${opts('pm25',['Yes, significantly','Yes, somewhat','No'])}</div>`},
+
+{name:'Escorting - School Facilities', tag:'Section 4 - Existing School Facilities', render:()=>`
+  <div class="field"><div class="q-label">Does the school provide facilities for the school commute (e.g. school bus)?</div>${opts('school_facility',['Yes','No','Unsure'])}</div>
+  <div class="field"><div class="q-label">Does your child currently use school bus service?</div>${opts('uses_bus',['Yes','No'])}</div>
+  <div class="field"><div class="q-label">If not, why?</div><textarea placeholder="Type your answer..."></textarea></div>
+  <div class="field"><div class="q-label">If yes, what should be improved?</div><textarea placeholder="Type your answer..."></textarea></div>
+  <div class="field"><div class="q-label">Does the school actively promote independent travel?</div>${opts('school_promotes',['Yes','No','Unsure'])}</div>`},
+
+{name:'School Choice', tag:'Section 5 - School Choice', render:()=>`
+  <div class="field"><div class="q-label">What describes the school your child goes to?</div>${opts('school_type',['Public','Private, local','Private, international'])}</div>
+  <div class="field"><div class="q-label">Reasons for choosing the current school (multiple allowed)</div>
+    ${opts('school_reason',['Proximity to home','Proximity to work','Sibling at same school','Tuition affordability','Curriculum & activities','Teacher quality','Prestige/reputation','School facilities','Parental involvement','Friend circle (child)','Friend circle (parent)'],true)}</div>
+  <div class="field"><div class="q-label">Is the school approximately on your daily commute route?</div>${opts('route_relation',['Directly on route','Slight detour (<10 min)','Significant detour (>10 min)','N/A'])}</div>
+  <div class="field"><div class="q-label">Compared to this school, what's the nearest school of similar quality?</div>${opts('nearest_similar',['Much closer','Somewhat closer','About the same','This is nearest','Do not know'])}</div>
+  <div class="field"><div class="q-label">If a school of the same quality were available within a 10-minute walk of home, would you switch?</div>${opts('switch_10min',['Yes','No','Maybe'])}</div>
+  <div class="field"><div class="q-label">If a school of the same quality were available within a 5-minute walk of home, would you switch?</div>${opts('switch_5min',['Yes','No','Maybe'])}</div>
+  <div class="field"><div class="q-label">Monthly tuition fee (repeat per child)</div>${opts('tuition',['Free/public','<5,000','5,000-15,000','15,000-30,000','>30,000'])}</div>`},
+
+{name:'Review & Submit', render:()=>`
+  <div class="hero"><h1>Thank you!</h1>
+  <p>Please review all your answers before submitting. This survey covers all 5 sections as designed. You can go back and edit any answer before you press Submit.</p>
+  <button class="btn btn-primary" style="margin-top:16px">Submit Survey</button></div>`},
+];
+
+let rpIdx = 0;
+function renderRP(){
+  const step = rpSteps[rpIdx];
+  document.getElementById('rp-fill').style.width = (rpIdx/(rpSteps.length-1)*100)+'%';
+  document.getElementById('rp-step-name').textContent = step.tag || step.name;
+  document.getElementById('rp-step-count').textContent = (rpIdx)+' / '+(rpSteps.length-1);
+  document.getElementById('rp-card').innerHTML = `
+    ${step.tag?`<div class="section-tag">${step.tag}</div>`:''}
+    <div class="step-title">${step.name}</div>
+    <div class="step-sub">&nbsp;</div>
+    ${step.render()}
+    ${step.customNav?'':`<div class="nav-row">
+      <button class="btn btn-ghost" onclick="rpIdx=Math.max(0,rpIdx-1);renderRP()" ${rpIdx===0?'style=visibility:hidden':''}>&lt;- Back</button>
+      ${tempSaveBtn()}
+      <button class="btn btn-primary" onclick="rpIdx=Math.min(${rpSteps.length-1},rpIdx+1);renderRP()">${rpIdx===rpSteps.length-1?'Done':'Next ->'}</button>
+    </div>`}`;
+}
+renderRP();
+
+/* ================= SP DATA ================= */
+const scenarios = [
+ {round:1, options:[
+   {title:'Escort by car',icon:'CAR',time:10,cost:0,traffic:2,crime:2,footpath:null,companion:null},
+   {title:'Child travels alone by PT',icon:'BUS',time:40,cost:50,wait:30,traffic:4,crime:4,footpath:'Poor',companion:'None'}
+ ]},
+ {round:2, options:[
+   {title:'Escort by car',icon:'CAR',time:40,cost:0,traffic:2,crime:2,footpath:null,companion:null},
+   {title:'Child travels alone by PT',icon:'BUS',time:15,cost:0,wait:5,traffic:1,crime:1,footpath:'Good',companion:'School buddy'}
+ ]},
+ {round:3, options:[
+   {title:'Escort by motorcycle',icon:'MOTO',time:15,cost:0,traffic:4,crime:2,footpath:null,companion:null,risky:true},
+   {title:'Child travels alone by PT',icon:'BUS',time:25,cost:15,wait:15,traffic:3,crime:2,footpath:'Moderate',companion:'Guardian'}
+ ]},
+ {round:4, options:[
+   {title:'Escort by car',icon:'CAR',time:20,cost:0,traffic:3,crime:2,footpath:null,companion:null},
+   {title:'Child travels alone by PT',icon:'BUS',time:20,cost:15,wait:10,traffic:2,crime:2,footpath:'Good',companion:'School buddy'},
+   {title:'Third-party escort (school bus)',icon:'VAN',time:22,cost:20,traffic:2,crime:2,footpath:null,companion:null,trust:'High'}
+ ]},
+ {round:5, options:[
+   {title:'Escort by car',icon:'CAR',time:15,cost:0,traffic:2,crime:1,footpath:null,companion:null},
+   {title:'Child walks/bikes alone',icon:'WALK',time:10,cost:0,traffic:3,crime:2,footpath:'Good',companion:'None'}
+ ]},
+ {round:6, options:[
+   {title:'Escort by motorcycle',icon:'MOTO',time:12,cost:0,traffic:5,crime:3,footpath:null,companion:null,risky:true},
+   {title:'Third-party escort (songthaew)',icon:'VAN',time:20,cost:15,traffic:2,crime:2,footpath:null,companion:null,trust:'Low'},
+   {title:'Child travels alone by PT',icon:'BUS',time:30,cost:50,wait:15,traffic:2,crime:2,footpath:'Good',companion:'Guardian'}
+ ]},
+];
+
+function dangerBar(level){
+  let s='';
+  for(let i=1;i<=5;i++) s+=`<span class="${i<=level?'on':''}"></span>`;
+  return `<div class="danger-bar">${s}</div>`;
+}
+function optionCard(o,ri,oi){
+  const selected = A['sp_'+ri]===oi;
+  let rows='';
+  rows += `<div class="attr-row"><span class="ic">TIME</span> Travel time <b>${o.time} min</b></div>`;
+  if(o.wait!==undefined) rows += `<div class="attr-row"><span class="ic">WAIT</span> Wait time <b>${o.wait} min</b></div>`;
+  rows += `<div class="attr-row"><span class="ic">COST</span> Cost <b>${o.cost} THB</b></div>`;
+  rows += `<div class="attr-row"><span class="ic">TRAF</span> Traffic risk ${dangerBar(o.traffic)}</div>`;
+  rows += `<div class="attr-row"><span class="ic">CRIME</span> Crime risk ${dangerBar(o.crime)}</div>`;
+  if(o.footpath) rows += `<div class="attr-row"><span class="ic">PATH</span> Footpath <b>${o.footpath}</b></div>`;
+  if(o.companion) rows += `<div class="attr-row"><span class="ic">COMP</span> Companion <b>${o.companion}</b></div>`;
+  if(o.trust) rows += `<div class="attr-row"><span class="ic">TRUST</span> Driver trust <b>${o.trust}</b></div>`;
+  return `<div class="opt-card ${selected?'selected':''}" onclick="A['sp_${ri}']=${oi};renderSP()">
+    <span class="pick-badge">Your choice</span>
+    <div class="icon">${o.icon}</div>
+    <div class="opt-title">${o.title}</div>
+    ${rows}
+  </div>`;
+}
+
+let spIdx = 0;
+function renderSP(){
+  const dots = scenarios.map((s,i)=>`<div class="dot ${i<spIdx?'done':i===spIdx?'active':''}"></div>`).join('');
+  let body='';
+  if(spIdx < scenarios.length){
+    const sc = scenarios[spIdx];
+    body = `
+      <div class="sp-progress">${dots}<div class="dot ${spIdx>=scenarios.length?'active':''}"></div></div>
+      <div class="sp-round-label">Round ${sc.round} of ${scenarios.length}</div>
+      <div class="sp-question">For your child's usual school trip today, which would you choose?</div>
+      <div class="option-row">${sc.options.map((o,oi)=>optionCard(o,spIdx,oi)).join('')}</div>
+      <div class="sp-footer">Tap a card to choose. You can change your answer before moving on.</div>
+      <div class="nav-row">
+        <button class="btn btn-ghost" onclick="spIdx=Math.max(0,spIdx-1);renderSP()" ${spIdx===0?'style=visibility:hidden':''}>&lt;- Back</button>
+        <button class="btn btn-primary" onclick="spIdx++;renderSP()" ${A['sp_'+spIdx]===undefined?'disabled':''}>Next round -&gt;</button>
+      </div>`;
+  } else if (spIdx === scenarios.length){
+    const factors = ['Travel time','Cost (fare)','Traffic safety','Crime & stranger safety','Footpath & crossing conditions','Having a companion','Trust in the driver','Something else'];
+    body = `
+      <div class="sp-progress">${scenarios.map(()=>`<div class="dot done"></div>`).join('')}<div class="dot active"></div></div>
+      <div class="sp-round-label">Debrief</div>
+      <div class="sp-question">Thinking about the choices you just made, which factor mattered to you the most?</div>
+      <div class="debrief-list">${factors.map(f=>{
+        const on = A['debrief']===f;
+        return `<label class="opt ${on?'checked':''}" onclick="A['debrief']='${f}';renderSP()">${f}</label>`;
+      }).join('')}</div>
+      <div class="nav-row">
+        <button class="btn btn-ghost" onclick="spIdx--;renderSP()">&lt;- Back</button>
+        <button class="btn btn-primary" onclick="spIdx++;renderSP()" ${!A['debrief']?'disabled':''}>See summary -&gt;</button>
+      </div>`;
+  } else {
+    const chosen = scenarios.map((sc,i)=>{ const o = sc.options[A['sp_'+i]]; return o ? o.title : '-'; });
+    body = `
+      <div class="hero"><h1>Complete!</h1><p>Thanks for playing through all ${scenarios.length} scenarios. Here is what you picked:</p></div>
+      <div class="summary-box">
+        ${chosen.map((c,i)=>`<div style="margin-bottom:6px"><b>Round ${i+1}:</b> ${c}</div>`).join('')}
+        <div style="margin-top:10px"><b>Most important factor:</b> ${A['debrief']}</div>
+      </div>
+      <div class="nav-row"><span></span><button class="btn btn-primary" onclick="spIdx=0;renderSP()">Restart demo</button></div>`;
+  }
+  document.getElementById('sp-card').innerHTML = body;
+}
+renderSP();
+</script>
