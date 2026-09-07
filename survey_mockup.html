@@ -39,6 +39,13 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Robo
 .loc-map{height:150px;position:relative;cursor:crosshair;background-color:#eef2f7;background-image:linear-gradient(#dbe3ee 1px,transparent 1px),linear-gradient(90deg,#dbe3ee 1px,transparent 1px);background-size:22px 22px}
 .loc-pin{position:absolute;width:16px;height:16px;background:#ef4444;border:2px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg) translate(-50%,-100%);box-shadow:0 1px 4px rgba(0,0,0,.3);display:none}
 .loc-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12px;pointer-events:none;text-align:center;padding:0 20px}
+.loc-map-real{border-top:1px solid var(--line);background:#eef2f7}
+.loc-hint-real{font-size:11px;color:var(--sub);padding:6px 12px;background:#f8fafc;border-top:1px solid var(--line)}
+.loc-latlng{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-top:1px solid var(--line);background:#fff}
+.loc-latlng input{width:120px}
+.btn-confirm-pin{border:none;background:var(--blue);color:#fff;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.loc-status{font-size:11.5px;color:var(--sub)}
+.loc-status.ok{color:var(--green);font-weight:700}
 .loc-fields{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
 .loc-fields input{border:none;border-radius:0;background:#fff}
 .loc-fields input:first-child{border-right:1px solid var(--line)}
@@ -212,25 +219,39 @@ window.pickOpt = (el,name,o,multi)=>{
 };
 
 function locPicker(id){
+  const q = encodeURIComponent(A[id+'_search'] || A[id+'_name'] || 'Bangkok, Thailand');
+  const confirmed = A[id+'_confirmed'];
   return `<div class="locpicker">
-    <input class="loc-search" type="text" placeholder="Search for a place or address..." oninput="A['${id}_search']=this.value">
-    <div class="loc-map" onclick="dropPin(event,this,'${id}')">
-      <div class="loc-hint">Click anywhere on the map to drop a pin (demo map, not real geodata)</div>
-      <div class="loc-pin"></div>
-    </div>
+    <input class="loc-search" type="text" placeholder="Search for a place or address, then press Enter" value="${A[id+'_search']||''}" oninput="A['${id}_search']=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();updateMap('${id}')}">
+    <div class="loc-map-real"><iframe id="map_${id}" width="100%" height="180" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${q}&output=embed"></iframe></div>
+    <div class="loc-hint-real">Real Google Map - search above to move the map. To capture exact coordinates: on Google Maps, right-click (or long-press) the exact spot, choose "What's here?", then copy the Lat, Long shown into the two boxes below and press Confirm.</div>
     <div class="loc-fields">
-      <input type="text" placeholder="Place name (e.g. Home, Office Building B)" oninput="A['${id}_name']=this.value">
-      <input type="text" placeholder="Address / nearest landmark" oninput="A['${id}_addr']=this.value">
+      <input type="text" placeholder="Place name (e.g. Home, Office Building B)" value="${A[id+'_name']||''}" oninput="A['${id}_name']=this.value">
+      <input type="text" placeholder="Address / nearest landmark" value="${A[id+'_addr']||''}" oninput="A['${id}_addr']=this.value">
+    </div>
+    <div class="loc-latlng">
+      <input type="text" id="lat_${id}" placeholder="Latitude" value="${A[id+'_lat']||''}">
+      <input type="text" id="lng_${id}" placeholder="Longitude" value="${A[id+'_lng']||''}">
+      <button type="button" class="btn-confirm-pin" onclick="confirmPin('${id}')">Confirm location</button>
+      <span id="locstatus_${id}" class="loc-status ${confirmed?'ok':''}">${confirmed?'Location confirmed (lat/long saved)':'Not confirmed yet'}</span>
     </div>
   </div>`;
 }
-window.dropPin = (ev,mapEl,id)=>{
-  const rect = mapEl.getBoundingClientRect();
-  const x = ev.clientX-rect.left, y = ev.clientY-rect.top;
-  const pin = mapEl.querySelector('.loc-pin');
-  pin.style.left = x+'px'; pin.style.top = y+'px'; pin.style.display='block';
-  const hint = mapEl.querySelector('.loc-hint'); if(hint) hint.style.display='none';
-  A[id+'_x']=x; A[id+'_y']=y;
+window.confirmPin = (id)=>{
+  const latEl = document.getElementById('lat_'+id), lngEl = document.getElementById('lng_'+id);
+  const lat = latEl ? latEl.value.trim() : '', lng = lngEl ? lngEl.value.trim() : '';
+  A[id+'_lat']=lat; A[id+'_lng']=lng;
+  A[id+'_confirmed'] = !!(lat && lng);
+  const st = document.getElementById('locstatus_'+id);
+  if(st){
+    st.textContent = A[id+'_confirmed'] ? 'Location confirmed (lat/long saved)' : 'Enter both latitude and longitude first';
+    st.classList.toggle('ok', A[id+'_confirmed']);
+  }
+};
+window.updateMap = (id)=>{
+  const q = encodeURIComponent(A[id+'_search']||'Bangkok, Thailand');
+  const ifr = document.getElementById('map_'+id);
+  if(ifr) ifr.src = 'https://www.google.com/maps?q='+q+'&output=embed';
 };
 
 /* house icons (inline SVG, no external assets) */
@@ -300,13 +321,16 @@ function renderModal(){
   const eduField = ch.kind==='adult'
     ? `<div class="field"><div class="q-label">Highest education level</div>${opts(p+'_edu',['Junior high or lower','Senior high or equivalent','Undergraduate degree','Graduate degree','Postgraduate degree'])}</div>`
     : `<div class="field"><div class="q-label">Current education level</div>${opts(p+'_edu',['Not attending any school','Pre-school','Elementary school','Junior high or equivalent','Senior high or equivalent','Undergraduate degree'])}</div>
-       <div class="field"><div class="q-label">If school-going: specific grade</div>${opts(p+'_grade',['P1-P6','M1-M3','M4-M6'])}</div>`;
+       <div class="field"><div class="q-label">If school-going: specific grade</div>${opts(p+'_grade',['P1','P2','P3','P4','P5','P6','M1','M2','M3','M4','M5','M6','Bachelor degree'])}</div>`;
   const employField = ch.kind==='adult'
     ? `<div class="field"><div class="q-label">Employment status</div>${opts(p+'_employ',['Full-time','Part-time','Self-employed','Not employed (incl. retired)'])}</div>
        <div class="field"><div class="q-label">Work start / end time (if employed)</div><div class="grid2"><input type="time"><input type="time"></div></div>
        <div class="field"><div class="q-label">Primary workplace location</div>${locPicker(p+'_work')}</div>`
     : `<div class="field"><div class="q-label">School start / end time (if school-going)</div><div class="grid2"><input type="time"><input type="time"></div></div>
-       <div class="field"><div class="q-label">School location</div>${locPicker(p+'_school')}</div>`;
+       <div class="field"><div class="q-label">School name and location</div>${locPicker(p+'_school')}</div>
+       <div class="field"><div class="q-label">School type</div>${opts(p+'_schooltype',['Public','Private, local','Private, international'])}</div>
+       <div class="field"><div class="q-label">Does this child use school bus service?</div>${opts(p+'_usesbus',['Yes','No'])}</div>
+       <div class="q-note">Collected once here - Sections 4 and 5 will reuse this instead of asking again.</div>`;
 
   document.getElementById('modal-body').innerHTML = `
     <div class="field"><div class="q-label">Nickname / initial</div><input type="text" value="${A[p+'_name']||''}" oninput="A['${p}_name']=this.value;renderAvatarSectionOnly();document.getElementById('modal-title').textContent=this.value+' - Individual Information'" placeholder="e.g. Somchai, Child A"></div>
@@ -316,8 +340,11 @@ function renderModal(){
     ${eduField}
     ${employField}
     <div class="field"><div class="q-label">Driving license</div>
-      <div class="opt-row"><label class="opt ${cval(ch,'lic_car',false)?'checked':''}" onclick="A['${p}_lic_car']=!A['${p}_lic_car'];this.classList.toggle('checked')">Car</label>
-      <label class="opt ${cval(ch,'lic_moto',false)?'checked':''}" onclick="A['${p}_lic_moto']=!A['${p}_lic_moto'];this.classList.toggle('checked')">Motorbike</label></div></div>
+      <div class="opt-row">
+      <label class="opt ${cval(ch,'lic_car',false)?'checked':''}" onclick="A['${p}_lic_car']=!A['${p}_lic_car'];if(A['${p}_lic_car'])A['${p}_lic_none']=false;renderModal()">Car</label>
+      <label class="opt ${cval(ch,'lic_moto',false)?'checked':''}" onclick="A['${p}_lic_moto']=!A['${p}_lic_moto'];if(A['${p}_lic_moto'])A['${p}_lic_none']=false;renderModal()">Motorbike</label>
+      <label class="opt ${cval(ch,'lic_none',false)?'checked':''}" onclick="A['${p}_lic_none']=!A['${p}_lic_none'];if(A['${p}_lic_none']){A['${p}_lic_car']=false;A['${p}_lic_moto']=false;}renderModal()">None</label>
+      </div></div>
     <div class="nav-row"><span></span><button class="btn btn-primary" onclick="closeModal()">Save &amp; close</button></div>
   `;
 }
@@ -328,6 +355,7 @@ function renderAvatarSectionOnly(){
 
 /* travel diary state */
 let stops = [{place:'Home'},{place:'School'},{place:'Home'}];
+let maintActivities = [{name:''}];
 let tripPerson = null;
 
 function personChipRow(selectedId,onClickName){
@@ -434,10 +462,18 @@ const rpSteps = [
     ${tripConfirmed?`<div class="confirm-box"><b>${stops.length-1} segment(s) saved:</b><br>${stops.slice(0,-1).map((s,i)=>(s.place||'?')+' -&gt; '+(stops[i+1].place||'?')).join('<br>')}<br><span style="font-size:12px">Check this looks right, then press Next to fill in each segment's details.</span></div>`:''}
   </div>
   <div class="field"><div class="q-label">Maintenance time (typical weekday, minimum vs preferred)</div>
-    <table class="likert-table"><tr><td></td><td class="likert-head">Minimum (min)</td><td class="likert-head">Preferred (min)</td></tr>
-    <tr><td class="lbl">Sleeping</td><td colspan="2" style="font-size:12px;color:var(--sub);text-align:left">Calculated automatically from the sleep/wake time above</td></tr>
-    ${['Getting ready/bathing','Breakfast','Escorting children','Other'].map(a=>`<tr><td class="lbl">${a}</td><td><input type="number" style="width:70px"></td><td><input type="number" style="width:70px"></td></tr>`).join('')}
-    </table></div>
+    <div class="q-help">Add a row for each activity you do before leaving home, and enter the minimum time you need and the time you would prefer. Only Sleeping is fixed (calculated above).</div>
+    <table class="likert-table"><tr><td></td><td class="likert-head">Minimum (min)</td><td class="likert-head">Preferred (min)</td><td></td></tr>
+    <tr><td class="lbl">Sleeping</td><td colspan="2" style="font-size:12px;color:var(--sub);text-align:left">Calculated automatically from the sleep/wake time above</td><td></td></tr>
+    ${maintActivities.map((m,i)=>`<tr>
+      <td class="lbl"><input type="text" value="${m.name}" placeholder="e.g. Breakfast" oninput="maintActivities[${i}].name=this.value" style="border:none;background:transparent;padding:0"></td>
+      <td><input type="number" style="width:70px" value="${A['maint_'+i+'_min']!==undefined?A['maint_'+i+'_min']:''}" oninput="A['maint_${i}_min']=this.value"></td>
+      <td><input type="number" style="width:70px" value="${A['maint_'+i+'_pref']!==undefined?A['maint_'+i+'_pref']:''}" oninput="A['maint_${i}_pref']=this.value"></td>
+      <td>${maintActivities.length>1?`<span class="remove" onclick="maintActivities.splice(${i},1);renderRP()">Remove</span>`:''}</td>
+    </tr>`).join('')}
+    </table>
+    <button class="add-btn" style="margin-top:8px" onclick="maintActivities.push({name:''});renderRP()">+ Add activity</button>
+  </div>
   `:'<div class="empty-hint">Pick a household member above to start their trip diary.</div>'}`},
 
 {name:'Travel Diary - Trip Details', tag:'Section 3 - Trip Details (per segment)', customNav:true, render:()=>{
@@ -556,13 +592,19 @@ const rpSteps = [
 
 {name:'Escorting - School Facilities', tag:'Section 4 - Existing School Facilities', render:()=>`
   <div class="field"><div class="q-label">Does the school provide facilities for the school commute (e.g. school bus)?</div>${opts('school_facility',['Yes','No','Unsure'])}</div>
-  <div class="field"><div class="q-label">Does your child currently use school bus service?</div>${opts('uses_bus',['Yes','No'])}</div>
-  <div class="field"><div class="q-label">If not, why?</div><textarea placeholder="Type your answer..."></textarea></div>
+  <div class="field"><div class="q-label">School bus usage (per child)</div>
+    <div class="q-help">Already collected in Section 2 for each child - shown here for reference only.</div>
+    ${characters.filter(c=>c.kind==='child').map(c=>`<div class="q-help" style="margin-bottom:4px"><b>${A[c.id+'_name']||'Child'}:</b> ${A[c.id+'_usesbus']||'Not yet answered in Section 2'}</div>`).join('') || '<span class="q-help">No child characters created yet.</span>'}
+  </div>
+  <div class="field"><div class="q-label">If not using school bus, why?</div><textarea placeholder="Type your answer..."></textarea></div>
   <div class="field"><div class="q-label">If yes, what should be improved?</div><textarea placeholder="Type your answer..."></textarea></div>
   <div class="field"><div class="q-label">Does the school actively promote independent travel?</div>${opts('school_promotes',['Yes','No','Unsure'])}</div>`},
 
 {name:'School Choice', tag:'Section 5 - School Choice', render:()=>`
-  <div class="field"><div class="q-label">What describes the school your child goes to?</div>${opts('school_type',['Public','Private, local','Private, international'])}</div>
+  <div class="field"><div class="q-label">School type (per child)</div>
+    <div class="q-help">Already collected in Section 2 for each child - shown here for reference only.</div>
+    ${characters.filter(c=>c.kind==='child').map(c=>`<div class="q-help" style="margin-bottom:4px"><b>${A[c.id+'_name']||'Child'}:</b> ${A[c.id+'_schooltype']||'Not yet answered in Section 2'}</div>`).join('') || '<span class="q-help">No child characters created yet.</span>'}
+  </div>
   <div class="field"><div class="q-label">Reasons for choosing the current school (multiple allowed)</div>
     ${opts('school_reason',['Proximity to home','Proximity to work','Sibling at same school','Tuition affordability','Curriculum & activities','Teacher quality','Prestige/reputation','School facilities','Parental involvement','Friend circle (child)','Friend circle (parent)'],true)}</div>
   <div class="field"><div class="q-label">Is the school approximately on your daily commute route?</div>${opts('route_relation',['Directly on route','Slight detour (<10 min)','Significant detour (>10 min)','N/A'])}</div>
