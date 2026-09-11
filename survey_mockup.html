@@ -443,6 +443,8 @@ const T = {
 "Yes, I would like an incentive":"ใช่ ต้องการรับสิ่งตอบแทน","No, thank you":"ไม่ ขอบคุณ",
 "Full name":"ชื่อ-นามสกุล","Email":"อีเมล","Phone number":"เบอร์โทรศัพท์",
 "Submitted - thank you!":"ส่งแบบสอบถามแล้ว - ขอบคุณ!","Your responses have been recorded. You may now close this window.":"คำตอบของท่านถูกบันทึกแล้ว ท่านสามารถปิดหน้าต่างนี้ได้",
+"Select a line":"เลือกสาย",
+"Household Information":"ข้อมูลครัวเรือน","Individual Information":"ข้อมูลส่วนบุคคล","Travel Diary":"สมุดบันทึกการเดินทาง","Escorting Behavior & Safety":"พฤติกรรมการรับส่งและความปลอดภัย",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -500,6 +502,14 @@ window.pickOpt = (el,name,o,multi)=>{
   if(multi){ const k=name+'_'+o; A[k]=!A[k]; el.classList.toggle('checked'); }
   else { A[name]=o; el.parentElement.querySelectorAll('.opt').forEach(x=>x.classList.remove('checked')); el.classList.add('checked'); renderRP(); }
 };
+
+function selectOpts(name,options){
+  const cur = val(name) || '';
+  return `<select onchange="A['${name}']=this.value;renderRP()">
+    <option value="" ${cur===''?'selected':''}>${t('Select a line')}</option>
+    ${options.map(o=>`<option value="${o.replace(/"/g,'&quot;')}" ${cur===o?'selected':''}>${t(o)}</option>`).join('')}
+  </select>`;
+}
 
 function mapSrc(id){
   if(A[id+'_confirmed'] && A[id+'_lat'] && A[id+'_lng']){
@@ -753,6 +763,16 @@ function isStepComplete(step){
   }
 }
 
+const REVIEW_GROUPS = [
+  {label:'Household Information', steps:['Household - House & Location','Household - Vehicles & Income','Morning routine activities']},
+  {label:'Individual Information', steps:['Household - Create Your Household']},
+  {label:'Travel Diary', steps:['Travel Diary - Register a Trip','Travel Diary - Trip Details']},
+  {label:'Escorting Behavior & Safety', steps:['Escorting - Habit','Escorting - Decision (why)','Escorting - Threat & Coping (PMT)','Escorting - Travel Mode','Escorting - Route & Air Quality','Escorting - School Facilities']},
+  {label:'School Choice', steps:['School Choice']},
+];
+let reviewOpenGroup = null;
+window.toggleReviewGroup = (i)=>{ reviewOpenGroup = reviewOpenGroup===i ? null : i; renderRP(); };
+
 window.openIncentivePrompt = ()=>{
   document.getElementById('modal-title').textContent = t('Would you like to receive an incentive?');
   document.getElementById('modal-body').innerHTML = `
@@ -941,7 +961,7 @@ const rpSteps = [
       ${opts('multimode_'+ns,['No, one mode only','Yes'])}<input type="text" placeholder="${t('e.g. walk, then bus, then train')}" style="margin-top:8px"></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('For each mode change above, about how long did the walk (or wait) between arriving from one mode and boarding the next take?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If BTS or MRT: which line?')}</div>
-      ${opts('line_'+ns,['Red Line (Bang Sue - Rangsit/Thammasat)','Red Line (Bang Sue - Taling Chan)','Airport Rail Link (Phaya Thai - Makkasan - Suvarnabhumi)','Green Line - Sukhumvit (Khu Khot - Kehha)','Green Line - Silom (National Stadium - Bang Wa)','Blue Line (Tha Phra - Bang Sue - Hua Lamphong - Lak Song)','Purple Line (Tao Poon - Khlong Bang Phai)','Pink Line (Khae Rai - Pak Kret - Min Buri)','Yellow Line (Lat Phrao - Phatthanakan - Samrong)'])}</div>
+      ${selectOpts('line_'+ns,['Red Line (Bang Sue - Rangsit/Thammasat)','Red Line (Bang Sue - Taling Chan)','Airport Rail Link (Phaya Thai - Makkasan - Suvarnabhumi)','Green Line - Sukhumvit (Khu Khot - Kehha)','Green Line - Silom (National Stadium - Bang Wa)','Blue Line (Tha Phra - Bang Sue - Hua Lamphong - Lak Song)','Purple Line (Tao Poon - Khlong Bang Phai)','Pink Line (Khae Rai - Pak Kret - Min Buri)','Yellow Line (Lat Phrao - Phatthanakan - Samrong)'])}</div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If BTS or MRT: boarding station / alighting station')}</div>
       <div class="grid2"><input type="text" placeholder="${t('Boarding station')}"><input type="text" placeholder="${t('Alighting station')}"></div></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If by car: were you the driver or a passenger?')}</div>
@@ -1099,17 +1119,32 @@ const rpSteps = [
 }},
 
 {name:'Review & Submit', render:()=>{
-  const sectionSteps = rpSteps.filter(s=>s.name!=='Welcome' && s.name!=='Review & Submit');
-  const rows = sectionSteps.map(s=>{
-    const done = isStepComplete(s);
-    const idx = rpSteps.indexOf(s);
-    return `<div class="stop-item"><span style="flex:1">${done?'✓ ':''}${t(s.name)}</span>${done?`<span style="color:var(--green);font-weight:700;font-size:12.5px">${t('Complete')}</span>`:`<button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="rpIdx=${idx};renderRP()">${t('Go to section')}</button>`}</div>`;
+  const stepByName = {}; rpSteps.forEach(s=>stepByName[s.name]=s);
+  const groupRows = REVIEW_GROUPS.map((g,gi)=>{
+    const substeps = g.steps.map(n=>stepByName[n]).filter(Boolean);
+    const doneCount = substeps.filter(isStepComplete).length;
+    const done = doneCount===substeps.length;
+    const open = reviewOpenGroup===gi;
+    const badge = done
+      ? `<span style="color:var(--green);font-weight:700;font-size:12.5px">${t('Complete')}</span>`
+      : `<span style="color:var(--sub);font-size:12.5px">${doneCount}/${substeps.length}</span>`;
+    const subRows = substeps.map(s=>{
+      const sdone = isStepComplete(s);
+      const idx = rpSteps.indexOf(s);
+      return `<div class="stop-item" style="margin-left:16px;background:#fff"><span style="flex:1">${sdone?'✓ ':''}${t(s.name)}</span>${sdone?`<span style="color:var(--green);font-weight:700;font-size:12.5px">${t('Complete')}</span>`:`<button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="rpIdx=${idx};renderRP()">${t('Go to section')}</button>`}</div>`;
+    }).join('');
+    return `<div class="stop-item" style="cursor:pointer" onclick="toggleReviewGroup(${gi})">
+        <span style="flex:1;font-weight:700">${done?'✓ ':''}${t(g.label)}</span>
+        ${badge}
+        <span style="margin-left:10px;color:var(--sub)">${open?'▲':'▼'}</span>
+      </div>
+      ${open?`<div style="display:flex;flex-direction:column;gap:8px;margin:4px 0 10px">${subRows}</div>`:''}`;
   }).join('');
-  const allDone = sectionSteps.every(isStepComplete);
+  const allDone = REVIEW_GROUPS.every(g=>g.steps.map(n=>stepByName[n]).filter(Boolean).every(isStepComplete));
   return `
   <div class="hero"><h1>${t('Thank you!')}</h1>
   <p>${t('Please review all your answers before submitting. This survey covers all 5 sections as designed. You can go back and edit any answer before you press Submit.')}</p></div>
-  <div class="stop-list" style="margin-top:10px">${rows}</div>
+  <div class="stop-list" style="margin-top:10px">${groupRows}</div>
   ${!allDone?`<div class="q-note" style="display:block;margin-top:12px">${t('Please complete every section before submitting.')}</div>`:''}
   <div class="nav-row"><span></span><button class="btn btn-primary" ${allDone?'':'disabled'} onclick="openIncentivePrompt()">${t('Submit Survey')}</button></div>
   `;
