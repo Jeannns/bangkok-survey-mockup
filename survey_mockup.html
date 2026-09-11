@@ -315,6 +315,8 @@ const T = {
 "My child could handle it if something unexpected happened":"บุตรหลานสามารถรับมือได้หากเกิดเหตุไม่คาดคิด",
 "If safety improvements were made, PT would genuinely be safe":"หากมีการปรับปรุงด้านความปลอดภัย ขนส่งสาธารณะจะปลอดภัยอย่างแท้จริง",
 "My child is already familiar with the route, even without an adult":"บุตรหลานคุ้นเคยกับเส้นทางอยู่แล้ว แม้ไม่มีผู้ใหญ่ไปด้วย",
+"I am familiar with/know other adults along the route who could help":"ฉันคุ้นเคย/รู้จักผู้ใหญ่คนอื่นตามเส้นทางที่สามารถช่วยเหลือได้",
+"Does your child currently carry a mobile phone during the commute?":"ปัจจุบันบุตรหลานพกโทรศัพท์มือถือระหว่างเดินทางหรือไม่",
 "Would you currently allow this child to travel by BTS/MRT/bus completely alone?":"ปัจจุบันท่านจะอนุญาตให้เด็กคนนี้เดินทางโดย BTS/MRT/รถเมล์เพียงลำพังหรือไม่",
 "Yes, already does":"ใช่ เดินทางเองอยู่แล้ว","Yes, I would allow it":"ใช่ จะอนุญาต","No, not under current conditions":"ไม่ ภายใต้เงื่อนไขปัจจุบัน","No, never regardless":"ไม่ ไม่ว่ากรณีใด",
 "If \"No, not under current conditions\": which would most change your mind? (top 3)":"หากตอบ \"ไม่ ภายใต้เงื่อนไขปัจจุบัน\": อะไรจะเปลี่ยนใจท่านได้มากที่สุด (เลือก 3 อันดับ)",
@@ -330,6 +332,9 @@ const T = {
 "Quality time with children":"ได้ใช้เวลาคุณภาพกับบุตรหลาน","Only mode available":"เป็นวิธีเดียวที่มี","Flexible work schedule":"เวลาทำงานยืดหยุ่น",
 "Proximity to station (home)":"ใกล้สถานี (ฝั่งบ้าน)","Proximity to station (school)":"ใกล้สถานี (ฝั่งโรงเรียน)","Comfortable sidewalk access":"ทางเท้าเข้าถึงสะดวก",
 "Timely PT schedule":"ตารางเวลาขนส่งสาธารณะตรงเวลา","PT is clean":"ขนส่งสาธารณะสะอาด","More affordable fare":"ค่าโดยสารประหยัดกว่า",
+"Combined with own commute/errand (trip-chaining)":"รวมกับการเดินทางไปทำงาน/ธุระของตัวเอง (เดินทางต่อเนื่อง)",
+"How often does weather (heavy rain/extreme heat) change your usual school-commute mode?":"สภาพอากาศ (ฝนตกหนัก/อากาศร้อนจัด) ทำให้ท่านเปลี่ยนวิธีเดินทางไปโรงเรียนตามปกติบ่อยเพียงใด",
+"Never":"ไม่เคย","Rarely":"นานๆ ครั้ง","Sometimes":"บางครั้ง","Often":"บ่อยครั้ง","Always":"ทุกครั้ง",
 "Has your child ever used BTS Skytrain on their own, without an adult?":"บุตรหลานเคยใช้ BTS ด้วยตนเองโดยไม่มีผู้ใหญ่ไปด้วยหรือไม่",
 "Has your child ever used MRT on their own, without an adult?":"บุตรหลานเคยใช้ MRT ด้วยตนเองโดยไม่มีผู้ใหญ่ไปด้วยหรือไม่",
 "Has your child ever used a city bus on their own, without an adult?":"บุตรหลานเคยใช้รถเมล์ด้วยตนเองโดยไม่มีผู้ใหญ่ไปด้วยหรือไม่",
@@ -358,6 +363,7 @@ const T = {
 "Proximity to home":"ใกล้บ้าน","Proximity to work":"ใกล้ที่ทำงาน","Sibling at same school":"มีพี่น้องเรียนโรงเรียนเดียวกัน","Tuition affordability":"ค่าเทอมที่จ่ายไหว",
 "Curriculum & activities":"หลักสูตรและกิจกรรม","Teacher quality":"คุณภาพครูผู้สอน","Prestige/reputation":"ชื่อเสียง/ภาพลักษณ์","School facilities":"สิ่งอำนวยความสะดวกของโรงเรียน",
 "Parental involvement":"การมีส่วนร่วมของผู้ปกครอง","Religious affiliation/values":"ความเกี่ยวข้องด้าน/ค่านิยมทางศาสนา","Friend circle (child)":"กลุ่มเพื่อนของเด็ก","Friend circle (parent)":"กลุ่มเพื่อนของผู้ปกครอง",
+"Community relationship":"ความสัมพันธ์กับชุมชน",
 "How would you rate this school's academic reputation?":"ท่านให้คะแนนชื่อเสียงด้านวิชาการของโรงเรียนนี้เท่าใด",
 "How would you rate this school's social prestige (how impressive/high-status the name is seen as)?":"ท่านให้คะแนนภาพลักษณ์ทางสังคมของโรงเรียนนี้เท่าใด (ความน่าประทับใจ/สถานะของชื่อโรงเรียน)",
 "Is the school approximately on your daily commute route?":"โรงเรียนอยู่บนเส้นทางเดินทางประจำวันของท่านโดยประมาณหรือไม่",
@@ -1083,11 +1089,12 @@ const rpSteps = [
   <div class="field"><div class="q-label">${t('How serious/likely it feels')}</div>
     ${likert(null,'pmt_severity',['If something bad happened, it would be very serious for our family','It is likely my child would run into danger travelling alone'])}</div>
   <div class="field"><div class="q-label">${t('How well the child/system could cope')}</div>
-    ${likert(null,'pmt_coping',['My child knows how to use BTS/MRT/bus safely','My child could handle it if something unexpected happened','If safety improvements were made, PT would genuinely be safe','My child is already familiar with the route, even without an adult'])}</div>
+    ${likert(null,'pmt_coping',['My child knows how to use BTS/MRT/bus safely','My child could handle it if something unexpected happened','If safety improvements were made, PT would genuinely be safe','My child is already familiar with the route, even without an adult','I am familiar with/know other adults along the route who could help'])}</div>
   <div class="field"><div class="q-label">${t('Would you currently allow this child to travel by BTS/MRT/bus completely alone?')}</div>
     ${opts('allow_independent',['Yes, already does','Yes, I would allow it','No, not under current conditions','No, never regardless'])}</div>
   <div class="field"><div class="q-label">${t('If "No, not under current conditions": which would most change your mind? (top 3)')}</div>
     ${opts('change_mind',['Slower traffic','Safer footpaths','Proper crossing at school gate','CCTV at stations','Security guard near school','Less crowding','Fare <=10 THB','Location tracking','School buddy system','Other'],true)}</div>
+  <div class="field"><div class="q-label">${t('Does your child currently carry a mobile phone during the commute?')}</div>${opts('child_has_phone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Minimum safety needed before allowing independent travel (rate separately)')}</div>
     ${likert(null,'min_safety',['Traffic danger','Crime/stranger risk'],'1 = any level is fine - 5 = must feel very safe')}</div>`},
 
@@ -1095,7 +1102,8 @@ const rpSteps = [
   <div class="field"><div class="q-label">${t('How do you typically escort your children? (main mode)')}</div>
     ${opts('escort_mode',['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi','MRT','BTS','Bus'])}</div>
   <div class="field"><div class="q-label">${t('Why this mode? (top 3)')}</div>
-    ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare'],true)}</div>
+    ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare','Combined with own commute/errand (trip-chaining)'],true)}</div>
+  <div class="field"><div class="q-label">${t('How often does weather (heavy rain/extreme heat) change your usual school-commute mode?')}</div>${opts('weather_mode_change',['Never','Rarely','Sometimes','Often','Always'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used BTS Skytrain on their own, without an adult?')}</div>${opts('used_bts_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used MRT on their own, without an adult?')}</div>${opts('used_mrt_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used a city bus on their own, without an adult?')}</div>${opts('used_bus_alone',['Yes','No'])}</div>
@@ -1140,7 +1148,7 @@ const rpSteps = [
     ${kids.map(c=>`<div class="q-help" style="margin-bottom:4px"><b>${childName(c)}:</b> ${A[c.id+'_schooltype']||t('Not yet answered in Section 2')} <button class="btn btn-ghost" style="border:1px solid var(--line);padding:2px 10px;font-size:11px" onclick="openModal('${c.id}')">${t('Edit')}</button></div>`).join('') || `<span class="q-help">${t('No child characters created yet.')}</span>`}
   </div>
   <div class="field"><div class="q-label">${t('Reasons for choosing the current school (multiple allowed)')}</div>
-    ${opts('school_reason',['Proximity to home','Proximity to work','Sibling at same school','Tuition affordability','Curriculum & activities','Teacher quality','Prestige/reputation','School facilities','Parental involvement','Religious affiliation/values','Friend circle (child)','Friend circle (parent)'],true)}</div>
+    ${opts('school_reason',['Proximity to home','Proximity to work','Sibling at same school','Tuition affordability','Curriculum & activities','Teacher quality','Prestige/reputation','School facilities','Parental involvement','Religious affiliation/values','Friend circle (child)','Friend circle (parent)','Community relationship'],true)}</div>
   <div class="field"><div class="q-label">${t("How would you rate this school's academic reputation?")}</div>${opts('school_reputation_rating',['1','2','3','4','5'])}</div>
   <div class="field"><div class="q-label">${t("How would you rate this school's social prestige (how impressive/high-status the name is seen as)?")}</div>${opts('school_prestige_rating',['1','2','3','4','5'])}</div>
   <div class="field"><div class="q-label">${t('Is the school approximately on your daily commute route?')}</div>${opts('route_relation',['Directly on route','Slight detour (<10 min)','Significant detour (>10 min)','N/A'])}</div>
