@@ -335,8 +335,8 @@ const T = {
 "Combined with own commute/errand (trip-chaining)":"รวมกับการเดินทางไปทำงาน/ธุระของตัวเอง (เดินทางต่อเนื่อง)",
 "Ride-hailing as backup when I cannot escort in person":"ใช้แอปเรียกรถเป็นทางเลือกสำรองเมื่อไปรับส่งเองไม่ได้",
 "How often does weather (heavy rain/extreme heat) change your usual school-commute mode?":"สภาพอากาศ (ฝนตกหนัก/อากาศร้อนจัด) ทำให้ท่านเปลี่ยนวิธีเดินทางไปโรงเรียนตามปกติบ่อยเพียงใด",
-"How often does your household use a ride-hailing app (e.g. Grab, inDrive, Bolt) to send/pick up your child for school?":"ครอบครัวท่านใช้แอปเรียกรถ (เช่น Grab, inDrive, Bolt) รับส่งบุตรหลานไปโรงเรียนบ่อยเพียงใด",
-"If child travels by a ride-hailing app (Grab/inDrive/Bolt), how much do you trust the driver?":"หากบุตรหลานเดินทางโดยแอปเรียกรถ (Grab/inDrive/Bolt) ท่านไว้วางใจคนขับมากเพียงใด",
+"How often does your household use a ride-hailing app (e.g. Grab, Line Man, inDrive, Bolt) to send/pick up your child for school?":"ครอบครัวท่านใช้แอปเรียกรถ (เช่น Grab, Line Man, inDrive, Bolt) รับส่งบุตรหลานไปโรงเรียนบ่อยเพียงใด",
+"If child travels by a ride-hailing app (Grab/Line Man/inDrive/Bolt), how much do you trust the driver?":"หากบุตรหลานเดินทางโดยแอปเรียกรถ (Grab/Line Man/inDrive/Bolt) ท่านไว้วางใจคนขับมากเพียงใด",
 "Never":"ไม่เคย","Rarely":"นานๆ ครั้ง","Sometimes":"บางครั้ง","Often":"บ่อยครั้ง","Always":"ทุกครั้ง",
 "Has your child ever used BTS Skytrain on their own, without an adult?":"บุตรหลานเคยใช้ BTS ด้วยตนเองโดยไม่มีผู้ใหญ่ไปด้วยหรือไม่",
 "Has your child ever used MRT on their own, without an adult?":"บุตรหลานเคยใช้ MRT ด้วยตนเองโดยไม่มีผู้ใหญ่ไปด้วยหรือไม่",
@@ -1108,13 +1108,13 @@ const rpSteps = [
   <div class="field"><div class="q-label">${t('Why this mode? (top 3)')}</div>
     ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare','Combined with own commute/errand (trip-chaining)','Ride-hailing as backup when I cannot escort in person'],true)}</div>
   <div class="field"><div class="q-label">${t('How often does weather (heavy rain/extreme heat) change your usual school-commute mode?')}</div>${opts('weather_mode_change',['Never','Rarely','Sometimes','Often','Always'])}</div>
-  <div class="field"><div class="q-label">${t('How often does your household use a ride-hailing app (e.g. Grab, inDrive, Bolt) to send/pick up your child for school?')}</div>${opts('ridehailing_freq',['Never','Rarely','Sometimes','Often','Always'])}</div>
+  <div class="field"><div class="q-label">${t('How often does your household use a ride-hailing app (e.g. Grab, Line Man, inDrive, Bolt) to send/pick up your child for school?')}</div>${opts('ridehailing_freq',['Never','Rarely','Sometimes','Often','Always'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used BTS Skytrain on their own, without an adult?')}</div>${opts('used_bts_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used MRT on their own, without an adult?')}</div>${opts('used_mrt_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used a city bus on their own, without an adult?')}</div>${opts('used_bus_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('How safe does it feel to escort your child by motorcycle (vs by car)?')}</div>${opts('moto_safety',['1','2','3','4','5'])}</div>
   <div class="field"><div class="q-label">${t('If child travels by school bus/songthaew/moto-taxi, how much do you trust the driver?')}</div>${opts('driver_trust',['1','2','3','4','5'])}</div>
-  <div class="field"><div class="q-label">${t('If child travels by a ride-hailing app (Grab/inDrive/Bolt), how much do you trust the driver?')}</div>${opts('ridehailing_trust',['1','2','3','4','5'])}</div>`},
+  <div class="field"><div class="q-label">${t('If child travels by a ride-hailing app (Grab/Line Man/inDrive/Bolt), how much do you trust the driver?')}</div>${opts('ridehailing_trust',['1','2','3','4','5'])}</div>`},
 
 {name:'Escorting - Route & Air Quality', tag:'Section 4 - Route Physical Characteristics', render:()=>{
   const kids = characters.filter(c=>c.kind==='child');
