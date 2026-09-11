@@ -411,6 +411,19 @@ const T = {
 "Section 4 - Route Physical Characteristics":"ส่วนที่ 4 - ลักษณะทางกายภาพของเส้นทาง",
 "Section 4 - Existing School Facilities":"ส่วนที่ 4 - สิ่งอำนวยความสะดวกของโรงเรียนที่มีอยู่",
 "Section 5 - School Choice":"ส่วนที่ 5 - การเลือกโรงเรียน",
+"Does this person hold a Rabbit Card or MRT Card?":"บุคคลนี้มีบัตร Rabbit Card หรือบัตร MRT หรือไม่",
+"Real Google Map - search above to move the map, or paste coordinates below and press Confirm to drop a pin at an exact spot. On Google Maps, right-click (or long-press) a spot and choose \"What's here?\" to get its coordinates.":"แผนที่ Google จริง - ค้นหาด้านบนเพื่อขยับแผนที่ หรือวางพิกัดด้านล่างแล้วกดยืนยันเพื่อปักหมุดตำแหน่งที่แน่นอน บน Google Maps ให้คลิกขวา (หรือกดค้าง) ที่จุดนั้นแล้วเลือก \"What's here?\" เพื่อดูพิกัด",
+"Paste coordinates, e.g. 13.9668, 100.6843":"วางพิกัด เช่น 13.9668, 100.6843",
+"Location confirmed (pin set)":"ยืนยันตำแหน่งแล้ว (ปักหมุดแล้ว)",
+"Could not read two numbers - paste as \"lat, lng\"":"อ่านตัวเลขไม่ได้ - วางในรูปแบบ \"lat, lng\"",
+"Which date does this trip diary cover?":"สมุดบันทึกการเดินทางนี้ครอบคลุมวันที่ใด",
+"Trips already registered":"ทริปที่ลงทะเบียนแล้ว",
+"Edit":"แก้ไข",
+"Please fill in the decision questions for":"กรุณากรอกคำถามการตัดสินใจสำหรับ",
+"Has already started (enter age)":"เริ่มแล้ว (ระบุอายุ)",
+"Not allowed to travel independently at all":"ไม่เคยอนุญาตให้เดินทางเองเลย",
+"Grade 1":"ป.1","Grade 2":"ป.2","Grade 3":"ป.3","Grade 4":"ป.4","Grade 5":"ป.5","Grade 6":"ป.6",
+"Grade 7":"ม.1","Grade 8":"ม.2","Grade 9":"ม.3","Grade 10":"ม.4","Grade 11":"ม.5","Grade 12":"ม.6",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -450,7 +463,13 @@ function likert(container,name,items,scaleLabels){
   }).join('');
   return `<table class="likert-table"><tr><td></td><td class="likert-head" colspan="5" style="text-align:center">${t(scaleLabels||'1 = low, 5 = high')}</td></tr>${rows}</table>`;
 }
-window.setLikert = (key,val_,el)=>{ A[key]=val_; el.parentElement.parentElement.querySelectorAll('.likert-scale').forEach(s=>s.classList.remove('checked')); el.classList.add('checked'); };
+window.setLikert = (key,val_,el)=>{
+  A[key]=val_;
+  el.parentElement.parentElement.querySelectorAll('.likert-scale').forEach(s=>s.classList.remove('checked'));
+  el.classList.add('checked');
+  const step = rpSteps[rpIdx];
+  if(step && step.customNav) renderRP();
+};
 
 function opts(name,options,multi){
   return `<div class="opt-row">` + options.map(o=>{
@@ -463,35 +482,45 @@ window.pickOpt = (el,name,o,multi)=>{
   else { A[name]=o; el.parentElement.querySelectorAll('.opt').forEach(x=>x.classList.remove('checked')); el.classList.add('checked'); renderRP(); }
 };
 
-function locPicker(id){
+function mapSrc(id){
+  if(A[id+'_confirmed'] && A[id+'_lat'] && A[id+'_lng']){
+    return 'https://www.google.com/maps?q='+encodeURIComponent(A[id+'_lat']+','+A[id+'_lng'])+'&z=17&output=embed';
+  }
   const q = encodeURIComponent(A[id+'_search'] || A[id+'_name'] || 'Bangkok, Thailand');
+  return 'https://www.google.com/maps?q='+q+'&output=embed';
+}
+function locPicker(id){
   const confirmed = A[id+'_confirmed'];
+  const coordStr = A[id+'_lat'] ? (A[id+'_lat']+', '+A[id+'_lng']) : '';
   return `<div class="locpicker">
     <input class="loc-search" type="text" placeholder="${t('Search for a place or address, then press Enter')}" value="${A[id+'_search']||''}" oninput="A['${id}_search']=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();updateMap('${id}')}">
-    <div class="loc-map-real"><iframe id="map_${id}" width="100%" height="180" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${q}&output=embed"></iframe></div>
-    <div class="loc-hint-real">${t('Real Google Map - search above to move the map. To capture exact coordinates: on Google Maps, right-click (or long-press) the exact spot, choose "What\'s here?", then copy the Lat, Long shown into the two boxes below and press Confirm.')}</div>
+    <div class="loc-map-real"><iframe id="map_${id}" width="100%" height="180" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${mapSrc(id)}"></iframe></div>
+    <div class="loc-hint-real">${t('Real Google Map - search above to move the map, or paste coordinates below and press Confirm to drop a pin at an exact spot. On Google Maps, right-click (or long-press) a spot and choose "What\'s here?" to get its coordinates.')}</div>
     <div class="loc-fields">
       <input type="text" placeholder="${t('Place name (e.g. Home, Office Building B)')}" value="${A[id+'_name']||''}" oninput="A['${id}_name']=this.value">
       <input type="text" placeholder="${t('Address / nearest landmark')}" value="${A[id+'_addr']||''}" oninput="A['${id}_addr']=this.value">
     </div>
     <div class="loc-latlng">
-      <input type="text" id="lat_${id}" placeholder="${t('Latitude')}" value="${A[id+'_lat']||''}">
-      <input type="text" id="lng_${id}" placeholder="${t('Longitude')}" value="${A[id+'_lng']||''}">
+      <input type="text" id="coords_${id}" placeholder="${t('Paste coordinates, e.g. 13.9668, 100.6843')}" value="${coordStr}" style="flex:1;width:auto">
       <button type="button" class="btn-confirm-pin" onclick="confirmPin('${id}')">${t('Confirm location')}</button>
-      <span id="locstatus_${id}" class="loc-status ${confirmed?'ok':''}">${confirmed?t('Location confirmed (lat/long saved)'):t('Not confirmed yet')}</span>
+      <span id="locstatus_${id}" class="loc-status ${confirmed?'ok':''}">${confirmed?t('Location confirmed (pin set)'):t('Not confirmed yet')}</span>
     </div>
   </div>`;
 }
 window.confirmPin = (id)=>{
-  const latEl = document.getElementById('lat_'+id), lngEl = document.getElementById('lng_'+id);
-  const lat = latEl ? latEl.value.trim() : '', lng = lngEl ? lngEl.value.trim() : '';
-  A[id+'_lat']=lat; A[id+'_lng']=lng;
-  A[id+'_confirmed'] = !!(lat && lng);
+  const el = document.getElementById('coords_'+id);
+  const raw = el ? el.value.trim() : '';
+  const parts = raw.split(',').map(s=>s.trim()).filter(Boolean);
+  const ok = parts.length===2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]));
+  A[id+'_lat'] = ok?parts[0]:''; A[id+'_lng'] = ok?parts[1]:'';
+  A[id+'_confirmed'] = ok;
   const st = document.getElementById('locstatus_'+id);
   if(st){
-    st.textContent = A[id+'_confirmed'] ? t('Location confirmed (lat/long saved)') : t('Enter both latitude and longitude first');
-    st.classList.toggle('ok', A[id+'_confirmed']);
+    st.textContent = ok ? t('Location confirmed (pin set)') : t('Could not read two numbers - paste as "lat, lng"');
+    st.classList.toggle('ok', ok);
   }
+  const ifr = document.getElementById('map_'+id);
+  if(ifr && ok) ifr.src = mapSrc(id);
 };
 window.updateMap = (id)=>{
   const q = encodeURIComponent(A[id+'_search']||'Bangkok, Thailand');
@@ -569,11 +598,12 @@ function renderModal(){
   const eduField = ch.kind==='adult'
     ? `<div class="field"><div class="q-label">${t('Highest education level')}</div>${opts(p+'_edu',['Junior high or lower','Senior high or equivalent','Undergraduate degree','Graduate degree','Postgraduate degree'])}</div>`
     : `<div class="field"><div class="q-label">${t('Current education level')}</div>${opts(p+'_edu',['Not attending any school','Pre-school','Elementary school','Junior high or equivalent','Senior high or equivalent','Undergraduate degree'])}</div>
-       <div class="field"><div class="q-label">${t('If school-going: specific grade')}</div>${opts(p+'_grade',['P1','P2','P3','P4','P5','P6','M1','M2','M3','M4','M5','M6','Bachelor degree'])}</div>`;
+       <div class="field"><div class="q-label">${t('If school-going: specific grade')}</div>${opts(p+'_grade',['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12'])}</div>`;
   const employField = ch.kind==='adult'
     ? `<div class="field"><div class="q-label">${t('Employment status')}</div>${opts(p+'_employ',['Full-time','Part-time','Self-employed','Not employed (incl. retired and students)'])}</div>
        <div class="field"><div class="q-label">${t('Work start / end time (if employed)')}</div><div class="grid2"><input type="time"><input type="time"></div></div>
-       <div class="field"><div class="q-label">${t('Primary workplace location')}</div>${locPicker(p+'_work')}</div>`
+       <div class="field"><div class="q-label">${t('Primary workplace location')}</div>${locPicker(p+'_work')}</div>
+       <div class="field"><div class="q-label">${t('Does this person hold a Rabbit Card or MRT Card?')}</div>${opts(p+'_transit_card',['Yes','No'])}</div>`
     : `<div class="field"><div class="q-label">${t('School start / end time (if school-going)')}</div><div class="grid2"><input type="time"><input type="time"></div></div>
        <div class="field"><div class="q-label">${t('School name and location')}</div>${locPicker(p+'_school')}</div>
        <div class="field"><div class="q-label">${t('School type')}</div>${opts(p+'_schooltype',['Public','Private, local','Private, international'])}</div>
@@ -616,6 +646,10 @@ function childTabRow(kids,activeIdx,onClickFn){
 let stops = [{place:'Home'},{place:'School'},{place:'Home'}];
 let maintActivities = [{name:''}];
 let tripPerson = null;
+let tripsByPerson = {}; // personId -> saved stops snapshot, once "Save trip" is pressed
+let diaryDate = '';
+window.setDiaryDate = (v)=>{ diaryDate=v; renderRP(); };
+function dl(s){ const base = t(s); return diaryDate ? base.replace('[date]', diaryDate) : base; }
 
 function personChipRow(selectedId,onClickName){
   if(characters.length===0) return `<div class="q-note">${t('No household members yet - go back and create them first.')}</div>`;
@@ -625,7 +659,14 @@ function personChipRow(selectedId,onClickName){
     return `<div class="chip ${active}" onclick="${onClickName}('${ch.id}')"><span class="dot"></span>${name}</div>`;
   }).join('')}</div>`;
 }
-window.setTripPerson = (id)=>{ tripPerson = id; renderRP(); };
+window.setTripPerson = (id)=>{
+  tripPerson = id;
+  stops = tripsByPerson[id] ? tripsByPerson[id].map(s=>({...s})) : [{place:'Home'},{place:'School'},{place:'Home'}];
+  tripConfirmed = !!tripsByPerson[id];
+  segIdx = 0; showTripDonePrompt = false;
+  renderRP();
+};
+window.saveTrip = ()=>{ tripConfirmed = true; tripsByPerson[tripPerson] = stops.map(s=>({...s})); renderRP(); };
 window.toggleCompanion = (id)=>{ const k='companion_'+id; A[k]=!A[k]; renderRP(); };
 
 let tripConfirmed = false;
@@ -691,7 +732,6 @@ const rpSteps = [
     <div class="field"><div class="q-label">${t('Registered cars in household')}</div>${opts('n_cars',['0','1','2','3 or more'])}</div>
     <div class="field"><div class="q-label">${t('Registered motorbikes in household')}</div>${opts('n_bikes',['0','1','2','3 or more'])}</div>
   </div>
-  <div class="field"><div class="q-label">${t('Does your household hold a Rabbit Card or MRT Card?')}</div>${opts('transit_card',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t("Household's average monthly income in 2026 (all sources, before tax)")}</div>
     ${opts('income',['<15,000','15,000-30,000','30,000-50,000','50,000-100,000','>100,000'])}</div>`},
 
@@ -711,38 +751,46 @@ const rpSteps = [
       createCharacters();
     ">${t('+ Create household members')}</button>
   </div>
-  <div id="avatar-row-slot">${renderAvatarRow()}</div>
-  <div class="field" style="margin-top:10px">
-    <div class="q-label">${t('Morning routine activities')}</div>
-    <div class="q-help">${t('Please think about a typical weekday when you need to leave home for work, school, or university. For sleep and each necessary activity you do before leaving home, please indicate the minimum amount of time you need, and the amount of time you would prefer to have if you were not under time pressure.')}</div>
-    <table class="likert-table"><tr><td></td><td class="likert-head">${t('Minimum (min)')}</td><td class="likert-head">${t('Preferred (min)')}</td><td></td></tr>
-    <tr><td class="lbl">${t('Sleeping')}</td><td colspan="2" style="font-size:12px;color:var(--sub);text-align:left">${t('Calculated automatically from the sleep/wake time entered in the trip diary')}</td><td></td></tr>
-    ${maintActivities.map((m,i)=>`<tr>
-      <td class="lbl"><input type="text" value="${m.name}" placeholder="${t('e.g. Breakfast')}" oninput="maintActivities[${i}].name=this.value" style="border:none;background:transparent;padding:0"></td>
-      <td><input type="number" style="width:70px" value="${A['maint_'+i+'_min']!==undefined?A['maint_'+i+'_min']:''}" oninput="A['maint_${i}_min']=this.value"></td>
-      <td><input type="number" style="width:70px" value="${A['maint_'+i+'_pref']!==undefined?A['maint_'+i+'_pref']:''}" oninput="A['maint_${i}_pref']=this.value"></td>
-      <td>${maintActivities.length>1?`<span class="remove" onclick="maintActivities.splice(${i},1);renderRP()">${t('Remove')}</span>`:''}</td>
-    </tr>`).join('')}
-    </table>
-    <button class="add-btn" style="margin-top:8px" onclick="maintActivities.push({name:''});renderRP()">${t('+ Add activity')}</button>
-  </div>`},
+  <div id="avatar-row-slot">${renderAvatarRow()}</div>`},
+
+{name:'Morning routine activities', tag:'Section 1 - Household Information', render:()=>`
+  <div class="q-help">${t('Please think about a typical weekday when you need to leave home for work, school, or university. For sleep and each necessary activity you do before leaving home, please indicate the minimum amount of time you need, and the amount of time you would prefer to have if you were not under time pressure.')}</div>
+  <table class="likert-table"><tr><td></td><td class="likert-head">${t('Minimum (min)')}</td><td class="likert-head">${t('Preferred (min)')}</td><td></td></tr>
+  <tr><td class="lbl">${t('Sleeping')}</td><td colspan="2" style="font-size:12px;color:var(--sub);text-align:left">${t('Calculated automatically from the sleep/wake time entered in the trip diary')}</td><td></td></tr>
+  ${maintActivities.map((m,i)=>`<tr>
+    <td class="lbl"><input type="text" value="${m.name}" placeholder="${t('e.g. Breakfast')}" oninput="maintActivities[${i}].name=this.value" style="border:none;background:transparent;padding:0"></td>
+    <td><input type="number" style="width:70px" value="${A['maint_'+i+'_min']!==undefined?A['maint_'+i+'_min']:''}" oninput="A['maint_${i}_min']=this.value"></td>
+    <td><input type="number" style="width:70px" value="${A['maint_'+i+'_pref']!==undefined?A['maint_'+i+'_pref']:''}" oninput="A['maint_${i}_pref']=this.value"></td>
+    <td>${maintActivities.length>1?`<span class="remove" onclick="maintActivities.splice(${i},1);renderRP()">${t('Remove')}</span>`:''}</td>
+  </tr>`).join('')}
+  </table>
+  <button class="add-btn" style="margin-top:8px" onclick="maintActivities.push({name:''});renderRP()">${t('+ Add activity')}</button>`},
 
 {name:'Travel Diary - Register a Trip', tag:'Section 3 - Trip Roster &amp; Morning Schedule', render:()=>`
   <div class="field"><div class="q-label">${t('Whose trip diary is this?')}</div>${personChipRow(tripPerson,'setTripPerson')}</div>
+  ${Object.keys(tripsByPerson).length?`<div class="field" style="border:none;padding-top:0">
+    <div class="q-label" style="font-size:13px">${t('Trips already registered')}</div>
+    <div class="stop-list">${Object.keys(tripsByPerson).map(id=>{
+      const c = characters.find(c=>c.id===id);
+      const nm = c ? (A[id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'))) : id;
+      return `<div class="stop-item"><span style="flex:1">${nm}</span><button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="setTripPerson('${id}')">${t('Edit')}</button></div>`;
+    }).join('')}</div>
+  </div>`:''}
+  <div class="field"><div class="q-label">${t('Which date does this trip diary cover?')}</div><input type="date" value="${diaryDate}" onchange="setDiaryDate(this.value)" style="width:220px"></div>
   ${tripPerson?`
-  <div class="q-note">${t('The questions below refer to [date], the day covered by this trip diary. Who traveled together on each leg is asked later, per segment, in Trip Details.')}</div>
+  <div class="q-note">${dl('The questions below refer to [date], the day covered by this trip diary. Who traveled together on each leg is asked later, per segment, in Trip Details.')}</div>
   <div class="grid2">
-    <div class="field"><div class="q-label">${t('Sleep time (night before [date])')}</div><input type="time"></div>
-    <div class="field"><div class="q-label">${t('Wake time (on [date])')}</div><input type="time"></div>
+    <div class="field"><div class="q-label">${dl('Sleep time (night before [date])')}</div><input type="time"></div>
+    <div class="field"><div class="q-label">${dl('Wake time (on [date])')}</div><input type="time"></div>
   </div>
-  <div class="field"><div class="q-label">${t('List every place visited on [date], in order')}</div>
+  <div class="field"><div class="q-label">${dl('List every place visited on [date], in order')}</div>
     <div class="q-help">${t('Include short stops like drop-offs, pick-ups, or mode transfers. Drag the handle on the right to reorder a stop.')}</div>
     <div class="stop-list">${stops.map((s,i)=>`<div class="stop-item" draggable="true" ondragstart="dragStart(${i})" ondragover="event.preventDefault()" ondrop="dropStop(${i})"><span class="idx">${String.fromCharCode(65+i)}</span>
       <input type="text" value="${s.place}" oninput="stops[${i}].place=this.value;tripConfirmed=false" style="border:none;background:transparent;flex:1">
       ${stops.length>2?`<span class="remove" onclick="stops.splice(${i},1);tripConfirmed=false;renderRP()">${t('Remove')}</span>`:''}
       <span class="drag-handle">${t('Move')}</span></div>`).join('')}</div>
     <button class="add-btn" onclick="stops.splice(stops.length-1,0,{place:''});tripConfirmed=false;renderRP()">${t('+ Add a stop')}</button>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="tripConfirmed=true;renderRP()">${t('Save trip')}</button></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveTrip()">${t('Save trip')}</button></div>
     ${tripConfirmed?`<div class="confirm-box"><b>${stops.length-1} ${t('segment(s) saved:')}</b><br>${stops.slice(0,-1).map((s,i)=>(s.place||'?')+' -&gt; '+(stops[i+1].place||'?')).join('<br>')}<br><span style="font-size:12px">${t("Check this looks right, then press Next to fill in each segment's details.")}</span></div>`:''}
   </div>
   `:`<div class="empty-hint">${t('Pick a household member above to start their trip diary.')}</div>`}`},
@@ -754,7 +802,7 @@ const rpSteps = [
   const totalSegs = Math.max(0, stops.length-1);
 
   if(showTripDonePrompt || totalSegs===0){
-    return `<div class="prompt-box"><h4>${t('Does anyone else in the household have a trip on [date] too?')}</h4>
+    return `<div class="prompt-box"><h4>${dl('Does anyone else in the household have a trip on [date] too?')}</h4>
       <div class="nav-row" style="justify-content:center;gap:14px">
         <button class="btn btn-primary" onclick="resetTripState();rpIdx=rpSteps.findIndex(s=>s.name==='Travel Diary - Register a Trip');renderRP()">${t('Yes, register their trip')}</button>
         <button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="showTripDonePrompt=false;rpIdx++;renderRP()">${t('No, continue')}</button>
@@ -762,7 +810,8 @@ const rpSteps = [
   }
 
   const i = segIdx;
-  const purposeKey='purpose_'+i;
+  const ns = tripPerson+'_'+i;
+  const purposeKey='purpose_'+ns;
   const isEscort = (val(purposeKey)||'').indexOf('Escorting')>=0 || (val(purposeKey)||'').indexOf('drop-off')>=0 || (val(purposeKey)||'').indexOf('pick-up')>=0;
   const seg = `<div class="q-help">${t('Segment')} ${i+1} ${t('of')} ${totalSegs}</div>
     <div class="segment-card"><div class="segment-title">${stops[i].place||'?'} -&gt; ${stops[i+1].place||'?'}</div>
@@ -773,26 +822,26 @@ const rpSteps = [
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Who traveled with you on this segment?')}</div>
       <div class="opt-row">${characters.filter(c=>c.id!==tripPerson).map(c=>{
         const nm = A[c.id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'));
-        const key = 'seg'+i+'_companion_'+c.id;
+        const key = 'seg_'+ns+'_companion_'+c.id;
         const on = val(key,false)?'checked':'';
         return `<label class="opt ${on}" onclick="A['${key}']=!A['${key}'];this.classList.toggle('checked')">${nm}</label>`;
       }).join('') || `<span class="q-help">${t('No other household members yet.')}</span>`}</div></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Travel mode (main mode for this segment)')}</div>
-      ${opts('mode_'+i,['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'])}</div>
+      ${opts('mode_'+ns,['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'])}</div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Did you use more than one way of getting there? If yes, list them in order')}</div>
-      ${opts('multimode_'+i,['No, one mode only','Yes'])}<input type="text" placeholder="${t('e.g. walk, then bus, then train')}" style="margin-top:8px"></div>
+      ${opts('multimode_'+ns,['No, one mode only','Yes'])}<input type="text" placeholder="${t('e.g. walk, then bus, then train')}" style="margin-top:8px"></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('For each mode change above, about how long did the walk (or wait) between arriving from one mode and boarding the next take?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If BTS or MRT: boarding station / alighting station')}</div>
       <div class="grid2"><input type="text" placeholder="${t('Boarding station')}"><input type="text" placeholder="${t('Alighting station')}"></div></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If by car: were you the driver or a passenger?')}</div>
-      ${opts('driverpax_'+i,['Driver','Passenger'])}</div>
+      ${opts('driverpax_'+ns,['Driver','Passenger'])}</div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Main purpose of this trip')}</div>
       ${opts(purposeKey,['Commuting to work','Going to school (drop-off)','Going to school (for children)','Return home','Return to workplace','Return to school (pick-up)','Escorting (other)','Shopping','Leisure','Medical-related','Other private purpose','Business/work-related'])}</div>
     ${isEscort?`
     <div class="escort-box"><span class="tag">${t('Escort trip - extra detail')}</span>
       <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Taking the child TO school, or bringing them FROM school?')}</div>
-        ${opts('escdir_'+i,['To school','From school'])}</div>
-      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Drop-off / pick-up point')}</div>${locPicker('dropoff_'+i)}</div>
+        ${opts('escdir_'+ns,['To school','From school'])}</div>
+      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Drop-off / pick-up point')}</div>${locPicker('dropoff_'+ns)}</div>
       <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">${t('After arriving, how long do you usually wait?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
     </div>`:''}
     <div class="field" style="border:none;padding:0;margin-top:10px"><div class="q-label" style="font-size:13px">${t('Fare/cost (THB, 0 if free)')}</div><input type="number" style="width:120px"></div>
@@ -825,8 +874,17 @@ const rpSteps = [
     <div class="q-help">${t('Morning')}</div>${opts('esc_morning_days',['Mon','Tue','Wed','Thu','Fri'],true)}
     <div class="q-help" style="margin-top:8px">${t('Afternoon')}</div>${opts('esc_afternoon_days',['Mon','Tue','Wed','Thu','Fri'],true)}</div>`},
 
-{name:'Escorting - Decision (why)', tag:'Section 4 - School Escorting Decision', render:()=>{
+{name:'Escorting - Decision (why)', tag:'Section 4 - School Escorting Decision', customNav:true, render:()=>{
   const kids = characters.filter(c=>c.kind==='child');
+  function kidDone(ch){
+    const p = ch.id;
+    if(!!val('escorted_'+p,false)){
+      for(let i=0;i<7;i++){ if(val('escort_reason_'+p+'_'+i)===undefined) return false; }
+      return true;
+    }
+    for(let i=0;i<3;i++){ if(val('not_escort_reason_'+p+'_'+i)===undefined) return false; }
+    return val('main_reason_'+p)!==undefined;
+  }
   let perChildBlock;
   if(kids.length===0){
     perChildBlock = `<div class="empty-hint">${t('No child characters created yet.')}</div>`;
@@ -846,16 +904,25 @@ const rpSteps = [
       <div class="field"><div class="q-label">${t('Single main reason for not escorting')}</div>${opts('main_reason_'+p,['Old enough','School bus available','Sibling/friend accompanies','No car','Too costly','Work schedule conflict','Walking distance','Other'])}</div>
       `}`;
   }
+  const incomplete = kids.filter(c=>!kidDone(c));
   return `${perChildBlock}
   <div class="field"><div class="q-label">${t('Rate your concern on the following (household-level)')}</div>
     ${likert(null,'escort_concern',['Vehicle speeds too fast near school','Safe footpaths along the route','Road crossings are safe','Traffic volume is a hazard','Motorcycles/vendors block footpaths','Worried about theft/robbery','Area feels safe from crime','Area feels safe after 3pm','Worried about crime on public transport'])}</div>
   <div class="field"><div class="q-label">${t('How crowded does public transport feel during school-commute hours?')}</div>${opts('crowding',['1','2','3','4','5'])}</div>
-  <div class="field"><div class="q-label">${t('Worried that crowding could put my child at risk (harassment, theft, separation)')}</div>${opts('crowding_risk',['1','2','3','4','5'])}</div>`;
+  <div class="field"><div class="q-label">${t('Worried that crowding could put my child at risk (harassment, theft, separation)')}</div>${opts('crowding_risk',['1','2','3','4','5'])}</div>
+  ${incomplete.length?`<div class="q-note">${t('Please fill in the decision questions for')}: ${incomplete.map(c=>childName(c)).join(', ')}</div>`:''}
+  <div class="nav-row">
+    <button class="btn btn-ghost" onclick="rpIdx--;renderRP()">${t('<- Back')}</button>
+    ${tempSaveBtn()}
+    <button class="btn btn-primary" ${incomplete.length?'disabled':''} onclick="rpIdx++;renderRP()">${t('Next ->')}</button>
+  </div>`;
 }},
 
 {name:'Escorting - Threat & Coping (PMT)', tag:'Section 4 - Protection Motivation', render:()=>`
   <div class="field"><div class="q-label">${t('At what age will I start to let my children travel independently to school? (escorted children)')}</div><input type="number" placeholder="${t('years old')}" style="width:140px"></div>
-  <div class="field"><div class="q-label">${t('At what age have I started to let my children travel independently to school? (independently-traveling children)')}</div><input type="number" placeholder="${t('years old')}" style="width:140px"></div>
+  <div class="field"><div class="q-label">${t('At what age have I started to let my children travel independently to school? (independently-traveling children)')}</div>
+    ${opts('started_independent_never',['Has already started (enter age)','Not allowed to travel independently at all'])}
+    ${val('started_independent_never')!=='Not allowed to travel independently at all'?`<input type="number" placeholder="${t('years old')}" style="width:140px;margin-top:8px">`:''}</div>
   <div class="field"><div class="q-label">${t('How serious/likely it feels')}</div>
     ${likert(null,'pmt_severity',['If something bad happened, it would be very serious for our family','It is likely my child would run into danger travelling alone'])}</div>
   <div class="field"><div class="q-label">${t('How well the child/system could cope')}</div>
@@ -900,11 +967,10 @@ const rpSteps = [
   const ch = kids[idx]; const p = ch.id;
   return `<div class="q-note">${t('Repeat this question for every school-going child.')}</div>
   ${childTabRow(kids, idx, 'setFacilityChild')}
-  <div class="q-help">${childName(ch)} ${t('school bus use (from Section 2):')} ${A[p+'_usesbus']||t('Not yet answered in Section 2')}</div>
+  <div class="q-help">${childName(ch)} ${t('school bus use (from Section 2):')} ${A[p+'_usesbus']||t('Not yet answered in Section 2')} <button class="btn btn-ghost" style="border:1px solid var(--line);padding:2px 10px;font-size:11px" onclick="openModal('${p}')">${t('Edit')}</button></div>
   <div class="field"><div class="q-label">${t('Does the school provide facilities for the school commute (e.g. school bus)?')}</div>${opts(p+'_school_facility',['Yes','No','Unsure'])}</div>
   <div class="field"><div class="q-label">${t('If not using school bus, why?')}</div><textarea placeholder="${t('Type your answer...')}"></textarea></div>
   <div class="field"><div class="q-label">${t('Would a lower school bus fare make you more likely to have your child use the school bus?')}</div>${opts(p+'_bus_fare_sensitivity',['Yes, definitely','Maybe','No, fare is not the reason'])}</div>
-  <div class="field"><div class="q-label">${t('If yes, what should be improved?')}</div><textarea placeholder="${t('Type your answer...')}"></textarea></div>
   <div class="field"><div class="q-label">${t('Does the school actively promote independent travel?')}</div>${opts(p+'_school_promotes',['Yes','No','Unsure'])}</div>`;
 }},
 
@@ -914,7 +980,7 @@ const rpSteps = [
   const tCh = kids[tIdx];
   return `<div class="field"><div class="q-label">${t('School type (per child)')}</div>
     <div class="q-help">${t('Already collected in Section 2 for each child - shown here for reference only.')}</div>
-    ${kids.map(c=>`<div class="q-help" style="margin-bottom:4px"><b>${childName(c)}:</b> ${A[c.id+'_schooltype']||t('Not yet answered in Section 2')}</div>`).join('') || `<span class="q-help">${t('No child characters created yet.')}</span>`}
+    ${kids.map(c=>`<div class="q-help" style="margin-bottom:4px"><b>${childName(c)}:</b> ${A[c.id+'_schooltype']||t('Not yet answered in Section 2')} <button class="btn btn-ghost" style="border:1px solid var(--line);padding:2px 10px;font-size:11px" onclick="openModal('${c.id}')">${t('Edit')}</button></div>`).join('') || `<span class="q-help">${t('No child characters created yet.')}</span>`}
   </div>
   <div class="field"><div class="q-label">${t('Reasons for choosing the current school (multiple allowed)')}</div>
     ${opts('school_reason',['Proximity to home','Proximity to work','Sibling at same school','Tuition affordability','Curriculum & activities','Teacher quality','Prestige/reputation','School facilities','Parental involvement','Religious affiliation/values','Friend circle (child)','Friend circle (parent)'],true)}</div>
