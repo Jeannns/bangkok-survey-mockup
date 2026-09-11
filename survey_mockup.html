@@ -447,6 +447,33 @@ const T = {
 "Household Information":"ข้อมูลครัวเรือน","Individual Information":"ข้อมูลส่วนบุคคล","Travel Diary":"สมุดบันทึกการเดินทาง","Escorting Behavior & Safety":"พฤติกรรมการรับส่งและความปลอดภัย",
 "Section":"ส่วนที่",
 "(dev mode on - completion checks are bypassed on every page)":"(โหมดนักพัฒนาเปิดอยู่ - ข้ามการตรวจสอบความครบถ้วนทุกหน้า)",
+"Ctrl":"ควบคุม",
+"Module 1 of 2: Escort / Travel Choice":"โมดูล 1 จาก 2: การเลือกวิธีรับส่ง/เดินทาง",
+"Module 2 of 2: School Choice":"โมดูล 2 จาก 2: การเลือกโรงเรียน",
+"Before we begin: a few quick setup questions":"ก่อนเริ่ม: คำถามตั้งค่าสั้นๆ",
+"Which child is this stated-preference exercise about?":"แบบฝึกหัดนี้เกี่ยวกับบุตรคนใด",
+"For escorting trips, do you mainly use a car or a motorcycle?":"สำหรับการรับส่ง ท่านใช้รถยนต์หรือรถจักรยานยนต์เป็นหลัก",
+"Is this usually a dedicated trip just for escorting, or chained with another errand (e.g. on the way to work)?":"การเดินทางนี้เป็นทริปเฉพาะสำหรับรับส่ง หรือรวมกับธุระอื่น (เช่น ระหว่างไปทำงาน)",
+"Dedicated trip":"ทริปเฉพาะ","Chained with another errand":"รวมกับธุระอื่น",
+"Based on your earlier answers, travel modes you said are not available to you (e.g. no motorcycle license, no school bus service) are excluded from the choices below.":"จากคำตอบก่อนหน้านี้ รูปแบบการเดินทางที่ท่านระบุว่าไม่สามารถใช้ได้ (เช่น ไม่มีใบขับขี่รถจักรยานยนต์ ไม่มีรถรับส่งนักเรียน) จะถูกตัดออกจากตัวเลือกด้านล่าง",
+"Start Module 1 ->":"เริ่มโมดูล 1 ->",
+"PT fare":"ค่าโดยสารขนส่งสาธารณะ",
+"Traffic & footpath danger":"อันตรายจากการจราจรและทางเท้า",
+"Crime danger":"อันตรายจากอาชญากรรม",
+"Companion scheme":"รูปแบบผู้ร่วมทาง",
+"Third-party trust":"ความไว้วางใจบุคคลที่สาม",
+"Walk/bike portion":"ช่วงเดิน/ปั่นจักรยาน",
+"Escorted by parent":"ผู้ปกครองรับส่ง","Travels alone":"เดินทางคนเดียว","Travels with school buddy":"เดินทางกับเพื่อนไปโรงเรียนด้วยกัน","Escorted by guardian on arrival":"มีผู้ดูแลรับที่ปลายทาง","Third-party escort":"รับส่งโดยบุคคลที่สาม",
+"Nicely done with Module 1! Now let's look at school choice.":"ทำโมดูล 1 เสร็จแล้ว ต่อไปมาดูเรื่องการเลือกโรงเรียนกันบ้าง",
+"Continue to Module 2 ->":"ไปโมดูล 2 ->",
+"School A (your current school)":"โรงเรียน A (โรงเรียนปัจจุบันของท่าน)","School B (alternative)":"โรงเรียน B (ทางเลือกใหม่)",
+"(reference only - based on your earlier answers)":"(สำหรับอ้างอิง - จากคำตอบก่อนหน้านี้)",
+"Same as usual":"เหมือนเดิม","As usual":"เหมือนเดิม","Safer route":"เส้นทางปลอดภัยกว่า","Some risk":"มีความเสี่ยงบ้าง",
+"Tuition":"ค่าเทอม","Academic reputation":"ชื่อเสียงด้านวิชาการ","Class size":"ขนาดชั้นเรียน","Required travel mode":"รูปแบบการเดินทางที่ต้องใช้","Route/area safety":"ความปลอดภัยของเส้นทาง/พื้นที่",
+"For this school choice, which would you choose for your child?":"สำหรับการเลือกโรงเรียนนี้ ท่านจะเลือกแบบใดให้บุตรหลาน",
+"Thinking about your school choice above, which factor mattered to you the most?":"จากตัวเลือกโรงเรียนข้างต้น ปัจจัยใดสำคัญกับท่านมากที่สุด",
+"Academic reputation/quality":"ชื่อเสียง/คุณภาพวิชาการ","Tuition cost":"ค่าเทอม","Distance/travel time":"ระยะทาง/เวลาเดินทาง",
+"Module 1 choices (Escort / Travel)":"ตัวเลือกโมดูล 1 (การรับส่ง/เดินทาง)","Module 2 choices (School Choice)":"ตัวเลือกโมดูล 2 (การเลือกโรงเรียน)",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -1183,98 +1210,220 @@ renderTabLabels();
 renderRP();
 
 /* ================= SP DATA ================= */
-const scenarios = [
- {round:1, options:[
-   {title:'Escort by car',icon:'CAR',time:10,cost:0,traffic:2,crime:2,footpath:null,companion:null},
-   {title:'Child travels alone by PT',icon:'BUS',time:40,cost:50,wait:30,traffic:4,crime:4,footpath:'Poor',companion:'None'}
- ]},
- {round:2, options:[
-   {title:'Escort by car',icon:'CAR',time:40,cost:0,traffic:2,crime:2,footpath:null,companion:null},
-   {title:'Child travels alone by PT',icon:'BUS',time:15,cost:0,wait:5,traffic:1,crime:1,footpath:'Good',companion:'School buddy'}
- ]},
- {round:3, options:[
-   {title:'Escort by motorcycle',icon:'MOTO',time:15,cost:0,traffic:4,crime:2,footpath:null,companion:null,risky:true},
-   {title:'Child travels alone by PT',icon:'BUS',time:25,cost:15,wait:15,traffic:3,crime:2,footpath:'Moderate',companion:'Guardian'}
- ]},
- {round:4, options:[
-   {title:'Escort by car',icon:'CAR',time:20,cost:0,traffic:3,crime:2,footpath:null,companion:null},
-   {title:'Child travels alone by PT',icon:'BUS',time:20,cost:15,wait:10,traffic:2,crime:2,footpath:'Good',companion:'School buddy'},
-   {title:'Third-party escort (school bus)',icon:'VAN',time:22,cost:20,traffic:2,crime:2,footpath:null,companion:null,trust:'High'}
- ]},
- {round:5, options:[
-   {title:'Escort by car',icon:'CAR',time:15,cost:0,traffic:2,crime:1,footpath:null,companion:null},
-   {title:'Child walks/bikes alone',icon:'WALK',time:10,cost:0,traffic:3,crime:2,footpath:'Good',companion:'None'}
- ]},
- {round:6, options:[
-   {title:'Escort by motorcycle',icon:'MOTO',time:12,cost:0,traffic:5,crime:3,footpath:null,companion:null,risky:true},
-   {title:'Third-party escort (songthaew)',icon:'VAN',time:20,cost:15,traffic:2,crime:2,footpath:null,companion:null,trust:'Low'},
-   {title:'Child travels alone by PT',icon:'BUS',time:30,cost:50,wait:15,traffic:2,crime:2,footpath:'Good',companion:'Guardian'}
- ]},
-];
+/* Pre-SP Setup state: which child, car-vs-motorcycle branch, dedicated-vs-chained trip */
+let spSetupDone = false;
+let spChildId = null;
+let spMode = null;
+let spTripType = null;
 
 function dangerBar(level){
   let s='';
   for(let i=1;i<=5;i++) s+=`<span class="${i<=level?'on':''}"></span>`;
   return `<div class="danger-bar">${s}</div>`;
 }
-function optionCard(o,ri,oi){
-  const selected = A['sp_'+ri]===oi;
-  let rows='';
-  rows += `<div class="attr-row"><span class="ic">TIME</span> ${t('Travel time')} <b>${o.time} ${t('minutes')==='minutes'?'min':'นาที'}</b></div>`;
-  if(o.wait!==undefined) rows += `<div class="attr-row"><span class="ic">WAIT</span> ${t('Wait time')} <b>${o.wait} ${lang==='th'?'นาที':'min'}</b></div>`;
-  rows += `<div class="attr-row"><span class="ic">COST</span> ${t('Cost')} <b>${o.cost} THB</b></div>`;
-  rows += `<div class="attr-row"><span class="ic">TRAF</span> ${t('Traffic risk')} ${dangerBar(o.traffic)}</div>`;
-  rows += `<div class="attr-row"><span class="ic">CRIME</span> ${t('Crime risk')} ${dangerBar(o.crime)}</div>`;
-  if(o.footpath) rows += `<div class="attr-row"><span class="ic">PATH</span> ${t('Footpath')} <b>${t(o.footpath)}</b></div>`;
-  if(o.companion) rows += `<div class="attr-row"><span class="ic">COMP</span> ${t('Companion')} <b>${t(o.companion)}</b></div>`;
-  if(o.trust) rows += `<div class="attr-row"><span class="ic">TRUST</span> ${t('Driver trust')} <b>${t(o.trust)}</b></div>`;
-  return `<div class="opt-card ${selected?'selected':''}" onclick="A['sp_${ri}']=${oi};renderSP()">
+
+/* Module 1 - Escort/Travel Choice. 9 attributes: 5 control (time, fare, traffic+footpath danger,
+   crime danger, companion scheme), 1 non-core universal (wait time), 2 conditional sub-attributes
+   (walk/bike portion, third-party trust). The escort option's mode is pivoted by the respondent's
+   own car-vs-motorcycle branch from Pre-SP Setup rather than being an attribute itself. */
+function buildModule1(mode){
+  const escortTitle = mode==='Motorbike' ? 'Escort by motorcycle' : 'Escort by car';
+  const escortIcon = mode==='Motorbike' ? 'MOTO' : 'CAR';
+  return [
+    {round:1, options:[
+      {title:escortTitle,icon:escortIcon,time:10,fare:0,danger:2,crime:2,companion:'Escorted by parent'},
+      {title:'Child travels alone by PT',icon:'BUS',time:40,fare:50,danger:4,crime:4,companion:'Travels alone',wait:30,walkbike:8}
+    ]},
+    {round:2, options:[
+      {title:escortTitle,icon:escortIcon,time:40,fare:0,danger:2,crime:2,companion:'Escorted by parent'},
+      {title:'Child travels alone by PT',icon:'BUS',time:15,fare:0,danger:1,crime:1,companion:'Travels with school buddy',wait:5,walkbike:3}
+    ]},
+    {round:3, options:[
+      {title:escortTitle,icon:escortIcon,time:15,fare:0,danger:mode==='Motorbike'?4:2,crime:2,companion:'Escorted by parent'},
+      {title:'Child travels alone by PT',icon:'BUS',time:25,fare:15,danger:3,crime:2,companion:'Escorted by guardian on arrival',wait:15,walkbike:6}
+    ]},
+    {round:4, options:[
+      {title:escortTitle,icon:escortIcon,time:20,fare:0,danger:3,crime:2,companion:'Escorted by parent'},
+      {title:'Child travels alone by PT',icon:'BUS',time:20,fare:15,danger:2,crime:2,companion:'Travels with school buddy',wait:10,walkbike:5},
+      {title:'Third-party escort (school bus)',icon:'VAN',time:22,fare:20,danger:2,crime:2,companion:'Third-party escort',trust:'High'}
+    ]},
+    {round:5, options:[
+      {title:escortTitle,icon:escortIcon,time:12,fare:0,danger:mode==='Motorbike'?5:2,crime:mode==='Motorbike'?3:1,companion:'Escorted by parent'},
+      {title:'Third-party escort (songthaew)',icon:'VAN',time:20,fare:15,danger:2,crime:2,companion:'Third-party escort',trust:'Low'},
+      {title:'Child travels alone by PT',icon:'BUS',time:30,fare:50,danger:2,crime:2,companion:'Escorted by guardian on arrival',wait:15,walkbike:7}
+    ]},
+  ];
+}
+function m1Rows(o){
+  const unit = lang==='th' ? 'นาที' : 'min';
+  const rows = [{icon:'TIME',label:'Travel time',ctrl:true,value:o.time+' '+unit}];
+  if(o.wait!==undefined) rows.push({icon:'WAIT',label:'Wait time',value:o.wait+' '+unit});
+  if(o.walkbike!==undefined) rows.push({icon:'WALK',label:'Walk/bike portion',value:o.walkbike+' '+unit});
+  rows.push({icon:'FARE',label:'PT fare',ctrl:true,value:o.fare+' THB'});
+  rows.push({icon:'TRAF',label:'Traffic & footpath danger',ctrl:true,bar:dangerBar(o.danger)});
+  rows.push({icon:'CRIME',label:'Crime danger',ctrl:true,bar:dangerBar(o.crime)});
+  rows.push({icon:'COMP',label:'Companion scheme',ctrl:true,value:t(o.companion)});
+  if(o.trust) rows.push({icon:'TRUST',label:'Third-party trust',value:t(o.trust)});
+  return rows;
+}
+
+/* Module 2 - School Choice. School A = respondent's real current school (fixed, reused from
+   RP Sections 4/5 where available); School B = hypothetical alternative that varies per round.
+   7 attributes: 4 core (time, tuition, reputation, school type) + 3 exploratory (class size,
+   required mode, route/area safety). */
+function schoolARef(){
+  const kid = spChildId ? characters.find(c=>c.id===spChildId) : null;
+  return {
+    type: (kid && A[kid.id+'_schooltype']) || 'Public',
+    tuition: (kid && A['tuition_'+kid.id]) || A['tuition'] || 'Free/public',
+    reputation: A['school_reputation_rating'] || '3',
+    classSize: '30-40',
+    mode: 'Same as usual',
+    safety: 'As usual',
+  };
+}
+function buildModule2(){
+  const ref = schoolARef();
+  const schoolA = {title:'School A (your current school)',icon:'A',fixed:true,time:'Same as usual',tuition:ref.tuition,reputation:ref.reputation,type:ref.type,classSize:ref.classSize,mode:ref.mode,safety:ref.safety};
+  return [
+    {round:1, options:[schoolA,
+      {title:'School B (alternative)',icon:'B',time:15,tuition:'5,000-15,000',reputation:'4',type:'Private, local',classSize:'20-30',mode:'Walk',safety:'Safer route'}
+    ]},
+    {round:2, options:[schoolA,
+      {title:'School B (alternative)',icon:'B',time:30,tuition:'Free/public',reputation:'2',type:'Public',classSize:'40-50',mode:'School bus',safety:'Some risk'}
+    ]},
+    {round:3, options:[schoolA,
+      {title:'School B (alternative)',icon:'B',time:10,tuition:'15,000-30,000',reputation:'5',type:'Private, international',classSize:'15-20',mode:'Escort by car',safety:'Safer route'}
+    ]},
+    {round:4, options:[schoolA,
+      {title:'School B (alternative)',icon:'B',time:25,tuition:'<5,000',reputation:'3',type:'Public',classSize:'30-40',mode:'Bus',safety:'As usual'}
+    ]},
+  ];
+}
+function m2Rows(o){
+  return [
+    {icon:'TIME',label:'Travel time',ctrl:true,value:t(String(o.time))},
+    {icon:'FEE',label:'Tuition',ctrl:true,value:t(o.tuition)},
+    {icon:'REP',label:'Academic reputation',ctrl:true,value:o.reputation+'/5'},
+    {icon:'TYPE',label:'School type',ctrl:true,value:t(o.type)},
+    {icon:'SIZE',label:'Class size',value:o.classSize},
+    {icon:'MODE',label:'Required travel mode',value:t(o.mode)},
+    {icon:'SAFE',label:'Route/area safety',value:t(o.safety)},
+  ];
+}
+
+function scenarioCard(title,cardIcon,rows,selKey,idx,note){
+  const selected = A[selKey]===idx;
+  return `<div class="opt-card ${selected?'selected':''}" onclick="A['${selKey}']=${idx};renderSP()">
     <span class="pick-badge">${t('Your choice')}</span>
-    <div class="icon">${o.icon}</div>
-    <div class="opt-title">${t(o.title)}</div>
-    ${rows}
+    <div class="icon">${cardIcon}</div>
+    <div class="opt-title">${t(title)}</div>
+    ${note?`<div class="q-help" style="margin-bottom:8px">${note}</div>`:''}
+    ${rows.map(r=>`<div class="attr-row"><span class="ic">${r.icon}</span> ${t(r.label)}${r.ctrl?` <span style="color:var(--purple);font-weight:700;font-size:10px">(${t('Ctrl')})</span>`:''} ${r.bar?r.bar:`<b>${r.value}</b>`}</div>`).join('')}
   </div>`;
 }
 
-let spIdx = 0;
+/* setup + module state machine: spPhase walks setup -> m1 -> m1-transition -> m2 -> debrief -> summary */
+let spPhase = 'setup';
+let spRoundIdx = 0;
+window.setSpChild = (id)=>{ spChildId = id; renderSP(); };
+window.setSpMode = (m)=>{ spMode = m; renderSP(); };
+window.setSpTripType = (tt)=>{ spTripType = tt; renderSP(); };
+window.startModule1 = ()=>{ spSetupDone = true; spPhase = 'm1'; spRoundIdx = 0; renderSP(); };
+
+function renderSPSetup(){
+  const kids = characters.filter(c=>c.kind==='child');
+  return `
+    <div class="hero" style="padding:20px"><h1 style="font-size:22px">${t('Before we begin: a few quick setup questions')}</h1></div>
+    ${kids.length>1?`<div class="field"><div class="q-label">${t('Which child is this stated-preference exercise about?')}</div>
+      <div class="opt-row">${kids.map(c=>{
+        const on = spChildId===c.id?'checked':'';
+        return `<label class="opt ${on}" onclick="setSpChild('${c.id}')">${childName(c)}</label>`;
+      }).join('')}</div></div>`:''}
+    <div class="field"><div class="q-label">${t('For escorting trips, do you mainly use a car or a motorcycle?')}</div>
+      <div class="opt-row">${['Car','Motorbike'].map(m=>{
+        const on = spMode===m?'checked':'';
+        return `<label class="opt ${on}" onclick="setSpMode('${m}')">${t(m)}</label>`;
+      }).join('')}</div></div>
+    <div class="field"><div class="q-label">${t('Is this usually a dedicated trip just for escorting, or chained with another errand (e.g. on the way to work)?')}</div>
+      <div class="opt-row">${['Dedicated trip','Chained with another errand'].map(o=>{
+        const on = spTripType===o?'checked':'';
+        return `<label class="opt ${on}" onclick="setSpTripType('${o}')">${t(o)}</label>`;
+      }).join('')}</div></div>
+    <div class="q-note" style="display:block">${t('Based on your earlier answers, travel modes you said are not available to you (e.g. no motorcycle license, no school bus service) are excluded from the choices below.')}</div>
+    <div class="nav-row"><span></span><button class="btn btn-primary" ${(!spMode||!spTripType)?'disabled':''} onclick="startModule1()">${t('Start Module 1 ->')}</button></div>
+  `;
+}
+
+function renderModuleRound(moduleName,rounds,rowsFn,question,onDone){
+  const dots = rounds.map((s,i)=>`<div class="dot ${i<spRoundIdx?'done':i===spRoundIdx?'active':''}"></div>`).join('');
+  const sc = rounds[spRoundIdx];
+  const selKey = moduleName+'_'+spRoundIdx;
+  return `
+    <div class="sp-progress">${dots}</div>
+    <div class="sp-round-label">${t('Round')} ${sc.round} ${t('of')} ${rounds.length}</div>
+    <div class="sp-question">${t(question)}</div>
+    <div class="option-row">${sc.options.map((o,oi)=>scenarioCard(o.title,o.icon,rowsFn(o),selKey,oi,o.fixed?t('(reference only - based on your earlier answers)'):null)).join('')}</div>
+    <div class="sp-footer">${t('Tap a card to choose. You can change your answer before moving on.')}</div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="${spRoundIdx===0?('spPhase=\''+(moduleName==='m1'?'setup':'m1-transition')+'\';'):'spRoundIdx--;'}renderSP()">${t('<- Back')}</button>
+      <button class="btn btn-primary" onclick="${spRoundIdx<rounds.length-1?'spRoundIdx++;renderSP()':onDone}" ${A[selKey]===undefined?'disabled':''}>${spRoundIdx<rounds.length-1?t('Next round ->'):t('Continue ->')}</button>
+    </div>`;
+}
+
 function renderSP(){
-  const dots = scenarios.map((s,i)=>`<div class="dot ${i<spIdx?'done':i===spIdx?'active':''}"></div>`).join('');
   let body='';
-  if(spIdx < scenarios.length){
-    const sc = scenarios[spIdx];
+  const m1rounds = buildModule1(spMode||'Car');
+  const m2rounds = buildModule2();
+
+  if(spPhase==='setup'){
+    body = renderSPSetup();
+  } else if(spPhase==='m1'){
+    body = renderModuleRound('m1', m1rounds, m1Rows, "For your child's usual school trip today, which would you choose?", `spPhase='m1-transition';spRoundIdx=0;renderSP()`);
+    body = `<div class="sp-round-label" style="margin-bottom:10px">${t('Module 1 of 2: Escort / Travel Choice')}</div>` + body;
+  } else if(spPhase==='m1-transition'){
     body = `
-      <div class="sp-progress">${dots}<div class="dot ${spIdx>=scenarios.length?'active':''}"></div></div>
-      <div class="sp-round-label">${t('Round')} ${sc.round} ${t('of')} ${scenarios.length}</div>
-      <div class="sp-question">${t("For your child's usual school trip today, which would you choose?")}</div>
-      <div class="option-row">${sc.options.map((o,oi)=>optionCard(o,spIdx,oi)).join('')}</div>
-      <div class="sp-footer">${t('Tap a card to choose. You can change your answer before moving on.')}</div>
-      <div class="nav-row">
-        <button class="btn btn-ghost" onclick="spIdx=Math.max(0,spIdx-1);renderSP()" ${spIdx===0?'style=visibility:hidden':''}>${t('<- Back')}</button>
-        <button class="btn btn-primary" onclick="spIdx++;renderSP()" ${A['sp_'+spIdx]===undefined?'disabled':''}>${t('Next round ->')}</button>
-      </div>`;
-  } else if (spIdx === scenarios.length){
-    const factors = ['Travel time','Cost (fare)','Traffic safety','Crime & stranger safety','Footpath & crossing conditions','Having a companion','Trust in the driver','Something else'];
+      <div class="hero"><h1>${t("Nicely done with Module 1! Now let's look at school choice.")}</h1></div>
+      <div class="nav-row"><button class="btn btn-ghost" onclick="spPhase='m1';spRoundIdx=${m1rounds.length-1};renderSP()">${t('<- Back')}</button>
+      <button class="btn btn-primary" onclick="spPhase='m2';spRoundIdx=0;renderSP()">${t('Continue to Module 2 ->')}</button></div>`;
+  } else if(spPhase==='m2'){
+    body = renderModuleRound('m2', m2rounds, m2Rows, 'For this school choice, which would you choose for your child?', `spPhase='debrief';renderSP()`);
+    body = `<div class="sp-round-label" style="margin-bottom:10px">${t('Module 2 of 2: School Choice')}</div>` + body;
+  } else if(spPhase==='debrief'){
+    const factors1 = ['Travel time','PT fare','Traffic & footpath danger','Crime danger','Companion scheme','Having a companion','Trust in the driver','Something else'];
+    const factors2 = ['Academic reputation/quality','Tuition cost','Distance/travel time','Class size','Route/area safety','Required travel mode','Something else'];
     body = `
-      <div class="sp-progress">${scenarios.map(()=>`<div class="dot done"></div>`).join('')}<div class="dot active"></div></div>
       <div class="sp-round-label">Debrief</div>
       <div class="sp-question">${t('Thinking about the choices you just made, which factor mattered to you the most?')}</div>
-      <div class="debrief-list">${factors.map(f=>{
-        const on = A['debrief']===f;
-        return `<label class="opt ${on?'checked':''}" onclick="A['debrief']='${f}';renderSP()">${t(f)}</label>`;
+      <div class="debrief-list">${factors1.map(f=>{
+        const on = A['debrief1']===f;
+        return `<label class="opt ${on?'checked':''}" onclick="A['debrief1']='${f}';renderSP()">${t(f)}</label>`;
+      }).join('')}</div>
+      <div class="sp-question" style="margin-top:26px">${t('Thinking about your school choice above, which factor mattered to you the most?')}</div>
+      <div class="debrief-list">${factors2.map(f=>{
+        const on = A['debrief2']===f;
+        return `<label class="opt ${on?'checked':''}" onclick="A['debrief2']='${f}';renderSP()">${t(f)}</label>`;
       }).join('')}</div>
       <div class="nav-row">
-        <button class="btn btn-ghost" onclick="spIdx--;renderSP()">${t('<- Back')}</button>
-        <button class="btn btn-primary" onclick="spIdx++;renderSP()" ${!A['debrief']?'disabled':''}>${t('See summary ->')}</button>
+        <button class="btn btn-ghost" onclick="spPhase='m2';spRoundIdx=${m2rounds.length-1};renderSP()">${t('<- Back')}</button>
+        <button class="btn btn-primary" onclick="spPhase='summary';renderSP()" ${(!A['debrief1']||!A['debrief2'])?'disabled':''}>${t('See summary ->')}</button>
       </div>`;
   } else {
-    const chosen = scenarios.map((sc,i)=>{ const o = sc.options[A['sp_'+i]]; return o ? t(o.title) : '-'; });
+    const chosen1 = m1rounds.map((sc,i)=>{ const o = sc.options[A['m1_'+i]]; return o ? t(o.title) : '-'; });
+    const chosen2 = m2rounds.map((sc,i)=>{ const o = sc.options[A['m2_'+i]]; return o ? t(o.title) : '-'; });
     body = `
-      <div class="hero"><h1>${t('Complete!')}</h1><p>${t('Thanks for playing through all')} ${scenarios.length} ${t('scenarios. Here is what you picked:')}</p></div>
+      <div class="hero"><h1>${t('Complete!')}</h1></div>
       <div class="summary-box">
-        ${chosen.map((c,i)=>`<div style="margin-bottom:6px"><b>${t('Round')} ${i+1}:</b> ${c}</div>`).join('')}
-        <div style="margin-top:10px"><b>${t('Most important factor:')}</b> ${t(A['debrief'])}</div>
+        <b>${t('Module 1 choices (Escort / Travel)')}</b><br>
+        ${chosen1.map((c,i)=>`<div style="margin:4px 0"><b>${t('Round')} ${i+1}:</b> ${c}</div>`).join('')}
+        <div style="margin-top:8px"><b>${t('Most important factor:')}</b> ${t(A['debrief1'])}</div>
       </div>
-      <div class="nav-row"><span></span><button class="btn btn-primary" onclick="spIdx=0;renderSP()">${t('Restart demo')}</button></div>`;
+      <div class="summary-box">
+        <b>${t('Module 2 choices (School Choice)')}</b><br>
+        ${chosen2.map((c,i)=>`<div style="margin:4px 0"><b>${t('Round')} ${i+1}:</b> ${c}</div>`).join('')}
+        <div style="margin-top:8px"><b>${t('Most important factor:')}</b> ${t(A['debrief2'])}</div>
+      </div>
+      <div class="nav-row"><span></span><button class="btn btn-primary" onclick="spSetupDone=false;spPhase='setup';spRoundIdx=0;renderSP()">${t('Restart demo')}</button></div>`;
   }
   document.getElementById('sp-card').innerHTML = body;
 }
