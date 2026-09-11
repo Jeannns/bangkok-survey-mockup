@@ -220,6 +220,11 @@ const T = {
 "+ Create household members":"+ สร้างสมาชิกครัวเรือน",
 "Set the counts above, then press \"Create household members\" to generate everyone as characters.":"กำหนดจำนวนด้านบนก่อน แล้วกด \"สร้างสมาชิกครัวเรือน\" เพื่อสร้างตัวละครทุกคน",
 "Adult":"ผู้ใหญ่","Child":"เด็ก","Tap to set up":"แตะเพื่อกรอกข้อมูล",
+"Home":"บ้าน","Use this":"ใช้อันนี้","- workplace":"- ที่ทำงาน","- school":"- โรงเรียน",
+" - workplace (registered)":" - ที่ทำงาน (ลงทะเบียนไว้)"," - school (registered)":" - โรงเรียน (ลงทะเบียนไว้)","Home (registered)":"บ้าน (ลงทะเบียนไว้)",
+"No location set yet":"ยังไม่ได้ระบุตำแหน่ง",
+"Set location for":"ระบุตำแหน่งของ","Choose a registered place, or enter a new one below.":"เลือกสถานที่ที่ลงทะเบียนไว้ หรือกรอกสถานที่ใหม่ด้านล่าง",
+"Not in this list - enter manually":"ไม่มีในนี้ - กรอกเอง","Enter location":"กรอกตำแหน่ง","Choose a registered place instead":"เลือกจากสถานที่ที่ลงทะเบียนไว้แทน",
 "Morning routine activities":"กิจกรรมประจำวันช่วงเช้า",
 "Please think about a typical weekday when you need to leave home for work, school, or university. For sleep and each necessary activity you do before leaving home, please indicate the minimum amount of time you need, and the amount of time you would prefer to have if you were not under time pressure.":"ให้นึกถึงวันธรรมดาทั่วไปที่ท่านต้องออกจากบ้านไปทำงานหรือไปโรงเรียน/มหาวิทยาลัย สำหรับการนอนหลับและกิจกรรมที่จำเป็นแต่ละอย่างก่อนออกจากบ้าน โปรดระบุเวลาขั้นต่ำที่ต้องใช้ และเวลาที่ต้องการหากไม่มีข้อจำกัดด้านเวลา",
 "Sleeping":"การนอนหลับ",
@@ -884,7 +889,7 @@ function stopLocLabel(s){
   if(s.loc.type==='custom') return A[s.id+'_name'] || A[s.id+'_addr'] || t('Custom location set');
   return '';
 }
-window.openStopLocationPicker = (stopId)=>{
+window.showStopLocList = (stopId)=>{
   const s = stops.find(x=>x.id===stopId);
   if(!s) return;
   document.getElementById('modal-title').textContent = t('Set location for')+' "'+(s.place||'?')+'"';
@@ -905,7 +910,13 @@ window.openStopLocationPicker = (stopId)=>{
     <div class="stop-list">${rows.join('')}</div>
     <div class="nav-row"><span></span><button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="stopLocCustom('${stopId}')">${t('Not in this list - enter manually')}</button></div>
   `;
+};
+window.openStopLocationPicker = (stopId)=>{
+  const s = stops.find(x=>x.id===stopId);
+  if(!s) return;
   document.getElementById('modal-overlay').classList.add('open');
+  if(s.loc && s.loc.type==='custom'){ stopLocCustom(stopId); }
+  else { showStopLocList(stopId); }
 };
 window.pickStopLoc = (stopId,type,personId)=>{
   const s = stops.find(x=>x.id===stopId);
@@ -918,7 +929,10 @@ window.stopLocCustom = (stopId)=>{
   document.getElementById('modal-title').textContent = t('Enter location');
   document.getElementById('modal-body').innerHTML = `
     ${locPicker(stopId)}
-    <div class="nav-row"><span></span><button class="btn btn-primary" onclick="confirmStopLocCustom('${stopId}')">${t('Save & close')}</button></div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="showStopLocList('${stopId}')">${t('Choose a registered place instead')}</button>
+      <button class="btn btn-primary" onclick="confirmStopLocCustom('${stopId}')">${t('Save & close')}</button>
+    </div>
   `;
 };
 window.confirmStopLocCustom = (stopId)=>{
