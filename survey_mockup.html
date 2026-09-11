@@ -445,6 +445,7 @@ const T = {
 "Submitted - thank you!":"ส่งแบบสอบถามแล้ว - ขอบคุณ!","Your responses have been recorded. You may now close this window.":"คำตอบของท่านถูกบันทึกแล้ว ท่านสามารถปิดหน้าต่างนี้ได้",
 "Select a line":"เลือกสาย",
 "Household Information":"ข้อมูลครัวเรือน","Individual Information":"ข้อมูลส่วนบุคคล","Travel Diary":"สมุดบันทึกการเดินทาง","Escorting Behavior & Safety":"พฤติกรรมการรับส่งและความปลอดภัย",
+"Section":"ส่วนที่",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -1134,7 +1135,7 @@ const rpSteps = [
       return `<div class="stop-item" style="margin-left:16px;background:#fff"><span style="flex:1">${sdone?'✓ ':''}${t(s.name)}</span>${sdone?`<span style="color:var(--green);font-weight:700;font-size:12.5px">${t('Complete')}</span>`:`<button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="rpIdx=${idx};renderRP()">${t('Go to section')}</button>`}</div>`;
     }).join('');
     return `<div class="stop-item" style="cursor:pointer" onclick="toggleReviewGroup(${gi})">
-        <span style="flex:1;font-weight:700">${done?'✓ ':''}${t(g.label)}</span>
+        <span style="flex:1;font-weight:700">${done?'✓ ':''}${t('Section')} ${gi+1}: ${t(g.label)}</span>
         ${badge}
         <span style="margin-left:10px;color:var(--sub)">${open?'▲':'▼'}</span>
       </div>
@@ -1159,7 +1160,9 @@ function renderRP(){
   document.getElementById('rp-step-count').textContent = (rpIdx)+' / '+(rpSteps.length-1);
   document.getElementById('rp-card').innerHTML = `
     ${step.tag?`<div class="section-tag">${t(step.tag)}</div>`:''}
-    <div class="step-title">${t(step.name)}</div>
+    ${step.name==='Welcome'
+      ? `<div class="step-title" style="cursor:pointer;user-select:none" title="dev shortcut" onclick="rpIdx=${rpSteps.length-1};renderRP()">${t(step.name)}</div>`
+      : `<div class="step-title">${t(step.name)}</div>`}
     <div class="step-sub">&nbsp;</div>
     ${step.render()}
     ${step.customNav?'':`<div class="nav-row">
