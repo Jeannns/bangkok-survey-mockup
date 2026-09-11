@@ -987,6 +987,9 @@ const rpSteps = [
   const ns = tripPerson+'_'+i;
   const purposeKey='purpose_'+ns;
   const isEscort = (val(purposeKey)||'').indexOf('Escorting')>=0 || (val(purposeKey)||'').indexOf('drop-off')>=0 || (val(purposeKey)||'').indexOf('pick-up')>=0;
+  const segMode = val('mode_'+ns);
+  const isRailMode = segMode==='MRT' || segMode==='BTS Skytrain';
+  const isCarMode = segMode==='Private car';
   const seg = `<div class="q-help">${t('Segment')} ${i+1} ${t('of')} ${totalSegs}</div>
     <div class="segment-card"><div class="segment-title">${stops[i].place||'?'} -&gt; ${stops[i+1].place||'?'}</div>
     <div class="grid2">
@@ -1005,12 +1008,14 @@ const rpSteps = [
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Did you use more than one way of getting there? If yes, list them in order')}</div>
       ${opts('multimode_'+ns,['No, one mode only','Yes'])}<input type="text" placeholder="${t('e.g. walk, then bus, then train')}" style="margin-top:8px"></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('For each mode change above, about how long did the walk (or wait) between arriving from one mode and boarding the next take?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
+    ${isRailMode?`
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If BTS or MRT: which line?')}</div>
       ${selectOpts('line_'+ns,['Red Line (Bang Sue - Rangsit/Thammasat)','Red Line (Bang Sue - Taling Chan)','Airport Rail Link (Phaya Thai - Makkasan - Suvarnabhumi)','Green Line - Sukhumvit (Khu Khot - Kehha)','Green Line - Silom (National Stadium - Bang Wa)','Blue Line (Tha Phra - Bang Sue - Hua Lamphong - Lak Song)','Purple Line (Tao Poon - Khlong Bang Phai)','Pink Line (Khae Rai - Pak Kret - Min Buri)','Yellow Line (Lat Phrao - Phatthanakan - Samrong)'])}</div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If BTS or MRT: boarding station / alighting station')}</div>
-      <div class="grid2"><input type="text" placeholder="${t('Boarding station')}"><input type="text" placeholder="${t('Alighting station')}"></div></div>
+      <div class="grid2"><input type="text" placeholder="${t('Boarding station')}"><input type="text" placeholder="${t('Alighting station')}"></div></div>`:''}
+    ${isCarMode?`
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If by car: were you the driver or a passenger?')}</div>
-      ${opts('driverpax_'+ns,['Driver','Passenger'])}</div>
+      ${opts('driverpax_'+ns,['Driver','Passenger'])}</div>`:''}
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Main purpose of this trip')}</div>
       ${opts(purposeKey,['Commuting to work','Going to school (drop-off)','Going to school (for children)','Return home','Return to workplace','Return to school (pick-up)','Escorting (other)','Shopping','Leisure','Medical-related','Other private purpose','Business/work-related'])}</div>
     ${isEscort?`
