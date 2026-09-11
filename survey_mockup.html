@@ -424,6 +424,25 @@ const T = {
 "Not allowed to travel independently at all":"ไม่เคยอนุญาตให้เดินทางเองเลย",
 "Grade 1":"ป.1","Grade 2":"ป.2","Grade 3":"ป.3","Grade 4":"ป.4","Grade 5":"ป.5","Grade 6":"ป.6",
 "Grade 7":"ม.1","Grade 8":"ม.2","Grade 9":"ม.3","Grade 10":"ม.4","Grade 11":"ม.5","Grade 12":"ม.6",
+"Retired":"เกษียณอายุ","Not employed (incl. students)":"ไม่ได้ทำงาน (รวมนักเรียน/นักศึกษา)",
+"Occupation":"อาชีพ","e.g. Teacher, Engineer, Vendor":"เช่น ครู, วิศวกร, พ่อค้าแม่ค้า",
+"If BTS or MRT: which line?":"หากใช้ BTS หรือ MRT: สายใด",
+"Red Line (Bang Sue - Rangsit/Thammasat)":"สายสีแดง บางซื่อ - รังสิต/ธรรมศาสตร์",
+"Red Line (Bang Sue - Taling Chan)":"สายสีแดงอ่อน บางซื่อ - ตลิ่งชัน",
+"Airport Rail Link (Phaya Thai - Makkasan - Suvarnabhumi)":"แอร์พอร์ต เรล ลิงก์ พญาไท - มักกะสัน - สุวรรณภูมิ",
+"Green Line - Sukhumvit (Khu Khot - Kehha)":"สายสีเขียวอ่อน คูคต - เคหะฯ",
+"Green Line - Silom (National Stadium - Bang Wa)":"สายสีเขียวเข้ม สนามกีฬาแห่งชาติ - บางหว้า",
+"Blue Line (Tha Phra - Bang Sue - Hua Lamphong - Lak Song)":"สายสีน้ำเงิน ท่าพระ - บางซื่อ - หัวลำโพง - หลักสอง",
+"Purple Line (Tao Poon - Khlong Bang Phai)":"สายสีม่วง เตาปูน - คลองบางไผ่",
+"Pink Line (Khae Rai - Pak Kret - Min Buri)":"สายสีชมพู แคราย - ปากเกร็ด - มีนบุรี",
+"Yellow Line (Lat Phrao - Phatthanakan - Samrong)":"สายสีเหลือง ลาดพร้าว - พัฒนาการ - สำโรง",
+"Edit trip for":"แก้ไขทริปของ","No segments yet.":"ยังไม่มีช่วงการเดินทาง","Edit the list of places instead":"แก้ไขรายการสถานที่แทน",
+"Complete":"ครบถ้วน","Go to section":"ไปที่ส่วนนี้","Please complete every section before submitting.":"กรุณากรอกข้อมูลให้ครบทุกส่วนก่อนส่งแบบสอบถาม",
+"Would you like to receive an incentive?":"ท่านต้องการรับสิ่งตอบแทนหรือไม่",
+"If you would like a small thank-you incentive for completing this survey, please leave your contact details below. This information is kept separate from your survey answers.":"หากท่านต้องการรับของขอบคุณเล็กน้อยจากการทำแบบสอบถามนี้ กรุณาฝากข้อมูลติดต่อไว้ด้านล่าง ข้อมูลนี้จะถูกเก็บแยกจากคำตอบแบบสอบถามของท่าน",
+"Yes, I would like an incentive":"ใช่ ต้องการรับสิ่งตอบแทน","No, thank you":"ไม่ ขอบคุณ",
+"Full name":"ชื่อ-นามสกุล","Email":"อีเมล","Phone number":"เบอร์โทรศัพท์",
+"Submitted - thank you!":"ส่งแบบสอบถามแล้ว - ขอบคุณ!","Your responses have been recorded. You may now close this window.":"คำตอบของท่านถูกบันทึกแล้ว ท่านสามารถปิดหน้าต่างนี้ได้",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -544,9 +563,26 @@ let nAdultsTarget = 2, nChildrenTarget = 1;
 let activeCharId = null;
 
 function cval(ch,key,d){ return A[ch.id+'_'+key]!==undefined ? A[ch.id+'_'+key] : d; }
-function isCharDone(ch){ return !!A[ch.id+'_name'] && A[ch.id+'_age']!==undefined; }
+function isCharDone(ch){
+  const p = ch.id;
+  const base = !!A[p+'_name'] && A[p+'_age']!==undefined && !!A[p+'_gender'] && !!A[p+'_religion'] && !!A[p+'_edu'];
+  if(!base) return false;
+  if(ch.kind==='adult'){
+    return !!A[p+'_employ'] && (A[p+'_lic_car']||A[p+'_lic_moto']||A[p+'_lic_none']);
+  }
+  return !!A[p+'_schooltype'] && !!A[p+'_usesbus'];
+}
 function childName(ch){ return A[ch.id+'_name'] || t('Child'); }
 function adultName(ch){ return A[ch.id+'_name'] || t('Adult'); }
+function kidDecisionDone(ch){
+  const p = ch.id;
+  if(!!val('escorted_'+p,false)){
+    for(let i=0;i<7;i++){ if(val('escort_reason_'+p+'_'+i)===undefined) return false; }
+    return true;
+  }
+  for(let i=0;i<3;i++){ if(val('not_escort_reason_'+p+'_'+i)===undefined) return false; }
+  return val('main_reason_'+p)!==undefined;
+}
 
 function createCharacters(){
   characters = [];
@@ -600,7 +636,8 @@ function renderModal(){
     : `<div class="field"><div class="q-label">${t('Current education level')}</div>${opts(p+'_edu',['Not attending any school','Pre-school','Elementary school','Junior high or equivalent','Senior high or equivalent','Undergraduate degree'])}</div>
        <div class="field"><div class="q-label">${t('If school-going: specific grade')}</div>${opts(p+'_grade',['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12'])}</div>`;
   const employField = ch.kind==='adult'
-    ? `<div class="field"><div class="q-label">${t('Employment status')}</div>${opts(p+'_employ',['Full-time','Part-time','Self-employed','Not employed (incl. retired and students)'])}</div>
+    ? `<div class="field"><div class="q-label">${t('Employment status')}</div>${opts(p+'_employ',['Full-time','Part-time','Self-employed','Retired','Not employed (incl. students)'])}</div>
+       <div class="field"><div class="q-label">${t('Occupation')}</div><input type="text" value="${A[p+'_occupation']||''}" oninput="A['${p}_occupation']=this.value" placeholder="${t('e.g. Teacher, Engineer, Vendor')}"></div>
        <div class="field"><div class="q-label">${t('Work start / end time (if employed)')}</div><div class="grid2"><input type="time"><input type="time"></div></div>
        <div class="field"><div class="q-label">${t('Primary workplace location')}</div>${locPicker(p+'_work')}</div>
        <div class="field"><div class="q-label">${t('Does this person hold a Rabbit Card or MRT Card?')}</div>${opts(p+'_transit_card',['Yes','No'])}</div>`
@@ -668,6 +705,78 @@ window.setTripPerson = (id)=>{
 };
 window.saveTrip = ()=>{ tripConfirmed = true; tripsByPerson[tripPerson] = stops.map(s=>({...s})); renderRP(); };
 window.toggleCompanion = (id)=>{ const k='companion_'+id; A[k]=!A[k]; renderRP(); };
+
+window.openTripEditPicker = (id)=>{
+  const c = characters.find(c=>c.id===id);
+  const nm = c ? (A[id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'))) : id;
+  document.getElementById('modal-title').textContent = t('Edit trip for')+' '+nm;
+  const segs = tripsByPerson[id] || [];
+  const rows = segs.slice(0,-1).map((s,i)=>`<div class="stop-item"><span style="flex:1">${t('Segment')} ${i+1}: ${s.place||'?'} -&gt; ${(segs[i+1]||{}).place||'?'}</span><button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="jumpToSegment('${id}',${i})">${t('Edit')}</button></div>`).join('');
+  document.getElementById('modal-body').innerHTML = `
+    <div class="stop-list">${rows || `<div class="empty-hint">${t('No segments yet.')}</div>`}</div>
+    <div class="nav-row"><span></span><button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="jumpToStopList('${id}')">${t('Edit the list of places instead')}</button></div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+};
+window.jumpToSegment = (id,i)=>{
+  tripPerson = id;
+  stops = tripsByPerson[id].map(s=>({...s}));
+  tripConfirmed = true;
+  segIdx = i;
+  showTripDonePrompt = false;
+  document.getElementById('modal-overlay').classList.remove('open');
+  rpIdx = rpSteps.findIndex(s=>s.name==='Travel Diary - Trip Details');
+  renderRP();
+};
+window.jumpToStopList = (id)=>{
+  document.getElementById('modal-overlay').classList.remove('open');
+  setTripPerson(id);
+};
+
+function isStepComplete(step){
+  switch(step.name){
+    case 'Household - House & Location': return val('residence_type')!==undefined && !!A['home_confirmed'];
+    case 'Household - Vehicles & Income': return val('n_cars')!==undefined && val('n_bikes')!==undefined && val('income')!==undefined;
+    case 'Household - Create Your Household': return characters.length>0 && characters.every(isCharDone);
+    case 'Morning routine activities': return maintActivities.every((m,i)=>A['maint_'+i+'_min']!==undefined && A['maint_'+i+'_pref']!==undefined);
+    case 'Travel Diary - Register a Trip':
+    case 'Travel Diary - Trip Details':
+      return Object.keys(tripsByPerson).length>0;
+    case 'Escorting - Habit': return val('q1')!==undefined;
+    case 'Escorting - Decision (why)': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(kidDecisionDone); }
+    case 'Escorting - Threat & Coping (PMT)': return val('allow_independent')!==undefined;
+    case 'Escorting - Travel Mode': return val('escort_mode')!==undefined;
+    case 'Escorting - Route & Air Quality': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(c=>val(c.id+'_major_road')!==undefined); }
+    case 'Escorting - School Facilities': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(c=>val(c.id+'_school_facility')!==undefined); }
+    case 'School Choice': { const kids=characters.filter(c=>c.kind==='child'); const tuitionOk = kids.length===0 || kids.every(c=>val('tuition_'+c.id)!==undefined); return val('route_relation')!==undefined && tuitionOk; }
+    default: return true;
+  }
+}
+
+window.openIncentivePrompt = ()=>{
+  document.getElementById('modal-title').textContent = t('Would you like to receive an incentive?');
+  document.getElementById('modal-body').innerHTML = `
+    <p class="q-help">${t('If you would like a small thank-you incentive for completing this survey, please leave your contact details below. This information is kept separate from your survey answers.')}</p>
+    <div class="nav-row" style="justify-content:center;gap:14px;margin-bottom:6px">
+      <button class="btn btn-primary" onclick="showIncentiveForm()">${t('Yes, I would like an incentive')}</button>
+      <button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="finishSubmit()">${t('No, thank you')}</button>
+    </div>
+    <div id="incentive-form"></div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+};
+window.showIncentiveForm = ()=>{
+  document.getElementById('incentive-form').innerHTML = `
+    <div class="field"><div class="q-label">${t('Full name')}</div><input type="text" placeholder="${t('e.g. Somchai Srisuk')}"></div>
+    <div class="field"><div class="q-label">${t('Email')}</div><input type="text" placeholder="name@example.com"></div>
+    <div class="field"><div class="q-label">${t('Phone number')}</div><input type="text" placeholder="08X-XXX-XXXX"></div>
+    <div class="nav-row"><span></span><button class="btn btn-primary" onclick="finishSubmit()">${t('Submit Survey')}</button></div>
+  `;
+};
+window.finishSubmit = ()=>{
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('rp-card').innerHTML = `<div class="hero"><h1>${t('Submitted - thank you!')}</h1><p>${t('Your responses have been recorded. You may now close this window.')}</p></div>`;
+};
 
 let tripConfirmed = false;
 let segIdx = 0;
@@ -767,16 +876,16 @@ const rpSteps = [
   <button class="add-btn" style="margin-top:8px" onclick="maintActivities.push({name:''});renderRP()">${t('+ Add activity')}</button>`},
 
 {name:'Travel Diary - Register a Trip', tag:'Section 3 - Trip Roster &amp; Morning Schedule', render:()=>`
+  <div class="field"><div class="q-label">${t('Which date does this trip diary cover?')}</div><input type="date" value="${diaryDate}" onchange="setDiaryDate(this.value)" style="width:220px"></div>
   <div class="field"><div class="q-label">${t('Whose trip diary is this?')}</div>${personChipRow(tripPerson,'setTripPerson')}</div>
   ${Object.keys(tripsByPerson).length?`<div class="field" style="border:none;padding-top:0">
     <div class="q-label" style="font-size:13px">${t('Trips already registered')}</div>
     <div class="stop-list">${Object.keys(tripsByPerson).map(id=>{
       const c = characters.find(c=>c.id===id);
       const nm = c ? (A[id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'))) : id;
-      return `<div class="stop-item"><span style="flex:1">${nm}</span><button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="setTripPerson('${id}')">${t('Edit')}</button></div>`;
+      return `<div class="stop-item"><span style="flex:1">${nm}</span><button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="openTripEditPicker('${id}')">${t('Edit')}</button></div>`;
     }).join('')}</div>
   </div>`:''}
-  <div class="field"><div class="q-label">${t('Which date does this trip diary cover?')}</div><input type="date" value="${diaryDate}" onchange="setDiaryDate(this.value)" style="width:220px"></div>
   ${tripPerson?`
   <div class="q-note">${dl('The questions below refer to [date], the day covered by this trip diary. Who traveled together on each leg is asked later, per segment, in Trip Details.')}</div>
   <div class="grid2">
@@ -831,6 +940,8 @@ const rpSteps = [
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Did you use more than one way of getting there? If yes, list them in order')}</div>
       ${opts('multimode_'+ns,['No, one mode only','Yes'])}<input type="text" placeholder="${t('e.g. walk, then bus, then train')}" style="margin-top:8px"></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('For each mode change above, about how long did the walk (or wait) between arriving from one mode and boarding the next take?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
+    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If BTS or MRT: which line?')}</div>
+      ${opts('line_'+ns,['Red Line (Bang Sue - Rangsit/Thammasat)','Red Line (Bang Sue - Taling Chan)','Airport Rail Link (Phaya Thai - Makkasan - Suvarnabhumi)','Green Line - Sukhumvit (Khu Khot - Kehha)','Green Line - Silom (National Stadium - Bang Wa)','Blue Line (Tha Phra - Bang Sue - Hua Lamphong - Lak Song)','Purple Line (Tao Poon - Khlong Bang Phai)','Pink Line (Khae Rai - Pak Kret - Min Buri)','Yellow Line (Lat Phrao - Phatthanakan - Samrong)'])}</div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If BTS or MRT: boarding station / alighting station')}</div>
       <div class="grid2"><input type="text" placeholder="${t('Boarding station')}"><input type="text" placeholder="${t('Alighting station')}"></div></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If by car: were you the driver or a passenger?')}</div>
@@ -876,15 +987,6 @@ const rpSteps = [
 
 {name:'Escorting - Decision (why)', tag:'Section 4 - School Escorting Decision', customNav:true, render:()=>{
   const kids = characters.filter(c=>c.kind==='child');
-  function kidDone(ch){
-    const p = ch.id;
-    if(!!val('escorted_'+p,false)){
-      for(let i=0;i<7;i++){ if(val('escort_reason_'+p+'_'+i)===undefined) return false; }
-      return true;
-    }
-    for(let i=0;i<3;i++){ if(val('not_escort_reason_'+p+'_'+i)===undefined) return false; }
-    return val('main_reason_'+p)!==undefined;
-  }
   let perChildBlock;
   if(kids.length===0){
     perChildBlock = `<div class="empty-hint">${t('No child characters created yet.')}</div>`;
@@ -904,7 +1006,7 @@ const rpSteps = [
       <div class="field"><div class="q-label">${t('Single main reason for not escorting')}</div>${opts('main_reason_'+p,['Old enough','School bus available','Sibling/friend accompanies','No car','Too costly','Work schedule conflict','Walking distance','Other'])}</div>
       `}`;
   }
-  const incomplete = kids.filter(c=>!kidDone(c));
+  const incomplete = kids.filter(c=>!kidDecisionDone(c));
   return `${perChildBlock}
   <div class="field"><div class="q-label">${t('Rate your concern on the following (household-level)')}</div>
     ${likert(null,'escort_concern',['Vehicle speeds too fast near school','Safe footpaths along the route','Road crossings are safe','Traffic volume is a hazard','Motorcycles/vendors block footpaths','Worried about theft/robbery','Area feels safe from crime','Area feels safe after 3pm','Worried about crime on public transport'])}</div>
@@ -996,10 +1098,22 @@ const rpSteps = [
   </div>`;
 }},
 
-{name:'Review & Submit', render:()=>`
+{name:'Review & Submit', render:()=>{
+  const sectionSteps = rpSteps.filter(s=>s.name!=='Welcome' && s.name!=='Review & Submit');
+  const rows = sectionSteps.map(s=>{
+    const done = isStepComplete(s);
+    const idx = rpSteps.indexOf(s);
+    return `<div class="stop-item"><span style="flex:1">${done?'✓ ':''}${t(s.name)}</span>${done?`<span style="color:var(--green);font-weight:700;font-size:12.5px">${t('Complete')}</span>`:`<button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="rpIdx=${idx};renderRP()">${t('Go to section')}</button>`}</div>`;
+  }).join('');
+  const allDone = sectionSteps.every(isStepComplete);
+  return `
   <div class="hero"><h1>${t('Thank you!')}</h1>
-  <p>${t('Please review all your answers before submitting. This survey covers all 5 sections as designed. You can go back and edit any answer before you press Submit.')}</p>
-  <button class="btn btn-primary" style="margin-top:16px">${t('Submit Survey')}</button></div>`},
+  <p>${t('Please review all your answers before submitting. This survey covers all 5 sections as designed. You can go back and edit any answer before you press Submit.')}</p></div>
+  <div class="stop-list" style="margin-top:10px">${rows}</div>
+  ${!allDone?`<div class="q-note" style="display:block;margin-top:12px">${t('Please complete every section before submitting.')}</div>`:''}
+  <div class="nav-row"><span></span><button class="btn btn-primary" ${allDone?'':'disabled'} onclick="openIncentivePrompt()">${t('Submit Survey')}</button></div>
+  `;
+}},
 ];
 
 let rpIdx = 0;
