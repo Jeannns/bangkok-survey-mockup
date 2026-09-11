@@ -43,6 +43,8 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Robo
 .loc-pin{position:absolute;width:16px;height:16px;background:#ef4444;border:2px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg) translate(-50%,-100%);box-shadow:0 1px 4px rgba(0,0,0,.3);display:none}
 .loc-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:12px;pointer-events:none;text-align:center;padding:0 20px}
 .loc-map-real{border-top:1px solid var(--line);background:#eef2f7}
+.map-zoom-ctrl{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:4px;z-index:2}
+.map-zoom-ctrl button{width:28px;height:28px;border-radius:6px;border:1px solid var(--line);background:#fff;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.15);line-height:1}
 .loc-hint-real{font-size:11px;color:var(--sub);padding:6px 12px;background:#f8fafc;border-top:1px solid var(--line)}
 .loc-latlng{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-top:1px solid var(--line);background:#fff}
 .loc-latlng input{width:120px}
@@ -265,9 +267,9 @@ const T = {
 "For each mode change above, about how long did the walk (or wait) between arriving from one mode and boarding the next take?":"ในแต่ละครั้งที่เปลี่ยนรูปแบบการเดินทางข้างต้น ใช้เวลาเดิน (หรือรอ) ระหว่างมาถึงกับขึ้นรูปแบบถัดไปประมาณเท่าใด",
 "minutes":"นาที","If BTS or MRT: boarding station / alighting station":"หากใช้ BTS หรือ MRT: สถานีที่ขึ้น / สถานีที่ลง",
 "Boarding station":"สถานีที่ขึ้น","Alighting station":"สถานีที่ลง",
-"If by car: were you the driver or a passenger?":"หากเดินทางโดยรถยนต์: ท่านเป็นผู้ขับหรือผู้โดยสาร","Driver":"ผู้ขับ","Passenger":"ผู้โดยสาร",
+"If by car: were you the driver or a passenger?":"หากเดินทางโดยรถยนต์: ท่านเป็นผู้ขับหรือผู้โดยสาร","If by car or motorbike: were you the driver or a passenger?":"หากเดินทางโดยรถยนต์หรือรถจักรยานยนต์: ท่านเป็นผู้ขับหรือผู้โดยสาร","Driver":"ผู้ขับ","Passenger":"ผู้โดยสาร",
 "Main purpose of this trip":"วัตถุประสงค์หลักของการเดินทางครั้งนี้",
-"Commuting to work":"เดินทางไปทำงาน","Going to school (drop-off)":"ไปโรงเรียน (ไปส่ง)","Going to school (for children)":"ไปโรงเรียน (สำหรับเด็ก)",
+"Commuting to work":"เดินทางไปทำงาน","School escort":"รับส่งบุตรหลานไปโรงเรียน","Going to school (drop-off)":"ไปโรงเรียน (ไปส่ง)","Going to school (for children)":"ไปโรงเรียน (สำหรับเด็ก)",
 "Return home":"กลับบ้าน","Return to workplace":"กลับที่ทำงาน","Return to school (pick-up)":"กลับไปโรงเรียน (ไปรับ)","Escorting (other)":"รับส่ง (อื่นๆ)",
 "Shopping":"ซื้อของ","Leisure":"พักผ่อน/สันทนาการ","Medical-related":"เกี่ยวกับการรักษาพยาบาล","Other private purpose":"วัตถุประสงค์ส่วนตัวอื่นๆ","Business/work-related":"เกี่ยวกับธุรกิจ/งาน",
 "Escort trip - extra detail":"การเดินทางรับส่ง - รายละเอียดเพิ่มเติม",
@@ -424,6 +426,7 @@ const T = {
 "Section 5 - School Choice":"ส่วนที่ 5 - การเลือกโรงเรียน",
 "Does this person hold a Rabbit Card or MRT Card?":"บุคคลนี้มีบัตร Rabbit Card หรือบัตร MRT หรือไม่",
 "Real Google Map - search above to move the map, or paste coordinates below and press Confirm to drop a pin at an exact spot. On Google Maps, right-click (or long-press) a spot and choose \"What's here?\" to get its coordinates.":"แผนที่ Google จริง - ค้นหาด้านบนเพื่อขยับแผนที่ หรือวางพิกัดด้านล่างแล้วกดยืนยันเพื่อปักหมุดตำแหน่งที่แน่นอน บน Google Maps ให้คลิกขวา (หรือกดค้าง) ที่จุดนั้นแล้วเลือก \"What's here?\" เพื่อดูพิกัด",
+"Real Google Map - search above to move the map, use the +/- buttons to zoom, or paste coordinates below and press Confirm to drop a pin at an exact spot. On Google Maps, right-click (or long-press) a spot and choose \"What's here?\" to get its coordinates.":"แผนที่ Google จริง - ค้นหาด้านบนเพื่อขยับแผนที่ กดปุ่ม +/- เพื่อซูม หรือวางพิกัดด้านล่างแล้วกดยืนยันเพื่อปักหมุดตำแหน่งที่แน่นอน บน Google Maps ให้คลิกขวา (หรือกดค้าง) ที่จุดนั้นแล้วเลือก \"What's here?\" เพื่อดูพิกัด",
 "Paste coordinates, e.g. 13.9668, 100.6843":"วางพิกัด เช่น 13.9668, 100.6843",
 "Location confirmed (pin set)":"ยืนยันตำแหน่งแล้ว (ปักหมุดแล้ว)",
 "Could not read two numbers - paste as \"lat, lng\"":"อ่านตัวเลขไม่ได้ - วางในรูปแบบ \"lat, lng\"",
@@ -552,19 +555,32 @@ function selectOpts(name,options){
 }
 
 function mapSrc(id){
+  const z = A[id+'_zoom'] || 17;
   if(A[id+'_confirmed'] && A[id+'_lat'] && A[id+'_lng']){
-    return 'https://www.google.com/maps?q='+encodeURIComponent(A[id+'_lat']+','+A[id+'_lng'])+'&z=17&output=embed';
+    return 'https://www.google.com/maps?q='+encodeURIComponent(A[id+'_lat']+','+A[id+'_lng'])+'&z='+z+'&output=embed';
   }
   const q = encodeURIComponent(A[id+'_search'] || A[id+'_name'] || 'Bangkok, Thailand');
-  return 'https://www.google.com/maps?q='+q+'&output=embed';
+  return 'https://www.google.com/maps?q='+q+'&z='+z+'&output=embed';
 }
+window.zoomMap = (id,delta)=>{
+  const z = Math.min(20, Math.max(3, (A[id+'_zoom']||17)+delta));
+  A[id+'_zoom'] = z;
+  const ifr = document.getElementById('map_'+id);
+  if(ifr) ifr.src = mapSrc(id);
+};
 function locPicker(id){
   const confirmed = A[id+'_confirmed'];
   const coordStr = A[id+'_lat'] ? (A[id+'_lat']+', '+A[id+'_lng']) : '';
   return `<div class="locpicker">
     <input class="loc-search" type="text" placeholder="${t('Search for a place or address, then press Enter')}" value="${A[id+'_search']||''}" oninput="A['${id}_search']=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();updateMap('${id}')}">
-    <div class="loc-map-real"><iframe id="map_${id}" width="100%" height="180" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${mapSrc(id)}"></iframe></div>
-    <div class="loc-hint-real">${t('Real Google Map - search above to move the map, or paste coordinates below and press Confirm to drop a pin at an exact spot. On Google Maps, right-click (or long-press) a spot and choose "What\'s here?" to get its coordinates.')}</div>
+    <div class="loc-map-real" style="position:relative">
+      <iframe id="map_${id}" width="100%" height="180" style="border:0;display:block" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${mapSrc(id)}"></iframe>
+      <div class="map-zoom-ctrl">
+        <button type="button" onclick="zoomMap('${id}',1)">+</button>
+        <button type="button" onclick="zoomMap('${id}',-1)">-</button>
+      </div>
+    </div>
+    <div class="loc-hint-real">${t('Real Google Map - search above to move the map, use the +/- buttons to zoom, or paste coordinates below and press Confirm to drop a pin at an exact spot. On Google Maps, right-click (or long-press) a spot and choose "What\'s here?" to get its coordinates.')}</div>
     <div class="loc-fields">
       <input type="text" placeholder="${t('Place name (e.g. Home, Office Building B)')}" value="${A[id+'_name']||''}" oninput="A['${id}_name']=this.value">
       <input type="text" placeholder="${t('Address / nearest landmark')}" value="${A[id+'_addr']||''}" oninput="A['${id}_addr']=this.value">
@@ -1024,7 +1040,7 @@ const rpSteps = [
       <span class="edit-stop" onclick="openStopLocationPicker('${s.id}')">${t('Edit')}</span>
       ${stops.length>2?`<span class="remove" onclick="stops.splice(${i},1);tripConfirmed=false;renderRP()">${t('Remove')}</span>`:''}
       <span class="drag-handle">${t('Move')}</span></div>`).join('')}</div>
-    <button class="add-btn" onclick="stops.splice(stops.length-1,0,newStop(''));tripConfirmed=false;renderRP()">${t('+ Add a stop')}</button>
+    <button class="add-btn" onclick="stops.push(newStop(''));tripConfirmed=false;renderRP()">${t('+ Add a stop')}</button>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveTrip()">${t('Save trip')}</button></div>
     ${tripConfirmed?`<div class="confirm-box"><b>${stops.length-1} ${t('segment(s) saved:')}</b><br>${stops.slice(0,-1).map((s,i)=>(s.place||'?')+' -&gt; '+(stops[i+1].place||'?')).join('<br>')}<br><span style="font-size:12px">${t("Check this looks right, then press Next to fill in each segment's details.")}</span></div>`:''}
   </div>
@@ -1047,10 +1063,10 @@ const rpSteps = [
   const i = segIdx;
   const ns = tripPerson+'_'+i;
   const purposeKey='purpose_'+ns;
-  const isEscort = (val(purposeKey)||'').indexOf('Escorting')>=0 || (val(purposeKey)||'').indexOf('drop-off')>=0 || (val(purposeKey)||'').indexOf('pick-up')>=0;
+  const isEscort = (val(purposeKey)||'').indexOf('Escorting')>=0 || (val(purposeKey)||'').indexOf('School escort')>=0;
   const segMode = val('mode_'+ns);
   const isRailMode = segMode==='MRT' || segMode==='BTS Skytrain';
-  const isCarMode = segMode==='Private car';
+  const isCarMode = segMode==='Private car' || segMode==='Private motorbike';
   const seg = `<div class="q-help">${t('Segment')} ${i+1} ${t('of')} ${totalSegs}</div>
     <div class="segment-card"><div class="segment-title">${stops[i].place||'?'} -&gt; ${stops[i+1].place||'?'}</div>
     <div class="grid2">
@@ -1075,10 +1091,10 @@ const rpSteps = [
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If BTS or MRT: boarding station / alighting station')}</div>
       <div class="grid2"><input type="text" placeholder="${t('Boarding station')}"><input type="text" placeholder="${t('Alighting station')}"></div></div>`:''}
     ${isCarMode?`
-    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If by car: were you the driver or a passenger?')}</div>
+    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If by car or motorbike: were you the driver or a passenger?')}</div>
       ${opts('driverpax_'+ns,['Driver','Passenger'])}</div>`:''}
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Main purpose of this trip')}</div>
-      ${opts(purposeKey,['Commuting to work','Going to school (drop-off)','Going to school (for children)','Return home','Return to workplace','Return to school (pick-up)','Escorting (other)','Shopping','Leisure','Medical-related','Other private purpose','Business/work-related'])}</div>
+      ${opts(purposeKey,['Commuting to work','School escort','Going to school (for children)','Return home','Return to workplace','Escorting (other)','Shopping','Leisure','Medical-related','Other private purpose','Business/work-related'])}</div>
     ${isEscort?`
     <div class="escort-box"><span class="tag">${t('Escort trip - extra detail')}</span>
       <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Taking the child TO school, or bringing them FROM school?')}</div>
