@@ -446,6 +446,7 @@ const T = {
 "Select a line":"เลือกสาย",
 "Household Information":"ข้อมูลครัวเรือน","Individual Information":"ข้อมูลส่วนบุคคล","Travel Diary":"สมุดบันทึกการเดินทาง","Escorting Behavior & Safety":"พฤติกรรมการรับส่งและความปลอดภัย",
 "Section":"ส่วนที่",
+"(dev mode on - completion checks are bypassed on every page)":"(โหมดนักพัฒนาเปิดอยู่ - ข้ามการตรวจสอบความครบถ้วนทุกหน้า)",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -835,12 +836,18 @@ window.setDecisionChild = (i)=>{ decisionChildIdx=i; renderRP(); };
 window.toggleEscorted = (id)=>{ A['escorted_'+id]=!A['escorted_'+id]; renderRP(); };
 window.toggleEscortingAdult = (id)=>{ A['escorts_adult_'+id]=!A['escorts_adult_'+id]; renderRP(); };
 
+/* dev mode: toggled by clicking the "Welcome" title, bypasses completion gates so every
+   page can be reached and every button pressed via normal Next/Back without filling anything in */
+let devMode = false;
+
 /* ================= RP STEPS ================= */
 const rpSteps = [
 {name:'Welcome', render:()=>`
   <div class="hero"><span class="pill">${t('TDS - School Escorting Survey')}</span>
   <h1>${t('Before you begin')}</h1>
-  <p>${t('This survey has 5 parts: Household Information, Individual Information, Travel Diary, Escorting Behavior & Safety, and School Choice. It takes about 15-20 minutes. All answers are kept confidential.')}</p></div>`},
+  <p>${t('This survey has 5 parts: Household Information, Individual Information, Travel Diary, Escorting Behavior & Safety, and School Choice. It takes about 15-20 minutes. All answers are kept confidential.')}</p>
+  ${devMode?`<p style="color:var(--sub);font-size:12px;margin-top:10px">${t('(dev mode on - completion checks are bypassed on every page)')}</p>`:''}
+  </div>`},
 
 {name:'Household - House & Location', tag:'Section 1 - Household Information', render:()=>`
   <div class="field"><div class="q-label">${t('What type of residence do you currently live in?')}</div>
@@ -927,7 +934,7 @@ const rpSteps = [
 
 {name:'Travel Diary - Trip Details', tag:'Section 3 - Trip Details (per segment)', customNav:true, render:()=>{
   if(!tripPerson) return `<div class="empty-hint">${t('Go back and register a trip first.')}</div>
-    <div class="nav-row"><button class="btn btn-ghost" onclick="rpIdx--;renderRP()">${t('<- Back')}</button>${tempSaveBtn()}<span></span></div>`;
+    <div class="nav-row"><button class="btn btn-ghost" onclick="rpIdx--;renderRP()">${t('<- Back')}</button>${tempSaveBtn()}${devMode?`<button class="btn btn-primary" onclick="rpIdx++;renderRP()">${t('Next ->')}</button>`:'<span></span>'}</div>`;
 
   const totalSegs = Math.max(0, stops.length-1);
 
@@ -1037,7 +1044,7 @@ const rpSteps = [
   <div class="nav-row">
     <button class="btn btn-ghost" onclick="rpIdx--;renderRP()">${t('<- Back')}</button>
     ${tempSaveBtn()}
-    <button class="btn btn-primary" ${incomplete.length?'disabled':''} onclick="rpIdx++;renderRP()">${t('Next ->')}</button>
+    <button class="btn btn-primary" ${(incomplete.length && !devMode)?'disabled':''} onclick="rpIdx++;renderRP()">${t('Next ->')}</button>
   </div>`;
 }},
 
@@ -1146,8 +1153,9 @@ const rpSteps = [
   <div class="hero"><h1>${t('Thank you!')}</h1>
   <p>${t('Please review all your answers before submitting. This survey covers all 5 sections as designed. You can go back and edit any answer before you press Submit.')}</p></div>
   <div class="stop-list" style="margin-top:10px">${groupRows}</div>
-  ${!allDone?`<div class="q-note" style="display:block;margin-top:12px">${t('Please complete every section before submitting.')}</div>`:''}
-  <div class="nav-row"><span></span><button class="btn btn-primary" ${allDone?'':'disabled'} onclick="openIncentivePrompt()">${t('Submit Survey')}</button></div>
+  ${(!allDone && !devMode)?`<div class="q-note" style="display:block;margin-top:12px">${t('Please complete every section before submitting.')}</div>`:''}
+  ${(!allDone && devMode)?`<div class="q-note" style="display:block;margin-top:12px">${t('(dev mode on - completion checks are bypassed on every page)')}</div>`:''}
+  <div class="nav-row"><span></span><button class="btn btn-primary" ${(allDone||devMode)?'':'disabled'} onclick="openIncentivePrompt()">${t('Submit Survey')}</button></div>
   `;
 }},
 ];
@@ -1161,7 +1169,7 @@ function renderRP(){
   document.getElementById('rp-card').innerHTML = `
     ${step.tag?`<div class="section-tag">${t(step.tag)}</div>`:''}
     ${step.name==='Welcome'
-      ? `<div class="step-title" style="cursor:pointer;user-select:none" title="dev shortcut" onclick="rpIdx=${rpSteps.length-1};renderRP()">${t(step.name)}</div>`
+      ? `<div class="step-title" style="cursor:pointer;user-select:none" title="dev shortcut" onclick="devMode=!devMode;renderRP()">${t(step.name)}</div>`
       : `<div class="step-title">${t(step.name)}</div>`}
     <div class="step-sub">&nbsp;</div>
     ${step.render()}
