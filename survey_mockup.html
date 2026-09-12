@@ -196,6 +196,12 @@ textarea{resize:vertical;min-height:60px}
 /* ================= LANGUAGE TOGGLE ================= */
 let lang = 'en';
 const T = {
+"Physical condition/disability makes independent travel difficult":"สภาพร่างกาย/ความพิการทำให้เดินทางลำบากด้วยตนเอง","Destination is far from home":"ปลายทางอยู่ไกลจากบ้าน","To make sure we arrive on time":"เพื่อให้ไปถึงตรงเวลา","Carrying heavy or bulky items":"ต้องพกของหนักหรือของชิ้นใหญ่","I happen to have extra free time":"บังเอิญมีเวลาว่างพอดี",
+"Do you also regularly escort any child(ren) who are NOT members of your household (e.g. a neighbor's child, or as part of a carpool)?":"ท่านรับส่งเด็กที่ไม่ใช่สมาชิกในครัวเรือนเป็นประจำด้วยหรือไม่ (เช่น ลูกเพื่อนบ้าน หรือเป็นส่วนหนึ่งของการ carpool)","Briefly note the relationship and school for each":"โปรดระบุความสัมพันธ์และโรงเรียนของแต่ละคนโดยย่อ",
+"Did this person leave home at all on [date]?":"บุคคลนี้ได้ออกจากบ้านในวันที่ [date] หรือไม่","Yes, at least one trip":"ใช่ มีอย่างน้อย 1 ทริป","No trips at all":"ไม่มีการเดินทางเลย",
+"What was the main reason this person did not leave home at all on [date]?":"เหตุผลหลักที่บุคคลนี้ไม่ได้ออกจากบ้านเลยในวันที่ [date] คืออะไร","Working/studying from home or online class":"ทำงาน/เรียนที่บ้าน หรือเรียนออนไลน์","Workplace/school was closed":"ที่ทำงาน/โรงเรียนปิด","Had no reason to go out":"ไม่มีเหตุผลที่ต้องออกไปข้างนอก",
+"Save (no trip this day)":"บันทึก (ไม่มีการเดินทางวันนี้)","Recorded: no trips for this person on":"บันทึกแล้ว: ไม่มีการเดินทางของบุคคลนี้ในวันที่","no trip that day":"ไม่มีการเดินทางวันนั้น",
+"This person was recorded as making no trips at all that day.":"บุคคลนี้ถูกบันทึกว่าไม่มีการเดินทางเลยในวันนั้น","Register a trip for them instead":"ลงทะเบียนการเดินทางให้แทน","This person made no trips that day - nothing to detail. Continue to see if anyone else needs a trip registered.":"บุคคลนี้ไม่มีการเดินทางในวันนั้น - ไม่มีรายละเอียดต้องกรอก ไปต่อเพื่อดูว่ามีสมาชิกคนอื่นที่ต้องลงทะเบียนการเดินทางหรือไม่",
 "RP Survey":"แบบสอบถาม RP","SP Survey (interactive)":"แบบสอบถาม SP (แบบโต้ตอบ)","Welcome":"ยินดีต้อนรับ",
 "<- Back":"<- ย้อนกลับ","Next ->":"ถัดไป ->","Done":"เสร็จสิ้น","Save draft":"บันทึกฉบับร่าง","Character":"ตัวละคร","Save & close":"บันทึกและปิด",
 "Yes":"ใช่","No":"ไม่ใช่","Unsure":"ไม่แน่ใจ","N/A":"ไม่เกี่ยวข้อง","Other":"อื่นๆ","None":"ไม่มี","Maybe":"อาจจะ",
@@ -772,19 +778,30 @@ function personChipRow(selectedId,onClickName){
 }
 window.setTripPerson = (id)=>{
   tripPerson = id;
-  stops = tripsByPerson[id] ? tripsByPerson[id].map(s=>({...s})) : [newStop('Home'), newStop('School'), newStop('Home')];
-  tripConfirmed = !!tripsByPerson[id];
+  const saved = tripsByPerson[id];
+  stops = (saved && saved!=='NO_TRIP') ? saved.map(s=>({...s})) : [newStop('Home'), newStop('School'), newStop('Home')];
+  tripConfirmed = !!saved;
   segIdx = 0; showTripDonePrompt = false;
   renderRP();
 };
 window.saveTrip = ()=>{ tripConfirmed = true; tripsByPerson[tripPerson] = stops.map(s=>({...s})); renderRP(); };
+window.saveNoTrip = ()=>{ tripConfirmed = true; tripsByPerson[tripPerson] = 'NO_TRIP'; renderRP(); };
 window.toggleCompanion = (id)=>{ const k='companion_'+id; A[k]=!A[k]; renderRP(); };
 
 window.openTripEditPicker = (id)=>{
   const c = characters.find(c=>c.id===id);
   const nm = c ? (A[id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'))) : id;
   document.getElementById('modal-title').textContent = t('Edit trip for')+' '+nm;
-  const segs = tripsByPerson[id] || [];
+  const saved = tripsByPerson[id];
+  if(saved==='NO_TRIP'){
+    document.getElementById('modal-body').innerHTML = `
+      <div class="q-note">${t('This person was recorded as making no trips at all that day.')}</div>
+      <div class="nav-row"><span></span><button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="jumpToStopList('${id}')">${t('Register a trip for them instead')}</button></div>
+    `;
+    document.getElementById('modal-overlay').classList.add('open');
+    return;
+  }
+  const segs = saved || [];
   const rows = segs.slice(0,-1).map((s,i)=>`<div class="stop-item"><span style="flex:1">${t('Segment')} ${i+1}: ${s.place||'?'} -&gt; ${(segs[i+1]||{}).place||'?'}</span><button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="jumpToSegment('${id}',${i})">${t('Edit')}</button></div>`).join('');
   document.getElementById('modal-body').innerHTML = `
     <div class="stop-list">${rows || `<div class="empty-hint">${t('No segments yet.')}</div>`}</div>
@@ -1036,11 +1053,19 @@ const rpSteps = [
     <div class="stop-list">${Object.keys(tripsByPerson).map(id=>{
       const c = characters.find(c=>c.id===id);
       const nm = c ? (A[id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'))) : id;
-      return `<div class="stop-item"><span style="flex:1">${nm}</span><button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="openTripEditPicker('${id}')">${t('Edit')}</button></div>`;
+      const noTrip = tripsByPerson[id]==='NO_TRIP';
+      return `<div class="stop-item"><span style="flex:1">${nm}${noTrip?` <span class="q-help" style="font-size:11px">(${t('no trip that day')})</span>`:''}</span><button class="btn btn-ghost" style="border:1px solid var(--line);padding:6px 14px" onclick="openTripEditPicker('${id}')">${t('Edit')}</button></div>`;
     }).join('')}</div>
   </div>`:''}
   ${tripPerson?`
   <div class="q-note">${dl('The questions below refer to [date], the day covered by this trip diary. Who traveled together on each leg is asked later, per segment, in Trip Details.')}</div>
+  <div class="field"><div class="q-label">${dl('Did this person leave home at all on [date]?')}</div>${opts('madetrip_'+tripPerson,['Yes, at least one trip','No trips at all'])}</div>
+  ${val('madetrip_'+tripPerson)==='No trips at all'?`
+  <div class="field"><div class="q-label">${dl('What was the main reason this person did not leave home at all on [date]?')}</div>
+    ${opts('no_trip_reason_'+tripPerson,['Working/studying from home or online class','Workplace/school was closed','Had no reason to go out','Other'])}</div>
+  <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveNoTrip()">${t('Save (no trip this day)')}</button></div>
+  ${tripConfirmed && tripsByPerson[tripPerson]==='NO_TRIP'?`<div class="confirm-box">${t('Recorded: no trips for this person on')} ${diaryDate}.</div>`:''}
+  `:`
   <div class="grid2">
     <div class="field"><div class="q-label">${dl('Sleep time (night before [date])')}</div><input type="time"></div>
     <div class="field"><div class="q-label">${dl('Wake time (on [date])')}</div><input type="time"></div>
@@ -1057,13 +1082,19 @@ const rpSteps = [
       <span class="drag-handle">${t('Move')}</span></div>`).join('')}</div>
     <button class="add-btn" onclick="stops.push(newStop(''));tripConfirmed=false;renderRP()">${t('+ Add a stop')}</button>
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="saveTrip()">${t('Save trip')}</button></div>
-    ${tripConfirmed?`<div class="confirm-box"><b>${stops.length-1} ${t('segment(s) saved:')}</b><br>${stops.slice(0,-1).map((s,i)=>(s.place||'?')+' -&gt; '+(stops[i+1].place||'?')).join('<br>')}<br><span style="font-size:12px">${t("Check this looks right, then press Next to fill in each segment's details.")}</span></div>`:''}
+    ${tripConfirmed && tripsByPerson[tripPerson]!=='NO_TRIP'?`<div class="confirm-box"><b>${stops.length-1} ${t('segment(s) saved:')}</b><br>${stops.slice(0,-1).map((s,i)=>(s.place||'?')+' -&gt; '+(stops[i+1].place||'?')).join('<br>')}<br><span style="font-size:12px">${t("Check this looks right, then press Next to fill in each segment's details.")}</span></div>`:''}
   </div>
+  `}
   `:`<div class="empty-hint">${t('Pick a household member above to start their trip diary.')}</div>`}`},
 
 {name:'Travel Diary - Trip Details', tag:'Section 3 - Trip Details (per segment)', customNav:true, render:()=>{
   if(!tripPerson) return `<div class="empty-hint">${t('Go back and register a trip first.')}</div>
     <div class="nav-row"><button class="btn btn-ghost" onclick="rpIdx--;renderRP()">${t('<- Back')}</button>${tempSaveBtn()}${devMode?`<button class="btn btn-primary" onclick="rpIdx++;renderRP()">${t('Next ->')}</button>`:'<span></span>'}</div>`;
+
+  if(tripsByPerson[tripPerson]==='NO_TRIP' && !showTripDonePrompt){
+    return `<div class="empty-hint">${t('This person made no trips that day - nothing to detail. Continue to see if anyone else needs a trip registered.')}</div>
+      <div class="nav-row"><button class="btn btn-ghost" onclick="rpIdx--;renderRP()">${t('<- Back')}</button>${tempSaveBtn()}<button class="btn btn-primary" onclick="showTripDonePrompt=true;renderRP()">${t('Next ->')}</button></div>`;
+  }
 
   const totalSegs = Math.max(0, stops.length-1);
 
@@ -1138,6 +1169,8 @@ const rpSteps = [
       const on = val('escorted_'+c.id,false)?'checked':'';
       return `<label class="opt ${on}" onclick="toggleEscorted('${c.id}')">${childName(c)}</label>`;
     }).join('')||`<span class="q-help">${t('No child characters created yet.')}</span>`}</div></div>
+  <div class="field"><div class="q-label">${t("Do you also regularly escort any child(ren) who are NOT members of your household (e.g. a neighbor's child, or as part of a carpool)?")}</div>${opts('escorts_nonhousehold',['Yes','No'])}
+    ${val('escorts_nonhousehold')==='Yes'?`<input type="text" placeholder="${t('Briefly note the relationship and school for each')}" style="margin-top:8px;width:100%" value="${val('nonhousehold_detail','')}" oninput="A['nonhousehold_detail']=this.value">`:''}</div>
   <div class="field"><div class="q-label">${t('Which adults usually do the escorting?')}</div>
     <div class="opt-row">${characters.filter(c=>c.kind==='adult').map(c=>{
       const on = val('escorts_adult_'+c.id,false)?'checked':'';
@@ -1203,7 +1236,7 @@ const rpSteps = [
   <div class="field"><div class="q-label">${t('How do you typically escort your children? (main mode)')}</div>
     ${opts('escort_mode',['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi meter','MRT','BTS','Bus'])}</div>
   <div class="field"><div class="q-label">${t('Why this mode? (top 3)')}</div>
-    ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare','Combined with own commute/errand (trip-chaining)','Ride-hailing as backup when I cannot escort in person'],true)}</div>
+    ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare','Combined with own commute/errand (trip-chaining)','Ride-hailing as backup when I cannot escort in person','Physical condition/disability makes independent travel difficult','Destination is far from home','To make sure we arrive on time','Carrying heavy or bulky items','I happen to have extra free time'],true)}</div>
   <div class="field"><div class="q-label">${t('How often does weather (heavy rain/extreme heat) change your usual school-commute mode?')}</div>${opts('weather_mode_change',['Never','Rarely','Sometimes','Often','Always'])}</div>
   <div class="field"><div class="q-label">${t('How often does your household use a ride-hailing app (e.g. Grab, Line Man, inDrive, Bolt) to send/pick up your child for school?')}</div>${opts('ridehailing_freq',['Never','Rarely','Sometimes','Often','Always'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used BTS Skytrain on their own, without an adult?')}</div>${opts('used_bts_alone',['Yes','No'])}</div>
