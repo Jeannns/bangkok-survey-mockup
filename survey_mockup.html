@@ -196,6 +196,12 @@ textarea{resize:vertical;min-height:60px}
 /* ================= LANGUAGE TOGGLE ================= */
 let lang = 'en';
 const T = {
+"Your progress code:":"รหัสความคืบหน้าของคุณ:","write this down if you plan to continue later on a different device.":"จดรหัสนี้ไว้หากต้องการทำต่อในภายหลังจากอุปกรณ์อื่น",
+"Already started on another device? Enter your code to resume:":"เริ่มทำจากอุปกรณ์อื่นไว้แล้ว? กรอกรหัสของคุณเพื่อทำต่อ:","Resume":"ทำต่อ",
+"Draft loaded - continuing where you left off.":"โหลดฉบับร่างสำเร็จ - ทำต่อจากจุดที่ค้างไว้","No saved draft found for that code.":"ไม่พบฉบับร่างที่บันทึกไว้สำหรับรหัสนี้",
+"Saving...":"กำลังบันทึก...","Save failed - tap to retry":"บันทึกไม่สำเร็จ - แตะเพื่อลองใหม่","Save draft (offline demo)":"บันทึกฉบับร่าง (โหมดทดลอง ยังไม่เชื่อมระบบ)",
+"Submitting...":"กำลังส่งแบบสอบถาม...","Demo mode - not saved":"โหมดทดลอง - ยังไม่ได้บันทึก","This mockup is not yet connected to a real backend, so nothing was saved. See SETUP_GOOGLE_SHEET_BACKEND.md to connect one.":"ต้นแบบนี้ยังไม่ได้เชื่อมต่อกับระบบหลังบ้านจริง จึงยังไม่มีการบันทึกข้อมูลใดๆ ดูวิธีเชื่อมต่อได้ที่ SETUP_GOOGLE_SHEET_BACKEND.md",
+"Something went wrong":"เกิดข้อผิดพลาด","Your answers were not sent. Please check your internet connection and try Submit again from the Review page.":"คำตอบของท่านยังไม่ถูกส่ง กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองกดส่งอีกครั้งจากหน้าตรวจทาน","Back to Review":"กลับไปหน้าตรวจทาน",
 "Physical condition/disability makes independent travel difficult":"สภาพร่างกาย/ความพิการทำให้เดินทางลำบากด้วยตนเอง","Destination is far from home":"ปลายทางอยู่ไกลจากบ้าน","To make sure we arrive on time":"เพื่อให้ไปถึงตรงเวลา","Carrying heavy or bulky items":"ต้องพกของหนักหรือของชิ้นใหญ่","I happen to have extra free time":"บังเอิญมีเวลาว่างพอดี",
 "Do you also regularly escort any child(ren) who are NOT members of your household (e.g. a neighbor's child, or as part of a carpool)?":"ท่านรับส่งเด็กที่ไม่ใช่สมาชิกในครัวเรือนเป็นประจำด้วยหรือไม่ (เช่น ลูกเพื่อนบ้าน หรือเป็นส่วนหนึ่งของการ carpool)","Briefly note the relationship and school for each":"โปรดระบุความสัมพันธ์และโรงเรียนของแต่ละคนโดยย่อ",
 "Did this person leave home at all on [date]?":"บุคคลนี้ได้ออกจากบ้านในวันที่ [date] หรือไม่","Yes, at least one trip":"ใช่ มีอย่างน้อย 1 ทริป","No trips at all":"ไม่มีการเดินทางเลย",
@@ -527,6 +533,86 @@ document.querySelectorAll('.tab[data-tab]').forEach(t2=>t2.addEventListener('cli
 /* ================= SHARED HELPERS ================= */
 const A = {};
 function val(id,d){return A[id]!==undefined?A[id]:d;}
+
+/* ================= BACKEND (Google Sheet via Apps Script) =================
+   To enable real data capture: create a Google Sheet, open Extensions > Apps
+   Script, paste in google_apps_script/Code.gs from this repo, deploy it as a
+   Web App (Execute as: Me, Who has access: Anyone), then paste the
+   deployment URL below. See SETUP_GOOGLE_SHEET_BACKEND.md for the full
+   walkthrough. Until API_URL is set, Save Draft / Submit show a "demo mode -
+   not saved" message instead of silently pretending to persist anything. */
+const API_URL = ''; // <- paste your Apps Script Web App URL here after deploying
+
+function genRespondentCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I, avoids confusion when handwritten
+  let s = '';
+  for(let i=0;i<8;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s.slice(0,4)+'-'+s.slice(4);
+}
+let respondentCode = localStorage.getItem('bkk_survey_code') || genRespondentCode();
+localStorage.setItem('bkk_survey_code', respondentCode);
+let backendStatus = null; // null | 'saving' | 'saved' | 'error' | 'not_configured'
+let alreadySubmitted = localStorage.getItem('bkk_survey_submitted_'+respondentCode) === '1';
+
+function collectState(){
+  return { A, characters, tripsByPerson, diaryDate, maintActivities, lang };
+}
+function restoreState(data){
+  if(!data) return;
+  Object.keys(A).forEach(k=>delete A[k]);
+  Object.assign(A, data.A||{});
+  characters = data.characters||[];
+  tripsByPerson = data.tripsByPerson||{};
+  diaryDate = data.diaryDate||'';
+  maintActivities = data.maintActivities||[{name:''}];
+  lang = data.lang||lang;
+}
+
+async function backendPost(action){
+  if(!API_URL){ backendStatus='not_configured'; return {ok:false, error:'not_configured'}; }
+  backendStatus='saving'; renderRP();
+  try{
+    const res = await fetch(API_URL, { method:'POST', body: JSON.stringify({action, code:respondentCode, data:collectState()}) });
+    const json = await res.json();
+    backendStatus = json.ok ? 'saved' : 'error';
+    return json;
+  }catch(err){
+    backendStatus='error';
+    return {ok:false, error:String(err)};
+  }
+}
+async function backendLoad(code){
+  if(!API_URL) return {ok:false, error:'not_configured'};
+  try{
+    const res = await fetch(API_URL + '?action=loadDraft&code=' + encodeURIComponent(code));
+    return await res.json();
+  }catch(err){
+    return {ok:false, error:String(err)};
+  }
+}
+window.resumeWithCode = async (code)=>{
+  code = (code||'').trim().toUpperCase();
+  if(!code) return;
+  const result = await backendLoad(code);
+  if(result.ok && result.found){
+    restoreState(result.data);
+    respondentCode = code;
+    localStorage.setItem('bkk_survey_code', respondentCode);
+    alreadySubmitted = result.status==='submitted';
+    renderRP();
+    alert(t('Draft loaded - continuing where you left off.'));
+  } else {
+    alert(t('No saved draft found for that code.'));
+  }
+};
+async function tryAutoResume(){
+  const result = await backendLoad(respondentCode);
+  if(result.ok && result.found){
+    restoreState(result.data);
+    alreadySubmitted = result.status==='submitted';
+    renderRP();
+  }
+}
 
 function likert(container,name,items,scaleLabels){
   let rows = items.map((it,i)=>{
@@ -874,9 +960,19 @@ window.showIncentiveForm = ()=>{
     <div class="nav-row"><span></span><button class="btn btn-primary" onclick="finishSubmit()">${t('Submit Survey')}</button></div>
   `;
 };
-window.finishSubmit = ()=>{
+window.finishSubmit = async ()=>{
   document.getElementById('modal-overlay').classList.remove('open');
-  document.getElementById('rp-card').innerHTML = `<div class="hero"><h1>${t('Submitted - thank you!')}</h1><p>${t('Your responses have been recorded. You may now close this window.')}</p></div>`;
+  document.getElementById('rp-card').innerHTML = `<div class="hero"><h1>${t('Submitting...')}</h1></div>`;
+  const result = await backendPost('submit');
+  if(result.ok){
+    localStorage.setItem('bkk_survey_submitted_'+respondentCode,'1');
+    alreadySubmitted = true;
+    document.getElementById('rp-card').innerHTML = `<div class="hero"><h1>${t('Submitted - thank you!')}</h1><p>${t('Your responses have been recorded. You may now close this window.')}</p></div>`;
+  } else if(result.error==='not_configured'){
+    document.getElementById('rp-card').innerHTML = `<div class="hero"><h1>${t('Demo mode - not saved')}</h1><p>${t('This mockup is not yet connected to a real backend, so nothing was saved. See SETUP_GOOGLE_SHEET_BACKEND.md to connect one.')}</p></div>`;
+  } else {
+    document.getElementById('rp-card').innerHTML = `<div class="hero"><h1>${t('Something went wrong')}</h1><p>${t('Your answers were not sent. Please check your internet connection and try Submit again from the Review page.')}</p><button class="btn btn-primary" onclick="rpIdx=rpSteps.findIndex(s=>s.name==='Review & Submit');renderRP()">${t('Back to Review')}</button></div>`;
+  }
 };
 
 let tripConfirmed = false;
@@ -961,9 +1057,17 @@ window.confirmStopLocCustom = (stopId)=>{
 };
 
 let lastSavedAt = null;
-window.tempSave = ()=>{ lastSavedAt = new Date().toLocaleTimeString(); renderRP(); };
+window.tempSave = async ()=>{
+  const result = await backendPost('saveDraft');
+  if(result.ok) lastSavedAt = new Date().toLocaleTimeString();
+  renderRP();
+};
 function tempSaveBtn(){
-  return `<button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="tempSave()">${lastSavedAt?t('Draft saved ')+lastSavedAt:t('Save draft')}</button>`;
+  const label = backendStatus==='saving' ? t('Saving...')
+    : backendStatus==='error' ? t('Save failed - tap to retry')
+    : backendStatus==='not_configured' ? t('Save draft (offline demo)')
+    : lastSavedAt ? t('Draft saved ')+lastSavedAt : t('Save draft');
+  return `<button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="tempSave()">${label}</button>`;
 }
 
 /* per-child loop state for steps that repeat questions per child */
@@ -989,6 +1093,9 @@ const rpSteps = [
   <h1>${t('Before you begin')}</h1>
   <p>${t('This survey has 5 parts: Household Information, Individual Information, Travel Diary, Escorting Behavior & Safety, and School Choice. It takes about 15-20 minutes. All answers are kept confidential.')}</p>
   ${devMode?`<p style="color:var(--sub);font-size:12px;margin-top:10px">${t('(dev mode on - completion checks are bypassed on every page)')}</p>`:''}
+  <div class="q-note" style="margin-top:16px">${t('Your progress code:')} <b>${respondentCode}</b> - ${t('write this down if you plan to continue later on a different device.')}</div>
+  <div class="field" style="margin-top:10px"><div class="q-label" style="font-size:13px">${t('Already started on another device? Enter your code to resume:')}</div>
+    <div style="display:flex;gap:8px"><input type="text" id="resume-code-input" placeholder="XXXX-XXXX" style="flex:1"><button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="resumeWithCode(document.getElementById('resume-code-input').value)">${t('Resume')}</button></div></div>
   </div>`},
 
 {name:'Household - House & Location', tag:'Section 1 - Household Information', render:()=>`
@@ -1352,6 +1459,7 @@ function renderRP(){
 }
 renderTabLabels();
 renderRP();
+tryAutoResume();
 
 /* ================= SP DATA ================= */
 /* Pre-SP Setup state: which child, car-vs-motorcycle branch, dedicated-vs-chained trip */
