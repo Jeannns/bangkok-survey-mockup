@@ -1508,7 +1508,7 @@ function scenarioCard(title,cardIcon,rows,selKey,idx,note,opt){
     ${scene || `<div class="icon">${iconGlyph(cardIcon)}</div>`}
     <div class="opt-title">${t(title)}</div>
     ${note?`<div class="q-help" style="margin-bottom:8px">${note}</div>`:''}
-    ${rows.map(r=>`<div class="attr-row"><span class="ic">${iconGlyph(r.icon)}</span> ${t(r.label)}${r.ctrl?` <span style="color:var(--purple);font-weight:700;font-size:10px">(${t('Ctrl')})</span>`:''} ${r.bar?r.bar:`<b>${r.value}</b>`}</div>`).join('')}
+    ${rows.map(r=>`<div class="attr-row"><span class="ic">${iconGlyph(r.icon)}</span> ${t(r.label)} ${r.bar?r.bar:`<b>${r.value}</b>`}</div>`).join('')}
   </div>`;
 }
 
