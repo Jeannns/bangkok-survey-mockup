@@ -181,14 +181,13 @@ const DASHBOARD_HTML = '<!DOCTYPE html>' +
 '}' +
 'function renderAll(){ renderSummary(); populateFieldSelectors(); populateFilterValues(); renderRecent(); document.getElementById("last-updated").textContent = "Last updated: " + new Date().toLocaleTimeString(); }' +
 'function loadData(){' +
-'  fetch(window.location.href.split("?")[0] + "?action=listResponses")' +
-'    .then(function(res){ return res.json(); })' +
-'    .then(function(json){' +
-'      if(!json.ok){ document.getElementById("last-updated").textContent = "Error: " + json.error; return; }' +
-'      allResponses = json.responses || [];' +
-'      renderAll();' +
-'    })' +
-'    .catch(function(err){ document.getElementById("last-updated").textContent = "Error: " + err; });' +
+'  google.script.run.withSuccessHandler(function(json){' +
+'    if(!json.ok){ document.getElementById("last-updated").textContent = "Error: " + json.error; return; }' +
+'    allResponses = json.responses || [];' +
+'    renderAll();' +
+'  }).withFailureHandler(function(err){' +
+'    document.getElementById("last-updated").textContent = "Error: " + (err && err.message ? err.message : err);' +
+'  }).listResponses();' +
 '}' +
 'document.getElementById("group-field").addEventListener("change", renderChart);' +
 'document.getElementById("filter-field").addEventListener("change", populateFilterValues);' +

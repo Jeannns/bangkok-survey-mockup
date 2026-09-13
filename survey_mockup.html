@@ -506,6 +506,12 @@ const T = {
 "Thinking about your school choice above, which factor mattered to you the most?":"จากตัวเลือกโรงเรียนข้างต้น ปัจจัยใดสำคัญกับท่านมากที่สุด",
 "Academic reputation/quality":"ชื่อเสียง/คุณภาพวิชาการ","Tuition cost":"ค่าเทอม","Distance/travel time":"ระยะทาง/เวลาเดินทาง",
 "Module 1 choices (Escort / Travel)":"ตัวเลือกโมดูล 1 (การรับส่ง/เดินทาง)","Module 2 choices (School Choice)":"ตัวเลือกโมดูล 2 (การเลือกโรงเรียน)",
+"Religious, Islamic":"โรงเรียนศาสนาอิสลาม","Religious, Christian":"โรงเรียนศาสนาคริสต์","Religious, other":"โรงเรียนศาสนาอื่นๆ",
+"Please specify the religion/affiliation":"โปรดระบุศาสนา/สังกัด","Please specify":"โปรดระบุ",
+"How was this child admitted to their current school?":"บุตรหลานเข้าเรียนโรงเรียนปัจจุบันด้วยวิธีใด",
+"Normal application or entrance exam":"สมัครเรียนหรือสอบเข้าตามปกติ",
+"Area-based quota":"โควต้าตามพื้นที่ (บ้านอยู่ในเขตพื้นที่บริการของโรงเรียน)",
+"Staff/personnel quota":"โควต้าบุคลากร (ผู้ปกครองเป็นบุคลากรของโรงเรียนหรือหน่วยงานในเครือ)",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -643,6 +649,16 @@ window.pickOpt = (el,name,o,multi)=>{
   if(multi){ const k=name+'_'+o; A[k]=!A[k]; el.classList.toggle('checked'); }
   else { A[name]=o; el.parentElement.querySelectorAll('.opt').forEach(x=>x.classList.remove('checked')); el.classList.add('checked'); renderRP(); }
 };
+
+/* Same single-select as opts(), but re-renders the open character modal (not the
+   main RP page) afterward -- needed when picking an option should reveal/hide a
+   conditional field inside the modal (e.g. an "other, please specify" text box). */
+function optsModal(name,options){
+  return `<div class="opt-row">` + options.map(o=>{
+    const checked = (val(name)===o)?'checked':'';
+    return `<label class="opt ${checked}" onclick="A['${name}']='${o.replace(/'/g,"\\'")}';renderModal()">${t(o)}</label>`;
+  }).join('') + `</div>`;
+}
 
 function selectOpts(name,options){
   const cur = val(name) || '';
@@ -807,7 +823,12 @@ function renderModal(){
        <div class="field"><div class="q-label">${t('Does this person hold a Rabbit Card or MRT Card?')}</div>${opts(p+'_transit_card',['Yes','No'])}</div>`
     : `<div class="field"><div class="q-label">${t('School start / end time (if school-going)')}</div><div class="grid2"><input type="time"><input type="time"></div></div>
        <div class="field"><div class="q-label">${t('School name and location')}</div>${locPicker(p+'_school')}</div>
-       <div class="field"><div class="q-label">${t('School type')}</div>${opts(p+'_schooltype',['Public','Private, local','Private, international'])}</div>
+       <div class="field"><div class="q-label">${t('School type')}</div>${optsModal(p+'_schooltype',['Public','Private, local','Private, international','Religious, Islamic','Religious, Christian','Religious, other'])}
+         ${val(p+'_schooltype')==='Religious, other' ? `<input type="text" style="margin-top:6px" value="${A[p+'_schooltype_other']||''}" oninput="A['${p}_schooltype_other']=this.value" placeholder="${t('Please specify the religion/affiliation')}">` : ''}
+       </div>
+       <div class="field"><div class="q-label">${t('How was this child admitted to their current school?')}</div>${optsModal(p+'_admission',['Normal application or entrance exam','Area-based quota','Staff/personnel quota','Other'])}
+         ${val(p+'_admission')==='Other' ? `<input type="text" style="margin-top:6px" value="${A[p+'_admission_other']||''}" oninput="A['${p}_admission_other']=this.value" placeholder="${t('Please specify')}">` : ''}
+       </div>
        <div class="field"><div class="q-label">${t('Does this child use school bus service?')}</div>${opts(p+'_usesbus',['Yes','No'])}</div>
        <div class="q-note">${t('Collected once here - Sections 4 and 5 will reuse this instead of asking again.')}</div>`;
 
