@@ -559,6 +559,12 @@ const T = {
 "Walk/wait time (min)":"เวลาเดิน/รอ (นาที)",
 "Fare (THB)":"ค่าโดยสาร (บาท)",
 "+ Add mode":"+ เพิ่มรูปแบบการเดินทาง",
+"This is for escorting someone other than your own school-going child - e.g. a neighbor's child, an elderly relative, or another household member. For your own child's school run, choose \"School escort\" above instead.":"ข้อนี้สำหรับการรับส่งคนอื่นที่ไม่ใช่บุตรหลานวัยเรียนของท่านเอง เช่น ลูกเพื่อนบ้าน ญาติผู้สูงอายุ หรือสมาชิกครัวเรือนคนอื่น หากเป็นการไปรับส่งบุตรหลานไปโรงเรียนของท่านเอง ให้เลือก \"รับส่งบุตรหลานไปโรงเรียน\" ด้านบนแทน",
+"Who were you escorting on this trip?":"ท่านรับส่งใครในการเดินทางครั้งนี้",
+"e.g. neighbor's child, elderly parent":"เช่น ลูกเพื่อนบ้าน พ่อแม่ผู้สูงอายุ",
+"Were you dropping them off, or picking them up?":"ท่านไปส่งหรือไปรับ",
+"Dropping off":"ไปส่ง",
+"Picking up":"ไปรับ",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -1341,7 +1347,9 @@ const rpSteps = [
   const i = segIdx;
   const ns = tripPerson+'_'+i;
   const purposeKey='purpose_'+ns;
-  const isEscort = (val(purposeKey)||'').indexOf('Escorting')>=0 || (val(purposeKey)||'').indexOf('School escort')>=0;
+  const purposeVal = val(purposeKey)||'';
+  const isSchoolEscort = purposeVal === 'School escort';
+  const isOtherEscort = purposeVal === 'Escorting (other)';
   const segMode = val('mode_'+ns);
   const isRailMode = segMode==='MRT' || segMode==='BTS Skytrain';
   const isCarMode = segMode==='Private car' || segMode==='Private motorbike';
@@ -1388,10 +1396,20 @@ const rpSteps = [
       ${opts('driverpax_'+ns,['Driver','Passenger'])}</div>`:''}
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Main purpose of this trip')}</div>
       ${opts(purposeKey,['Commuting to work','School escort','Going to school (for children)','Return home','Return to workplace','Escorting (other)','Shopping','Leisure','Medical-related','Other private purpose','Business/work-related'])}</div>
-    ${isEscort?`
+    ${isSchoolEscort?`
     <div class="escort-box"><span class="tag">${t('Escort trip - extra detail')}</span>
       <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Taking the child TO school, or bringing them FROM school?')}</div>
         ${opts('escdir_'+ns,['To school','From school'])}</div>
+      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Drop-off / pick-up point')}</div>${locPicker('dropoff_'+ns)}</div>
+      <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">${t('After arriving, how long do you usually wait?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
+    </div>`:''}
+    ${isOtherEscort?`
+    <div class="escort-box"><span class="tag">${t('Escort trip - extra detail')}</span>
+      <div class="q-help" style="margin-bottom:8px">${t('This is for escorting someone other than your own school-going child - e.g. a neighbor\'s child, an elderly relative, or another household member. For your own child\'s school run, choose "School escort" above instead.')}</div>
+      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Who were you escorting on this trip?')}</div>
+        <input type="text" placeholder="${t("e.g. neighbor's child, elderly parent")}" value="${A['escortwho_'+ns]||''}" oninput="A['escortwho_${ns}']=this.value"></div>
+      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Were you dropping them off, or picking them up?')}</div>
+        ${opts('escdir_other_'+ns,['Dropping off','Picking up'])}</div>
       <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Drop-off / pick-up point')}</div>${locPicker('dropoff_'+ns)}</div>
       <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">${t('After arriving, how long do you usually wait?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
     </div>`:''}
