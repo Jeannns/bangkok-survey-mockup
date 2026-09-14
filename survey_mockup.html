@@ -578,6 +578,9 @@ const T = {
 "Screening":"คัดกรองคุณสมบัติ",
 "Dev navigation":"เมนูนำทาง (dev)",
 "Jump to any section":"กดเพื่อไปยังส่วนใดก็ได้",
+"Who are you escorting on this trip?":"ท่านรับส่งใครในการเดินทางครั้งนี้",
+"Select a household member":"เลือกสมาชิกในครัวเรือน",
+"Someone not in this household":"บุคคลอื่นที่ไม่ใช่สมาชิกในครัวเรือนนี้",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -1452,12 +1455,18 @@ const rpSteps = [
     ${isOtherEscort?`
     <div class="escort-box"><span class="tag">${t('Escort trip - extra detail')}</span>
       <div class="q-help" style="margin-bottom:8px">${t('This is for escorting someone other than your own school-going child - e.g. a neighbor\'s child, an elderly relative, or another household member. For your own child\'s school run, choose "School escort" above instead.')}</div>
-      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Who were you escorting on this trip?')}</div>
-        <input type="text" placeholder="${t("e.g. neighbor's child, elderly parent")}" value="${A['escortwho_'+ns]||''}" oninput="A['escortwho_${ns}']=this.value"></div>
-      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Were you dropping them off, or picking them up?')}</div>
-        ${opts('escdir_other_'+ns,['Dropping off','Picking up'])}</div>
-      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Drop-off / pick-up point')}</div>${locPicker('dropoff_'+ns)}</div>
-      <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">${t('After arriving, how long do you usually wait?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
+      <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">${t('Who are you escorting on this trip?')}</div>
+        <select onchange="A['escortwho_${ns}']=this.value;renderRP()">
+          <option value="">${t('Select a household member')}</option>
+          ${characters.filter(c=>c.id!==tripPerson).map(c=>{
+            const nm = A[c.id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'));
+            return `<option value="${c.id}" ${val('escortwho_'+ns)===c.id?'selected':''}>${nm}</option>`;
+          }).join('')}
+          <option value="__other__" ${val('escortwho_'+ns)==='__other__'?'selected':''}>${t('Someone not in this household')}</option>
+        </select>
+        ${characters.filter(c=>c.id!==tripPerson).length===0?`<div class="q-note">${t('No other household members yet.')}</div>`:''}
+        ${val('escortwho_'+ns)==='__other__'?`<input type="text" style="margin-top:8px" placeholder="${t("e.g. neighbor's child, elderly parent")}" value="${A['escortwho_other_'+ns]||''}" oninput="A['escortwho_other_${ns}']=this.value">`:''}
+      </div>
     </div>`:''}
     <div class="field" style="border:none;padding:0;margin-top:10px"><div class="q-label" style="font-size:13px">${t('Fare/cost (THB, 0 if free)')}</div><input type="number" style="width:120px"></div>
     </div>`;
