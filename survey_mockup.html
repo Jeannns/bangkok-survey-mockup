@@ -581,6 +581,13 @@ const T = {
 "Who are you escorting on this trip?":"ท่านรับส่งใครในการเดินทางครั้งนี้",
 "Select a household member":"เลือกสมาชิกในครัวเรือน",
 "Someone not in this household":"บุคคลอื่นที่ไม่ใช่สมาชิกในครัวเรือนนี้",
+"Where were they going?":"บุคคลนั้นไปที่ไหน",
+"e.g. school, hospital, market":"เช่น โรงเรียน โรงพยาบาล ตลาด",
+"What was the purpose of that person's trip?":"วัตถุประสงค์ของการเดินทางของบุคคลนั้นคืออะไร",
+"School":"โรงเรียน",
+"Medical/healthcare":"เกี่ยวกับการรักษาพยาบาล",
+"Social visit":"เยี่ยมเยียนสังสรรค์",
+"Work":"ทำงาน",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -1467,6 +1474,10 @@ const rpSteps = [
         ${characters.filter(c=>c.id!==tripPerson).length===0?`<div class="q-note">${t('No other household members yet.')}</div>`:''}
         ${val('escortwho_'+ns)==='__other__'?`<input type="text" style="margin-top:8px" placeholder="${t("e.g. neighbor's child, elderly parent")}" value="${A['escortwho_other_'+ns]||''}" oninput="A['escortwho_other_${ns}']=this.value">`:''}
       </div>
+      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Where were they going?')}</div>
+        <input type="text" placeholder="${t('e.g. school, hospital, market')}" value="${A['escortdest_'+ns]||''}" oninput="A['escortdest_${ns}']=this.value"></div>
+      <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">${t("What was the purpose of that person's trip?")}</div>
+        ${opts('escortpurpose_'+ns,['School','Medical/healthcare','Shopping','Social visit','Work','Other'])}</div>
     </div>`:''}
     <div class="field" style="border:none;padding:0;margin-top:10px"><div class="q-label" style="font-size:13px">${t('Fare/cost (THB, 0 if free)')}</div><input type="number" style="width:120px"></div>
     </div>`;
