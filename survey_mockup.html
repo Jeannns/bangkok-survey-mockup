@@ -7,7 +7,16 @@
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-.app{max-width:920px;margin:0 auto;padding:24px 20px 80px}
+.app{max-width:920px;margin:0 auto;padding:24px 20px 80px;transition:margin-left .15s}
+body.dev-nav-open .app{margin-left:250px}
+.dev-nav{position:fixed;top:0;left:0;bottom:0;width:230px;background:#111827;color:#e5e7eb;overflow-y:auto;padding:16px 12px 40px;font-size:12.5px;z-index:60;display:none;box-shadow:2px 0 16px rgba(0,0,0,.35)}
+.dev-nav.open{display:block}
+.dev-nav .dn-head{color:#f9fafb;font-weight:700;font-size:13px;margin-bottom:2px}
+.dev-nav .dn-sub{color:#9ca3af;font-size:11px;margin-bottom:12px}
+.dev-nav h4{margin:14px 0 6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af}
+.dev-nav .dn-item{display:block;padding:6px 8px;border-radius:6px;cursor:pointer;color:#e5e7eb;margin-bottom:2px;line-height:1.3}
+.dev-nav .dn-item:hover{background:#1f2937}
+.dev-nav .dn-item.active{background:#2563eb;color:#fff;font-weight:600}
 .tabs{display:flex;gap:8px;background:var(--card);padding:6px;border-radius:999px;box-shadow:var(--shadow);width:fit-content;margin:0 auto 24px}
 .tab{padding:10px 22px;border-radius:999px;border:none;background:transparent;font-weight:600;font-size:14px;color:var(--sub);cursor:pointer;transition:.15s}
 .tab.active{background:var(--blue);color:#fff}
@@ -159,6 +168,7 @@ textarea{resize:vertical;min-height:60px}
 .summary-box{background:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:16px;margin-top:18px;font-size:13.5px}
 </style>
 
+<div id="dev-nav" class="dev-nav"></div>
 <div class="app">
   <div class="lang-tabs">
     <button class="lang-tab active" id="lang-en" onclick="setLang('en')">EN</button>
@@ -565,6 +575,9 @@ const T = {
 "Were you dropping them off, or picking them up?":"ท่านไปส่งหรือไปรับ",
 "Dropping off":"ไปส่ง",
 "Picking up":"ไปรับ",
+"Screening":"คัดกรองคุณสมบัติ",
+"Dev navigation":"เมนูนำทาง (dev)",
+"Jump to any section":"กดเพื่อไปยังส่วนใดก็ได้",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -1053,6 +1066,39 @@ const REVIEW_GROUPS = [
 ];
 let reviewOpenGroup = null;
 window.toggleReviewGroup = (i)=>{ reviewOpenGroup = reviewOpenGroup===i ? null : i; renderRP(); };
+
+// Dev-mode sidebar navigation: like REVIEW_GROUPS but also covers Screening,
+// Welcome, and Review & Submit so every step in rpSteps is reachable.
+const DEV_NAV_GROUPS = [
+  {label:'Screening', steps:['Screening']},
+  {label:'Welcome', steps:['Welcome']},
+  {label:'Household Information', steps:['Household - House & Location','Household - Vehicles & Income','Morning routine activities']},
+  {label:'Individual Information', steps:['Household - Create Your Household']},
+  {label:'Travel Diary', steps:['Travel Diary - Register a Trip','Travel Diary - Trip Details']},
+  {label:'Escorting Behavior & Safety', steps:['Escorting - Habit','Escorting - Decision (why)','Escorting - Threat & Coping (PMT)','Escorting - Travel Mode','Escorting - Route & Air Quality','Escorting - School Facilities']},
+  {label:'School Choice', steps:['School Choice']},
+  {label:'Review & Submit', steps:['Review & Submit']},
+];
+window.devNavGoto = (idx)=>{ rpIdx = idx; renderRP(); };
+function renderDevNav(){
+  const el = document.getElementById('dev-nav');
+  if(!el) return;
+  document.body.classList.toggle('dev-nav-open', devMode);
+  el.classList.toggle('open', devMode);
+  if(!devMode){ el.innerHTML=''; return; }
+  const stepIdxByName = {};
+  rpSteps.forEach((s,i)=>{ stepIdxByName[s.name]=i; });
+  const groupsHtml = DEV_NAV_GROUPS.map(g=>{
+    const itemsHtml = g.steps.map(name=>{
+      const idx = stepIdxByName[name];
+      if(idx===undefined) return '';
+      const active = idx===rpIdx ? ' active' : '';
+      return `<span class="dn-item${active}" onclick="devNavGoto(${idx})">${t(name)}</span>`;
+    }).join('');
+    return `<h4>${t(g.label)}</h4>${itemsHtml}`;
+  }).join('');
+  el.innerHTML = `<div class="dn-head">${t('Dev navigation')}</div><div class="dn-sub">${t('Jump to any section')}</div>${groupsHtml}`;
+}
 
 window.openIncentivePrompt = ()=>{
   document.getElementById('modal-title').textContent = t('Would you like to receive an incentive?');
@@ -1615,6 +1661,7 @@ function renderRP(){
       ${tempSaveBtn()}
       <button class="btn btn-primary" onclick="rpIdx=Math.min(${rpSteps.length-1},rpIdx+1);renderRP()">${rpIdx===rpSteps.length-1?t('Done'):t('Next ->')}</button>
     </div>`}`;
+  renderDevNav();
 }
 renderTabLabels();
 renderRP();
