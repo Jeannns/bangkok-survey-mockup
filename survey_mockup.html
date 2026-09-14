@@ -550,6 +550,15 @@ const T = {
 "Is the person (or the way they travel) who escorts in the morning usually different from the one in the afternoon/evening?":"คนที่ไปส่งตอนเช้า (หรือวิธีที่ใช้) มักจะต่างจากคนที่ไปรับตอนบ่าย/เย็นหรือไม่",
 "No, usually the same":"ไม่ต่าง มักจะเป็นแบบเดิม",
 "Yes, usually different":"ต่าง มักจะไม่ใช่คนเดียวกัน",
+"One more check":"ก่อนบันทึก ขอถามอีกนิด",
+"No, let me add more stops":"ยังไม่ครบ ขอเพิ่มจุดแวะก่อน",
+"Yes, save this trip":"ครบแล้ว บันทึกเลย",
+"(e.g. took a motorcycle taxi partway before reaching the station)":"(เช่น นั่งวินมอเตอร์ไซค์ก่อนถึงสถานี)",
+"Additional modes used, in order, with the walk/wait time before boarding each one and its fare":"รูปแบบการเดินทางเพิ่มเติมที่ใช้ เรียงตามลำดับ พร้อมเวลาเดิน/รอก่อนขึ้นแต่ละรูปแบบ และค่าโดยสาร",
+"Select a mode":"เลือกรูปแบบการเดินทาง",
+"Walk/wait time (min)":"เวลาเดิน/รอ (นาที)",
+"Fare (THB)":"ค่าโดยสาร (บาท)",
+"+ Add mode":"+ เพิ่มรูปแบบการเดินทาง",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -599,7 +608,7 @@ let backendStatus = null; // null | 'saving' | 'saved' | 'error' | 'not_configur
 let alreadySubmitted = localStorage.getItem('bkk_survey_submitted_'+respondentCode) === '1';
 
 function collectState(){
-  return { A, characters, tripsByPerson, diaryDate, maintActivities, lang, spRespondentId };
+  return { A, characters, tripsByPerson, diaryDate, maintActivities, lang, spRespondentId, multimodeLegs };
 }
 function restoreState(data){
   if(!data) return;
@@ -610,6 +619,7 @@ function restoreState(data){
   diaryDate = data.diaryDate||'';
   maintActivities = data.maintActivities||[{name:''}];
   lang = data.lang||lang;
+  multimodeLegs = data.multimodeLegs||{};
   /* Only restore spRespondentId if this session hasn't already picked one (e.g. loading an
      RP draft should not silently pre-answer the SP "who are you" screen); spLoadCode resets
      it to null itself right before this runs, so a saved value here means "same code, same
@@ -929,6 +939,11 @@ let stops = [newStop('Home'), newStop('School'), newStop('Home')];
 let maintActivities = [{name:''}];
 let tripPerson = null;
 let tripsByPerson = {}; // personId -> saved stops snapshot, once "Save trip" is pressed
+let multimodeLegs = {}; // segment key (ns) -> [{mode,time,fare}], one entry per extra mode used mid-segment
+const MULTIMODE_OPTIONS = ['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'];
+window.addMultimodeLeg = (ns)=>{ if(!multimodeLegs[ns]) multimodeLegs[ns]=[]; multimodeLegs[ns].push({mode:'',time:'',fare:''}); renderRP(); };
+window.removeMultimodeLeg = (ns,idx)=>{ multimodeLegs[ns].splice(idx,1); renderRP(); };
+window.setMultimodeLeg = (ns,idx,field,value)=>{ multimodeLegs[ns][idx][field]=value; };
 let diaryDate = '';
 window.setDiaryDate = (v)=>{ diaryDate=v; renderRP(); };
 function dl(s){ const base = t(s); return diaryDate ? base.replace('[date]', diaryDate) : base; }
@@ -950,6 +965,20 @@ window.setTripPerson = (id)=>{
   renderRP();
 };
 window.saveTrip = ()=>{ tripConfirmed = true; tripsByPerson[tripPerson] = stops.map(s=>({...s})); renderRP(); };
+/* Day-completion check, asked as a popup (reusing the same modal-overlay used
+   elsewhere for character editing and trip-segment jump-to, per feedback that a
+   blocking inline question above the Save button was too easy to blow past
+   without noticing - a popup at the moment of saving is more likely to be read. */
+window.confirmSaveTrip = ()=>{
+  document.getElementById('modal-title').textContent = t('One more check');
+  document.getElementById('modal-body').innerHTML = `
+    <p>${dl('Have you now listed everywhere this person went on [date], all the way from waking up until returning home for the night (or wherever they ended up)?')}</p>
+    <div class="nav-row" style="justify-content:center;gap:14px;margin-top:10px">
+      <button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="closeModal()">${t('No, let me add more stops')}</button>
+      <button class="btn btn-primary" onclick="closeModal();saveTrip()">${t('Yes, save this trip')}</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+};
 window.saveNoTrip = ()=>{ tripConfirmed = true; tripsByPerson[tripPerson] = 'NO_TRIP'; renderRP(); };
 window.toggleCompanion = (id)=>{ const k='companion_'+id; A[k]=!A[k]; renderRP(); };
 
@@ -1284,9 +1313,7 @@ const rpSteps = [
       <span class="drag-handle">${t('Move')}</span></div>`).join('')}</div>
     <button class="add-btn" onclick="stops.push(newStop(''));tripConfirmed=false;renderRP()">${t('+ Add a stop')}</button>
     <div class="q-note" style="display:block;margin-top:10px">${t("Don't forget short side trips too - e.g. if you left work for a meeting or an errand and came back before heading elsewhere, add stops for that as well.")}</div>
-    <div class="field" style="margin-top:10px"><div class="q-label" style="font-size:13px">${dl('Have you now listed everywhere this person went on [date], all the way from waking up until returning home for the night (or wherever they ended up)?')}</div>
-      ${opts('diarycomplete_'+tripPerson,['Yes, this is the complete day','No, I still need to add more stops'])}</div>
-    <div style="margin-top:12px"><button class="btn btn-primary" ${val('diarycomplete_'+tripPerson)!=='Yes, this is the complete day'&&!devMode?'disabled':''} onclick="saveTrip()">${t('Save trip')}</button></div>
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="confirmSaveTrip()">${t('Save trip')}</button></div>
     ${tripConfirmed && tripsByPerson[tripPerson]!=='NO_TRIP'?`<div class="confirm-box"><b>${stops.length-1} ${t('segment(s) saved:')}</b><br>${stops.slice(0,-1).map((s,i)=>(s.place||'?')+' -&gt; '+(stops[i+1].place||'?')).join('<br>')}<br><span style="font-size:12px">${t("Check this looks right, then press Next to fill in each segment's details.")}</span></div>`:''}
   </div>
   `}
@@ -1333,14 +1360,24 @@ const rpSteps = [
       }).join('') || `<span class="q-help">${t('No other household members yet.')}</span>`}</div></div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Travel mode (main mode for this segment)')}</div>
       ${opts('mode_'+ns,['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'])}</div>
-    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Did you change to a different transport mode partway through this trip (before reaching')} ${stops[i+1].place||'?'})?</div>
+    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Did you change to a different transport mode partway through this trip (before reaching')} ${stops[i+1].place||'?'})? <span class="q-help">${t('(e.g. took a motorcycle taxi partway before reaching the station)')}</span></div>
       ${opts('multimode_'+ns,['No, one mode only','Yes'])}</div>
     ${val('multimode_'+ns)==='Yes'?`
-    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('2nd mode used')}</div>${opts('multimode2_'+ns,['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'])}</div>
-    ${val('multimode2_'+ns)?`<div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('3rd mode used (only if there was one)')}</div>${opts('multimode3_'+ns,['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'])}</div>`:''}
-    ${val('multimode3_'+ns)?`<div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('4th mode used (only if there was one)')}</div>${opts('multimode4_'+ns,['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'])}</div>`:''}
+    <div class="field" style="border:none;padding:0;margin-bottom:10px">
+      <div class="q-label" style="font-size:13px">${t('Additional modes used, in order, with the walk/wait time before boarding each one and its fare')}</div>
+      ${(multimodeLegs[ns]||[]).map((leg,li)=>`
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+          <select onchange="setMultimodeLeg('${ns}',${li},'mode',this.value)" style="flex:1;min-width:150px">
+            <option value="">${t('Select a mode')}</option>
+            ${MULTIMODE_OPTIONS.map(m=>`<option value="${m}" ${leg.mode===m?'selected':''}>${t(m)}</option>`).join('')}
+          </select>
+          <input type="number" placeholder="${t('Walk/wait time (min)')}" value="${leg.time||''}" oninput="setMultimodeLeg('${ns}',${li},'time',this.value)" style="width:160px">
+          <input type="number" placeholder="${t('Fare (THB)')}" value="${leg.fare||''}" oninput="setMultimodeLeg('${ns}',${li},'fare',this.value)" style="width:110px">
+          <span class="remove" onclick="removeMultimodeLeg('${ns}',${li})">${t('Remove')}</span>
+        </div>`).join('')}
+      <button class="add-btn" onclick="addMultimodeLeg('${ns}')">${t('+ Add mode')}</button>
+    </div>
     `:''}
-    <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('For each mode change above, about how long did the walk (or wait) between arriving from one mode and boarding the next take?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
     ${isRailMode?`
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('If BTS or MRT: which line?')}</div>
       ${selectOpts('line_'+ns,['Red Line (Bang Sue - Rangsit/Thammasat)','Red Line (Bang Sue - Taling Chan)','Airport Rail Link (Phaya Thai - Makkasan - Suvarnabhumi)','Green Line - Sukhumvit (Khu Khot - Kehha)','Green Line - Silom (National Stadium - Bang Wa)','Blue Line (Tha Phra - Bang Sue - Hua Lamphong - Lak Song)','Purple Line (Tao Poon - Khlong Bang Phai)','Pink Line (Khae Rai - Pak Kret - Min Buri)','Yellow Line (Lat Phrao - Phatthanakan - Samrong)'])}</div>
