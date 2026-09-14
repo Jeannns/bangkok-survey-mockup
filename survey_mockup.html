@@ -512,6 +512,19 @@ const T = {
 "Normal application or entrance exam":"สมัครเรียนหรือสอบเข้าตามปกติ",
 "Area-based quota":"โควต้าตามพื้นที่ (บ้านอยู่ในเขตพื้นที่บริการของโรงเรียน)",
 "Staff/personnel quota":"โควต้าบุคลากร (ผู้ปกครองเป็นบุคลากรของโรงเรียนหรือหน่วยงานในเครือ)",
+"Enter your household code":"กรอกรหัสครัวเรือนของท่าน",
+"This is the same code you were given when you started (or finished) the household survey. Entering it here links this section to your household, so we can match it up with your earlier answers.":"นี่คือรหัสเดียวกับที่ท่านได้รับตอนเริ่ม (หรือทำเสร็จ) แบบสอบถามครัวเรือน การกรอกรหัสนี้จะเชื่อมส่วนนี้เข้ากับครัวเรือนของท่าน เพื่อให้จับคู่กับคำตอบก่อนหน้าได้",
+"Household code":"รหัสครัวเรือน",
+"Please enter a household code.":"กรุณากรอกรหัสครัวเรือน",
+"No household found for that code. Check the code from the household (RP) survey and try again.":"ไม่พบครัวเรือนสำหรับรหัสนี้ กรุณาตรวจสอบรหัสจากแบบสอบถามครัวเรือนแล้วลองใหม่",
+"Don't have a code, or it's your first time? Ask whoever gave you the survey link for the household code, or complete the household survey first.":"ไม่มีรหัส หรือเป็นครั้งแรกใช่ไหม? สอบถามรหัสครัวเรือนจากผู้ที่ส่งลิงก์แบบสอบถามให้ท่าน หรือทำแบบสอบถามครัวเรือนให้เสร็จก่อน",
+"Loading...":"กำลังโหลด...",
+"Continue ->":"ถัดไป ->",
+"Which household member are you?":"ท่านคือสมาชิกคนใดในครัวเรือน",
+"Pick yourself from the household you (or someone in your household) set up earlier.":"เลือกตัวท่านเองจากรายชื่อครัวเรือนที่ท่าน (หรือสมาชิกในครัวเรือน) กรอกไว้ก่อนหน้านี้",
+"No household members were found for this code yet. Go back and check the code, or complete the household survey first.":"ยังไม่พบสมาชิกครัวเรือนสำหรับรหัสนี้ กรุณาย้อนกลับไปตรวจสอบรหัส หรือทำแบบสอบถามครัวเรือนให้เสร็จก่อน",
+"yrs":"ปี",
+"Don't see yourself listed? Go back and double check the household code.":"ไม่เห็นชื่อตัวเองในรายชื่อใช่ไหม? ย้อนกลับไปตรวจสอบรหัสครัวเรือนอีกครั้ง",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -561,7 +574,7 @@ let backendStatus = null; // null | 'saving' | 'saved' | 'error' | 'not_configur
 let alreadySubmitted = localStorage.getItem('bkk_survey_submitted_'+respondentCode) === '1';
 
 function collectState(){
-  return { A, characters, tripsByPerson, diaryDate, maintActivities, lang };
+  return { A, characters, tripsByPerson, diaryDate, maintActivities, lang, spRespondentId };
 }
 function restoreState(data){
   if(!data) return;
@@ -572,6 +585,11 @@ function restoreState(data){
   diaryDate = data.diaryDate||'';
   maintActivities = data.maintActivities||[{name:''}];
   lang = data.lang||lang;
+  /* Only restore spRespondentId if this session hasn't already picked one (e.g. loading an
+     RP draft should not silently pre-answer the SP "who are you" screen); spLoadCode resets
+     it to null itself right before this runs, so a saved value here means "same code, same
+     person resuming" and a null/undefined value here leaves the current selection untouched. */
+  if(data.spRespondentId!==undefined) spRespondentId = data.spRespondentId;
 }
 
 async function backendPost(action){
@@ -1483,6 +1501,40 @@ renderRP();
 tryAutoResume();
 
 /* ================= SP DATA ================= */
+/* SP household-code linking state: lets SP be opened as its own session (e.g. a separate
+   link sent after the RP household survey) and still tie back to the same household + the
+   specific person answering, for RP-SP pivoting later. */
+let spCodeError = null;
+let spCodeLoading = false;
+let spRespondentId = null;
+
+window.spLoadCode = async (code)=>{
+  code = (code||'').trim().toUpperCase();
+  if(!code){ spCodeError = 'Please enter a household code.'; renderSP(); return; }
+  spCodeError = null; spCodeLoading = true; renderSP();
+  const result = await backendLoad(code);
+  spCodeLoading = false;
+  if(result.ok && result.found){
+    restoreState(result.data);
+    respondentCode = code;
+    localStorage.setItem('bkk_survey_code', respondentCode);
+    spRespondentId = null;
+    spPhase = 'whoami';
+  } else if(!result.ok && result.error==='not_configured'){
+    /* Demo mode: no Apps Script backend wired up yet, so there is nothing to fetch from.
+       Accept the typed code as-is (any household already created in this browser tab, e.g.
+       from the RP demo, stays as-is) so the rest of the flow can still be tried out. */
+    respondentCode = code;
+    localStorage.setItem('bkk_survey_code', respondentCode);
+    spRespondentId = null;
+    spPhase = 'whoami';
+  } else {
+    spCodeError = 'No household found for that code. Check the code from the household (RP) survey and try again.';
+  }
+  renderSP();
+};
+window.setSpRespondent = (id)=>{ spRespondentId = id; renderSP(); };
+
 /* Pre-SP Setup state: which child, car-vs-motorcycle branch, dedicated-vs-chained trip */
 let spSetupDone = false;
 let spChildId = null;
@@ -1674,13 +1726,48 @@ function scenarioCard(title,cardIcon,rows,selKey,idx,note,opt){
   </div>`;
 }
 
-/* setup + module state machine: spPhase walks setup -> m1 -> m1-transition -> m2 -> debrief -> summary */
-let spPhase = 'setup';
+/* setup + module state machine: spPhase walks code -> whoami -> setup -> m1 -> m1-transition -> m2 -> debrief -> summary */
+let spPhase = 'code';
 let spRoundIdx = 0;
 window.setSpChild = (id)=>{ spChildId = id; renderSP(); };
 window.setSpMode = (m)=>{ spMode = m; renderSP(); };
 window.setSpTripType = (tt)=>{ spTripType = tt; renderSP(); };
 window.startModule1 = ()=>{ spSetupDone = true; spPhase = 'm1'; spRoundIdx = 0; renderSP(); };
+
+function renderSPCode(){
+  return `
+    <div class="hero" style="padding:20px"><h1 style="font-size:22px">${t('Enter your household code')}</h1>
+    <p>${t('This is the same code you were given when you started (or finished) the household survey. Entering it here links this section to your household, so we can match it up with your earlier answers.')}</p></div>
+    <div class="field"><div class="q-label">${t('Household code')}</div>
+      <input type="text" id="sp-code-input" placeholder="XXXX-XXXX" value="${respondentCode||''}" style="max-width:220px;text-transform:uppercase"></div>
+    ${spCodeError?`<div class="q-note" style="display:block;color:#dc2626">${t(spCodeError)}</div>`:''}
+    <div class="q-note" style="display:block">${t("Don't have a code, or it's your first time? Ask whoever gave you the survey link for the household code, or complete the household survey first.")}</div>
+    <div class="nav-row"><span></span><button class="btn btn-primary" ${spCodeLoading?'disabled':''} onclick="spLoadCode(document.getElementById('sp-code-input').value)">${spCodeLoading?t('Loading...'):t('Continue ->')}</button></div>
+  `;
+}
+
+function renderSPWhoAmI(){
+  const all = characters;
+  if(!all.length){
+    return `<div class="empty-hint">${t('No household members were found for this code yet. Go back and check the code, or complete the household survey first.')}</div>
+      <div class="nav-row"><button class="btn btn-ghost" onclick="spPhase='code';renderSP()">${t('<- Back')}</button><span></span></div>`;
+  }
+  return `
+    <div class="hero" style="padding:20px"><h1 style="font-size:22px">${t('Which household member are you?')}</h1>
+    <p>${t('Pick yourself from the household you (or someone in your household) set up earlier.')}</p></div>
+    <div class="field">${all.map(c=>{
+      const nm = A[c.id+'_name'] || (c.kind==='adult'?t('Adult'):t('Child'));
+      const age = A[c.id+'_age'];
+      const on = spRespondentId===c.id?'checked':'';
+      return `<label class="opt ${on}" style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px"><span onclick="setSpRespondent('${c.id}')" style="flex:1">${nm}</span><span class="q-help" onclick="setSpRespondent('${c.id}')">${c.kind==='adult'?t('Adult'):t('Child')}${age!==undefined && age!==''?(' · '+age+' '+t('yrs')):''}</span></label>`;
+    }).join('')}</div>
+    <div class="q-note" style="display:block">${t("Don't see yourself listed? Go back and double check the household code.")}</div>
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="spPhase='code';renderSP()">${t('<- Back')}</button>
+      <button class="btn btn-primary" ${!spRespondentId?'disabled':''} onclick="spPhase='setup';renderSP()">${t('Continue ->')}</button>
+    </div>
+  `;
+}
 
 function renderSPSetup(){
   const kids = characters.filter(c=>c.kind==='child');
@@ -1702,7 +1789,7 @@ function renderSPSetup(){
         return `<label class="opt ${on}" onclick="setSpTripType('${o}')">${t(o)}</label>`;
       }).join('')}</div></div>
     <div class="q-note" style="display:block">${t('Based on your earlier answers, travel modes you said are not available to you (e.g. no motorcycle license, no school bus service) are excluded from the choices below.')}</div>
-    <div class="nav-row"><span></span><button class="btn btn-primary" ${(!spMode||!spTripType)?'disabled':''} onclick="startModule1()">${t('Start Module 1 ->')}</button></div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="spPhase='whoami';renderSP()">${t('<- Back')}</button><button class="btn btn-primary" ${(!spMode||!spTripType)?'disabled':''} onclick="startModule1()">${t('Start Module 1 ->')}</button></div>
   `;
 }
 
@@ -1727,7 +1814,11 @@ function renderSP(){
   const m1rounds = buildModule1(spMode||'Car');
   const m2rounds = buildModule2();
 
-  if(spPhase==='setup'){
+  if(spPhase==='code'){
+    body = renderSPCode();
+  } else if(spPhase==='whoami'){
+    body = renderSPWhoAmI();
+  } else if(spPhase==='setup'){
     body = renderSPSetup();
   } else if(spPhase==='m1'){
     body = renderModuleRound('m1', m1rounds, m1Rows, "For your child's usual school trip today, which would you choose?", `spPhase='m1-transition';spRoundIdx=0;renderSP()`);
@@ -1774,7 +1865,7 @@ function renderSP(){
         ${chosen2.map((c,i)=>`<div style="margin:4px 0"><b>${t('Round')} ${i+1}:</b> ${c}</div>`).join('')}
         <div style="margin-top:8px"><b>${t('Most important factor:')}</b> ${t(A['debrief2'])}</div>
       </div>
-      <div class="nav-row"><span></span><button class="btn btn-primary" onclick="spSetupDone=false;spPhase='setup';spRoundIdx=0;renderSP()">${t('Restart demo')}</button></div>`;
+      <div class="nav-row"><span></span><button class="btn btn-primary" onclick="spSetupDone=false;spRespondentId=null;spCodeError=null;spPhase='code';spRoundIdx=0;renderSP()">${t('Restart demo')}</button></div>`;
   }
   document.getElementById('sp-card').innerHTML = body;
 }
