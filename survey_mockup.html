@@ -569,25 +569,10 @@ const T = {
 "Walk/wait time (min)":"เวลาเดิน/รอ (นาที)",
 "Fare (THB)":"ค่าโดยสาร (บาท)",
 "+ Add mode":"+ เพิ่มรูปแบบการเดินทาง",
-"This is for escorting someone other than your own school-going child - e.g. a neighbor's child, an elderly relative, or another household member. For your own child's school run, choose \"School escort\" above instead.":"ข้อนี้สำหรับการรับส่งคนอื่นที่ไม่ใช่บุตรหลานวัยเรียนของท่านเอง เช่น ลูกเพื่อนบ้าน ญาติผู้สูงอายุ หรือสมาชิกครัวเรือนคนอื่น หากเป็นการไปรับส่งบุตรหลานไปโรงเรียนของท่านเอง ให้เลือก \"รับส่งบุตรหลานไปโรงเรียน\" ด้านบนแทน",
-"Who were you escorting on this trip?":"ท่านรับส่งใครในการเดินทางครั้งนี้",
-"e.g. neighbor's child, elderly parent":"เช่น ลูกเพื่อนบ้าน พ่อแม่ผู้สูงอายุ",
-"Were you dropping them off, or picking them up?":"ท่านไปส่งหรือไปรับ",
-"Dropping off":"ไปส่ง",
-"Picking up":"ไปรับ",
 "Screening":"คัดกรองคุณสมบัติ",
 "Dev navigation":"เมนูนำทาง (dev)",
 "Jump to any section":"กดเพื่อไปยังส่วนใดก็ได้",
-"Who are you escorting on this trip?":"ท่านรับส่งใครในการเดินทางครั้งนี้",
-"Select a household member":"เลือกสมาชิกในครัวเรือน",
-"Someone not in this household":"บุคคลอื่นที่ไม่ใช่สมาชิกในครัวเรือนนี้",
-"Where were they going?":"บุคคลนั้นไปที่ไหน",
-"e.g. school, hospital, market":"เช่น โรงเรียน โรงพยาบาล ตลาด",
-"What was the purpose of that person's trip?":"วัตถุประสงค์ของการเดินทางของบุคคลนั้นคืออะไร",
-"School":"โรงเรียน",
-"Medical/healthcare":"เกี่ยวกับการรักษาพยาบาล",
-"Social visit":"เยี่ยมเยียนสังสรรค์",
-"Work":"ทำงาน",
+"For example, if you dropped your spouse off at work on the way to dropping off your child at school, that is 2 separate stops (spouse's workplace, then school), not one combined stop.":"ตัวอย่างเช่น หากท่านไปส่งคู่สมรสที่ทำงานระหว่างทางไปส่งบุตรหลานที่โรงเรียน ให้นับเป็น 2 จุดแวะแยกกัน (ที่ทำงานคู่สมรส แล้วจึงโรงเรียน) ไม่ใช่จุดแวะเดียวรวมกัน",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
 window.setLang = (l)=>{
@@ -1363,6 +1348,7 @@ const rpSteps = [
   </div>
   <div class="field"><div class="q-label">${dl('List every place visited on [date], in order')}</div>
     <div class="q-help">${t('A stop is a place you did something, even briefly - like dropping off or picking up your child. Add a new stop for each one.')}</div>
+    <div class="q-help">${t('For example, if you dropped your spouse off at work on the way to dropping off your child at school, that is 2 separate stops (spouse\'s workplace, then school), not one combined stop.')}</div>
     <div class="q-help">${t("Just changing transport mode partway through a trip (e.g. switching from a car to the BTS) is NOT a new stop - describe that on the next page instead, in the question about using more than one way of getting there.")}</div>
     <div class="q-help">${t('Drag the handle on the right to reorder a stop.')}</div>
     <div class="stop-list">${stops.map((s,i)=>`<div class="stop-item" draggable="true" ondragstart="dragStart(${i})" ondragover="event.preventDefault()" ondrop="dropStop(${i})"><span class="idx">${String.fromCharCode(65+i)}</span>
@@ -1405,7 +1391,6 @@ const rpSteps = [
   const purposeKey='purpose_'+ns;
   const purposeVal = val(purposeKey)||'';
   const isSchoolEscort = purposeVal === 'School escort';
-  const isOtherEscort = purposeVal === 'Escorting (other)';
   const segMode = val('mode_'+ns);
   const isRailMode = segMode==='MRT' || segMode==='BTS Skytrain';
   const isCarMode = segMode==='Private car' || segMode==='Private motorbike';
@@ -1458,26 +1443,6 @@ const rpSteps = [
         ${opts('escdir_'+ns,['To school','From school'])}</div>
       <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Drop-off / pick-up point')}</div>${locPicker('dropoff_'+ns)}</div>
       <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">${t('After arriving, how long do you usually wait?')}</div><input type="number" placeholder="${t('minutes')}" style="width:140px"></div>
-    </div>`:''}
-    ${isOtherEscort?`
-    <div class="escort-box"><span class="tag">${t('Escort trip - extra detail')}</span>
-      <div class="q-help" style="margin-bottom:8px">${t('This is for escorting someone other than your own school-going child - e.g. a neighbor\'s child, an elderly relative, or another household member. For your own child\'s school run, choose "School escort" above instead.')}</div>
-      <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">${t('Who are you escorting on this trip?')}</div>
-        <select onchange="A['escortwho_${ns}']=this.value;renderRP()">
-          <option value="">${t('Select a household member')}</option>
-          ${characters.filter(c=>c.id!==tripPerson).map(c=>{
-            const nm = A[c.id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'));
-            return `<option value="${c.id}" ${val('escortwho_'+ns)===c.id?'selected':''}>${nm}</option>`;
-          }).join('')}
-          <option value="__other__" ${val('escortwho_'+ns)==='__other__'?'selected':''}>${t('Someone not in this household')}</option>
-        </select>
-        ${characters.filter(c=>c.id!==tripPerson).length===0?`<div class="q-note">${t('No other household members yet.')}</div>`:''}
-        ${val('escortwho_'+ns)==='__other__'?`<input type="text" style="margin-top:8px" placeholder="${t("e.g. neighbor's child, elderly parent")}" value="${A['escortwho_other_'+ns]||''}" oninput="A['escortwho_other_${ns}']=this.value">`:''}
-      </div>
-      <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Where were they going?')}</div>
-        <input type="text" placeholder="${t('e.g. school, hospital, market')}" value="${A['escortdest_'+ns]||''}" oninput="A['escortdest_${ns}']=this.value"></div>
-      <div class="field" style="border:none;padding:0"><div class="q-label" style="font-size:13px">${t("What was the purpose of that person's trip?")}</div>
-        ${opts('escortpurpose_'+ns,['School','Medical/healthcare','Shopping','Social visit','Work','Other'])}</div>
     </div>`:''}
     <div class="field" style="border:none;padding:0;margin-top:10px"><div class="q-label" style="font-size:13px">${t('Fare/cost (THB, 0 if free)')}</div><input type="number" style="width:120px"></div>
     </div>`;
