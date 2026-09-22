@@ -401,6 +401,7 @@ const T = {
 "How would you rate this school's academic reputation?":"ท่านให้คะแนนชื่อเสียงด้านวิชาการของโรงเรียนนี้เท่าใด",
 "How would you rate this school's social prestige (how impressive/high-status the name is seen as)?":"ท่านให้คะแนนภาพลักษณ์ทางสังคมของโรงเรียนนี้เท่าใด (ความน่าประทับใจ/สถานะของชื่อโรงเรียน)",
 "Overall, how satisfied are you with this school?":"โดยรวมแล้ว ท่านพึงพอใจกับโรงเรียนนี้มากน้อยเพียงใด",
+"The following 3 ratings are about each child's own school (repeat per child)":"คะแนน 3 ข้อต่อไปนี้เป็นเรื่องโรงเรียนของเด็กแต่ละคน (ทำซ้ำทีละคน)",
 "Is the school approximately on your daily commute route?":"โรงเรียนอยู่บนเส้นทางเดินทางประจำวันของท่านโดยประมาณหรือไม่",
 "Directly on route":"อยู่บนเส้นทางโดยตรง","Slight detour (<10 min)":"อ้อมเล็กน้อย (น้อยกว่า 10 นาที)","Significant detour (>10 min)":"อ้อมมาก (มากกว่า 10 นาที)",
 "Compared to this school, what's the nearest school of similar quality?":"เทียบกับโรงเรียนนี้ โรงเรียนคุณภาพใกล้เคียงที่ใกล้ที่สุดอยู่ที่ใด",
@@ -860,7 +861,7 @@ function createCharacters(){
   charSeq = 0;
   for(let i=0;i<nAdultsTarget;i++){ charSeq++; characters.push({id:'ch'+charSeq, kind:'adult'}); }
   for(let i=0;i<nChildrenTarget;i++){ charSeq++; characters.push({id:'ch'+charSeq, kind:'child'}); }
-  routeChildIdx = 0; facilityChildIdx = 0; tuitionChildIdx = 0; decisionChildIdx = 0;
+  routeChildIdx = 0; facilityChildIdx = 0; tuitionChildIdx = 0; scRatingChildIdx = 0; decisionChildIdx = 0;
   renderRP();
 }
 
@@ -1245,6 +1246,8 @@ let facilityChildIdx = 0;
 window.setFacilityChild = (i)=>{ facilityChildIdx=i; renderRP(); };
 let tuitionChildIdx = 0;
 window.setTuitionChild = (i)=>{ tuitionChildIdx=i; renderRP(); };
+let scRatingChildIdx = 0;
+window.setSCRatingChild = (i)=>{ scRatingChildIdx=i; renderRP(); };
 let decisionChildIdx = 0;
 window.setDecisionChild = (i)=>{ decisionChildIdx=i; renderRP(); };
 window.toggleEscorted = (id)=>{ A['escorted_'+id]=!A['escorted_'+id]; renderRP(); };
@@ -1593,15 +1596,22 @@ const rpSteps = [
   const kids = characters.filter(c=>c.kind==='child');
   const tIdx = kids.length ? Math.min(tuitionChildIdx, kids.length-1) : 0;
   const tCh = kids[tIdx];
+  const rIdx = kids.length ? Math.min(scRatingChildIdx, kids.length-1) : 0;
+  const rCh = kids[rIdx];
+  const repKey = kids.length ? 'school_reputation_rating_'+rCh.id : 'school_reputation_rating';
+  const presKey = kids.length ? 'school_prestige_rating_'+rCh.id : 'school_prestige_rating';
+  const satKey = kids.length ? 'school_satisfaction_rating_'+rCh.id : 'school_satisfaction_rating';
   return `<div class="field"><div class="q-label">${t('School type (per child)')}</div>
     <div class="q-help">${t('Already collected in Section 2 for each child - shown here for reference only.')}</div>
     ${kids.map(c=>`<div class="q-help" style="margin-bottom:4px"><b>${childName(c)}:</b> ${schoolTypeLabel(c.id)||t('Not yet answered in Section 2')} <button class="btn btn-ghost" style="border:1px solid var(--line);padding:2px 10px;font-size:11px" onclick="openModal('${c.id}')">${t('Edit')}</button></div>`).join('') || `<span class="q-help">${t('No child characters created yet.')}</span>`}
   </div>
   <div class="field"><div class="q-label">${t('Reasons for choosing the current school (multiple allowed)')}</div>
     ${opts('school_reason',['Proximity to home','Proximity to work','Sibling at same school','Tuition affordability','Curriculum & activities','Teacher quality','Prestige/reputation','School facilities','Parental involvement','Religious affiliation/values','Friend circle (child)','Friend circle (parent)','Community relationship'],true)}</div>
-  <div class="field"><div class="q-label">${t("How would you rate this school's academic reputation?")}</div>${opts('school_reputation_rating',['1','2','3','4','5'])}</div>
-  <div class="field"><div class="q-label">${t("How would you rate this school's social prestige (how impressive/high-status the name is seen as)?")}</div>${opts('school_prestige_rating',['1','2','3','4','5'])}</div>
-  <div class="field"><div class="q-label">${t('Overall, how satisfied are you with this school?')}</div>${opts('school_satisfaction_rating',['1','2','3','4','5'])}</div>
+  <div class="field"><div class="q-label">${t('The following 3 ratings are about each child\'s own school (repeat per child)')}</div>
+    ${kids.length?childTabRow(kids, rIdx, 'setSCRatingChild'):''}</div>
+  <div class="field"><div class="q-label">${t("How would you rate this school's academic reputation?")}</div>${opts(repKey,['1','2','3','4','5'])}</div>
+  <div class="field"><div class="q-label">${t("How would you rate this school's social prestige (how impressive/high-status the name is seen as)?")}</div>${opts(presKey,['1','2','3','4','5'])}</div>
+  <div class="field"><div class="q-label">${t('Overall, how satisfied are you with this school?')}</div>${opts(satKey,['1','2','3','4','5'])}</div>
   <div class="field"><div class="q-label">${t('Is the school approximately on your daily commute route?')}</div>${opts('route_relation',['Directly on route','Slight detour (<10 min)','Significant detour (>10 min)','N/A'])}</div>
   <div class="field"><div class="q-label">${t("Compared to this school, what's the nearest school of similar quality?")}</div>${opts('nearest_similar',['Much closer','Somewhat closer','About the same','This is nearest','Do not know'])}</div>
   <div class="field"><div class="q-label">${t('If a school of the same quality were available within a 10-minute walk of home, would you switch?')}</div>${opts('switch_10min',['Yes','No','Maybe'])}</div>
@@ -1845,10 +1855,13 @@ function m1Rows(o){
    required mode, route/area safety). */
 function schoolARef(){
   const kid = spChildId ? characters.find(c=>c.id===spChildId) : null;
+  const repKey = kid ? 'school_reputation_rating_'+kid.id : 'school_reputation_rating';
   return {
     type: (kid && schoolTypeLabel(kid.id)) || t('Public'),
     tuition: (kid && A['tuition_'+kid.id]) || A['tuition'] || 'Free/public',
-    reputation: A['school_reputation_rating'] || '3',
+    // per-child key first (2026-09-22 fix); falls back to the old un-prefixed
+    // key so a single-child household's earlier answer still resolves.
+    reputation: A[repKey] || A['school_reputation_rating'] || '3',
     classSize: '30-40',
     mode: 'Same as usual',
     safety: 'As usual',
