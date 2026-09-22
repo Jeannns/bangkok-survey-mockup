@@ -1935,18 +1935,24 @@ function buildModule2(){
   ];
   // per-round reputation offset, symmetric spread clipped to the 1-5 scale
   const REPUTATION_ROUNDS = [1, -1, 2, -2];
+  // School type (2026-09-22): held fixed at School A's real type in every round --
+  // type is treated as a causal indicator feeding the desirability latent variable
+  // (not a separately-estimated utility term), so it is no longer varied as an
+  // independent DCE attribute. Varying an attribute with no coefficient of its own
+  // would let it leak into the error term and risk biasing the attributes that
+  // ARE being estimated (time, desirability/reputation, tuition).
   return [
     {round:1, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:15,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[0].mult,TUITION_ROUNDS[0].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[0]),type:'Private, local',classSize:'20-30',mode:'Walk',safety:'Safer route'}
+      {title:'School B (alternative)',icon:'B',time:15,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[0].mult,TUITION_ROUNDS[0].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[0]),type:ref.type,classSize:'20-30',mode:'Walk',safety:'Safer route'}
     ]},
     {round:2, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:30,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[1].mult,TUITION_ROUNDS[1].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[1]),type:'Public',classSize:'40-50',mode:'School bus',safety:'Some risk'}
+      {title:'School B (alternative)',icon:'B',time:30,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[1].mult,TUITION_ROUNDS[1].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[1]),type:ref.type,classSize:'40-50',mode:'School bus',safety:'Some risk'}
     ]},
     {round:3, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:10,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[2].mult,TUITION_ROUNDS[2].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[2]),type:'Private, international',classSize:'15-20',mode:'Escort by car',safety:'Safer route'}
+      {title:'School B (alternative)',icon:'B',time:10,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[2].mult,TUITION_ROUNDS[2].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[2]),type:ref.type,classSize:'15-20',mode:'Escort by car',safety:'Safer route'}
     ]},
     {round:4, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:25,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[3].mult,TUITION_ROUNDS[3].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[3]),type:'Public',classSize:'30-40',mode:'Bus',safety:'As usual'}
+      {title:'School B (alternative)',icon:'B',time:25,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[3].mult,TUITION_ROUNDS[3].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[3]),type:ref.type,classSize:'30-40',mode:'Bus',safety:'As usual'}
     ]},
   ];
 }
@@ -1955,7 +1961,7 @@ function m2Rows(o){
     {icon:'TIME',label:'Travel time',ctrl:true,value:t(String(o.time))},
     {icon:'FEE',label:'Tuition',ctrl:true,value:t(o.tuition)},
     {icon:'REP',label:'Academic reputation',ctrl:true,value:o.reputation+'/5'},
-    {icon:'TYPE',label:'School type',ctrl:true,value:t(o.type)},
+    {icon:'TYPE',label:'School type',value:t(o.type)},
     {icon:'SIZE',label:'Class size',value:o.classSize},
     {icon:'MODE',label:'Required travel mode',value:t(o.mode)},
     {icon:'SAFE',label:'Route/area safety',value:t(o.safety)},
