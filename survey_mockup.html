@@ -572,6 +572,18 @@ const T = {
 "Screening":"คัดกรองคุณสมบัติ",
 "Dev navigation":"เมนูนำทาง (dev)",
 "Jump to any section":"กดเพื่อไปยังส่วนใดก็ได้",
+"If each of the following existed along your route, how much safer would you feel letting them travel independently?":"ถ้าเส้นทางของบุตรหลานมีสิ่งต่อไปนี้ ท่านจะรู้สึกปลอดภัยขึ้นแค่ไหนที่จะให้เดินทางเอง",
+"A clearly marked crosswalk right in front of the school":"ทางม้าลายที่ชัดเจนหน้าโรงเรียน",
+"CCTV cameras along the whole route":"กล้องวงจรปิดตลอดเส้นทาง",
+"A school bus service":"บริการรถรับส่งของโรงเรียน",
+"A dedicated security guard near the school":"เจ้าหน้าที่รักษาความปลอดภัยประจำใกล้โรงเรียน",
+"A community volunteer/parent-patrol program along the route (similar to Japan's PTA-style school-route watch)":"โครงการอาสาสมัครชุมชน/ผู้ปกครองลาดตระเวนตามเส้นทาง (คล้ายกิจกรรมเฝ้าระวังเส้นทางโรงเรียนแบบ PTA ของญี่ปุ่น)",
+"1 = no safer at all - 5 = much safer":"1 = ไม่ปลอดภัยขึ้นเลย - 5 = ปลอดภัยขึ้นมาก",
+"Suppose there was a school near your home (closer than your child's current school) with a community volunteer/parent-patrol program along the route, similar to Japan's PTA-style school-route watch programs, to help children travel safely. Would you be willing to move your child there and let them travel independently (e.g. walk or bike) instead of escorting them?":"สมมติว่ามีโรงเรียนใกล้บ้านของท่าน (ใกล้กว่าโรงเรียนปัจจุบันของบุตรหลาน) ที่มีโครงการอาสาสมัครชุมชน/ผู้ปกครองลาดตระเวนตามเส้นทาง คล้ายกิจกรรม PTA ของญี่ปุ่น เพื่อช่วยให้เด็กเดินทางอย่างปลอดภัย ท่านจะยินดีย้ายบุตรหลานไปเรียนที่นั่นและปล่อยให้เดินทางเอง (เช่น เดินหรือปั่นจักรยาน) แทนการไปรับส่งเองหรือไม่",
+"Probably yes":"น่าจะใช่",
+"Probably no":"น่าจะไม่",
+"No, never":"ไม่เลย",
+"Not applicable (already close to home or already independent)":"ไม่เกี่ยวข้อง (บ้านใกล้อยู่แล้ว หรือเดินทางเองอยู่แล้ว)",
 "For example, if you dropped your spouse off at work on the way to dropping off your child at school, that is 2 separate stops (spouse's workplace, then school), not one combined stop.":"ตัวอย่างเช่น หากท่านไปส่งคู่สมรสที่ทำงานระหว่างทางไปส่งบุตรหลานที่โรงเรียน ให้นับเป็น 2 จุดแวะแยกกัน (ที่ทำงานคู่สมรส แล้วจึงโรงเรียน) ไม่ใช่จุดแวะเดียวรวมกัน",
 };
 function t(s){ return (lang==='th' && T[s]!==undefined) ? T[s] : s; }
@@ -1527,7 +1539,11 @@ const rpSteps = [
     ${opts('change_mind',['Slower traffic','Safer footpaths','Proper crossing at school gate','CCTV at stations','Security guard near school','Less crowding','Fare <=10 THB','Location tracking','School buddy system','Other'],true)}</div>
   <div class="field"><div class="q-label">${t('Does your child currently carry a mobile phone during the commute?')}</div>${opts('child_has_phone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Minimum safety needed before allowing independent travel (rate separately)')}</div>
-    ${likert(null,'min_safety',['Traffic danger','Crime/stranger risk'],'1 = any level is fine - 5 = must feel very safe')}</div>`},
+    ${likert(null,'min_safety',['Traffic danger','Crime/stranger risk'],'1 = any level is fine - 5 = must feel very safe')}</div>
+  <div class="field"><div class="q-label">${t('If each of the following existed along your route, how much safer would you feel letting them travel independently?')}</div>
+    ${likert(null,'safety_measure_effect',['A clearly marked crosswalk right in front of the school','CCTV cameras along the whole route','A school bus service','A dedicated security guard near the school',"A community volunteer/parent-patrol program along the route (similar to Japan's PTA-style school-route watch)"],'1 = no safer at all - 5 = much safer')}</div>
+  <div class="field"><div class="q-label">${t("Suppose there was a school near your home (closer than your child's current school) with a community volunteer/parent-patrol program along the route, similar to Japan's PTA-style school-route watch programs, to help children travel safely. Would you be willing to move your child there and let them travel independently (e.g. walk or bike) instead of escorting them?")}</div>
+    ${opts('nearschool_volunteer_switch',['Yes, definitely','Probably yes','Probably no','No, never','Not applicable (already close to home or already independent)'])}</div>`},
 
 {name:'Escorting - Travel Mode', tag:'Section 4 - Travel Mode', render:()=>`
   <div class="field"><div class="q-label">${t('How do you typically escort your children? (main mode)')}</div>
