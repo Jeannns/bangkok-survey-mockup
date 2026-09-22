@@ -1867,21 +1867,51 @@ function schoolARef(){
     safety: 'As usual',
   };
 }
+/* Interim (non-D-efficient) pivot for School B's reputation and tuition, relative
+   to School A's real reported values -- matches the wording already fixed in the
+   SP docx (Table 1: reputation "+/-1-2 points on the same scale", tuition
+   "-50%/-20%/+30%/+100%"). Proper D-efficient design + branching is Concern 5
+   (survey concern.md), still deferred pending geocoding data; this only fixes the
+   demo so School B stops floating independently of School A. */
+const TUITION_BUCKET_ANCHOR = { // representative baht/month used only for the pivot math
+  'Free/public': 0, '<5,000': 3000, '5,000-15,000': 10000,
+  '15,000-30,000': 22500, '>30,000': 40000,
+};
+function pivotTuition(aTuitionBucket, multiplier, flatStepIfFree){
+  const anchor = TUITION_BUCKET_ANCHOR[aTuitionBucket];
+  const unit = lang==='th' ? 'บาท/เดือน' : 'THB/mo';
+  if(anchor===undefined) return aTuitionBucket; // unrecognized bucket, leave as-is
+  if(anchor===0) return (flatStepIfFree||0).toLocaleString()+' '+unit; // % of 0 is meaningless -- use a flat step instead
+  return Math.round(anchor*multiplier).toLocaleString()+' '+unit;
+}
+function pivotReputation(aReputation, offset){
+  const base = parseInt(aReputation,10) || 3;
+  return String(Math.max(1, Math.min(5, base+offset)));
+}
 function buildModule2(){
   const ref = schoolARef();
   const schoolA = {title:'School A (your current school)',icon:'A',fixed:true,time:'Same as usual',tuition:ref.tuition,reputation:ref.reputation,type:ref.type,classSize:ref.classSize,mode:ref.mode,safety:ref.safety};
+  // per-round tuition multiplier / flat-step-if-free, matching the docx's -50%/-20%/+30%/+100%
+  const TUITION_ROUNDS = [
+    {mult:1.3, flat:2000},  // round1: +30%
+    {mult:0.5, flat:1000},  // round2: -50%
+    {mult:2.0, flat:5000},  // round3: +100%
+    {mult:0.8, flat:1500},  // round4: -20%
+  ];
+  // per-round reputation offset, symmetric spread clipped to the 1-5 scale
+  const REPUTATION_ROUNDS = [1, -1, 2, -2];
   return [
     {round:1, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:15,tuition:'5,000-15,000',reputation:'4',type:'Private, local',classSize:'20-30',mode:'Walk',safety:'Safer route'}
+      {title:'School B (alternative)',icon:'B',time:15,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[0].mult,TUITION_ROUNDS[0].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[0]),type:'Private, local',classSize:'20-30',mode:'Walk',safety:'Safer route'}
     ]},
     {round:2, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:30,tuition:'Free/public',reputation:'2',type:'Public',classSize:'40-50',mode:'School bus',safety:'Some risk'}
+      {title:'School B (alternative)',icon:'B',time:30,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[1].mult,TUITION_ROUNDS[1].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[1]),type:'Public',classSize:'40-50',mode:'School bus',safety:'Some risk'}
     ]},
     {round:3, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:10,tuition:'15,000-30,000',reputation:'5',type:'Private, international',classSize:'15-20',mode:'Escort by car',safety:'Safer route'}
+      {title:'School B (alternative)',icon:'B',time:10,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[2].mult,TUITION_ROUNDS[2].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[2]),type:'Private, international',classSize:'15-20',mode:'Escort by car',safety:'Safer route'}
     ]},
     {round:4, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:25,tuition:'<5,000',reputation:'3',type:'Public',classSize:'30-40',mode:'Bus',safety:'As usual'}
+      {title:'School B (alternative)',icon:'B',time:25,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[3].mult,TUITION_ROUNDS[3].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[3]),type:'Public',classSize:'30-40',mode:'Bus',safety:'As usual'}
     ]},
   ];
 }
