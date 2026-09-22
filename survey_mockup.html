@@ -400,6 +400,7 @@ const T = {
 "Community relationship":"ความสัมพันธ์กับชุมชน",
 "How would you rate this school's academic reputation?":"ท่านให้คะแนนชื่อเสียงด้านวิชาการของโรงเรียนนี้เท่าใด",
 "How would you rate this school's social prestige (how impressive/high-status the name is seen as)?":"ท่านให้คะแนนภาพลักษณ์ทางสังคมของโรงเรียนนี้เท่าใด (ความน่าประทับใจ/สถานะของชื่อโรงเรียน)",
+"Overall, how satisfied are you with this school?":"โดยรวมแล้ว ท่านพึงพอใจกับโรงเรียนนี้มากน้อยเพียงใด",
 "Is the school approximately on your daily commute route?":"โรงเรียนอยู่บนเส้นทางเดินทางประจำวันของท่านโดยประมาณหรือไม่",
 "Directly on route":"อยู่บนเส้นทางโดยตรง","Slight detour (<10 min)":"อ้อมเล็กน้อย (น้อยกว่า 10 นาที)","Significant detour (>10 min)":"อ้อมมาก (มากกว่า 10 นาที)",
 "Compared to this school, what's the nearest school of similar quality?":"เทียบกับโรงเรียนนี้ โรงเรียนคุณภาพใกล้เคียงที่ใกล้ที่สุดอยู่ที่ใด",
@@ -1600,6 +1601,7 @@ const rpSteps = [
     ${opts('school_reason',['Proximity to home','Proximity to work','Sibling at same school','Tuition affordability','Curriculum & activities','Teacher quality','Prestige/reputation','School facilities','Parental involvement','Religious affiliation/values','Friend circle (child)','Friend circle (parent)','Community relationship'],true)}</div>
   <div class="field"><div class="q-label">${t("How would you rate this school's academic reputation?")}</div>${opts('school_reputation_rating',['1','2','3','4','5'])}</div>
   <div class="field"><div class="q-label">${t("How would you rate this school's social prestige (how impressive/high-status the name is seen as)?")}</div>${opts('school_prestige_rating',['1','2','3','4','5'])}</div>
+  <div class="field"><div class="q-label">${t('Overall, how satisfied are you with this school?')}</div>${opts('school_satisfaction_rating',['1','2','3','4','5'])}</div>
   <div class="field"><div class="q-label">${t('Is the school approximately on your daily commute route?')}</div>${opts('route_relation',['Directly on route','Slight detour (<10 min)','Significant detour (>10 min)','N/A'])}</div>
   <div class="field"><div class="q-label">${t("Compared to this school, what's the nearest school of similar quality?")}</div>${opts('nearest_similar',['Much closer','Somewhat closer','About the same','This is nearest','Do not know'])}</div>
   <div class="field"><div class="q-label">${t('If a school of the same quality were available within a 10-minute walk of home, would you switch?')}</div>${opts('switch_10min',['Yes','No','Maybe'])}</div>
