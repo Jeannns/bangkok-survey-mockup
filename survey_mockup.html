@@ -381,7 +381,6 @@ const T = {
 "Full":"เต็มรูปแบบ","Partial":"บางส่วน",
 "Unobstructed footpaths for most of the route?":"ทางเท้าไม่มีสิ่งกีดขวางตลอดเส้นทางส่วนใหญ่หรือไม่",
 "Any incident (near-accident, theft, harassment) on this route in the past year?":"มีเหตุการณ์ (เกือบเกิดอุบัติเหตุ การโจรกรรม การคุกคาม) บนเส้นทางนี้ในปีที่ผ่านมาหรือไม่",
-"Does PM2.5/dust affect how you choose your child's travel mode?":"ฝุ่น PM2.5 มีผลต่อการเลือกรูปแบบการเดินทางของบุตรหลานหรือไม่",
 "Yes, significantly":"ใช่ มีผลอย่างมาก","Yes, somewhat":"ใช่ มีผลบ้าง",
 "Does the school provide facilities for the school commute (e.g. school bus)?":"โรงเรียนมีสิ่งอำนวยความสะดวกด้านการเดินทาง (เช่น รถรับส่งนักเรียน) หรือไม่",
 "school bus use (from Section 2):":"การใช้รถรับส่งนักเรียน (จากส่วนที่ 2):",
@@ -437,7 +436,7 @@ const T = {
 "Escorting - Decision (why)":"การรับส่ง - การตัดสินใจ (เหตุผล)",
 "Escorting - Threat & Coping (PMT)":"การรับส่ง - การรับรู้ความเสี่ยงและการรับมือ",
 "Escorting - Travel Mode":"การรับส่ง - รูปแบบการเดินทาง",
-"Escorting - Route & Air Quality":"การรับส่ง - เส้นทางและคุณภาพอากาศ",
+"Escorting - Route":"การรับส่ง - เส้นทาง",
 "Escorting - School Facilities":"การรับส่ง - สิ่งอำนวยความสะดวกของโรงเรียน",
 "School Choice":"การเลือกโรงเรียน","Review & Submit":"ตรวจทานและส่งแบบสอบถาม",
 "TDS - School Escorting Survey":"TDS - แบบสอบถามการรับส่งไปโรงเรียน",
@@ -1059,7 +1058,7 @@ function isStepComplete(step){
     case 'Escorting - Decision (why)': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(kidDecisionDone); }
     case 'Escorting - Threat & Coping (PMT)': return val('allow_independent')!==undefined;
     case 'Escorting - Travel Mode': return val('escort_mode')!==undefined;
-    case 'Escorting - Route & Air Quality': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(c=>val(c.id+'_major_road')!==undefined); }
+    case 'Escorting - Route': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(c=>val(c.id+'_major_road')!==undefined); }
     case 'Escorting - School Facilities': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(c=>val(c.id+'_school_facility')!==undefined); }
     case 'School Choice': { const kids=characters.filter(c=>c.kind==='child'); const tuitionOk = kids.length===0 || kids.every(c=>val('tuition_'+c.id)!==undefined); return val('route_relation')!==undefined && tuitionOk; }
     default: return true;
@@ -1070,7 +1069,7 @@ const REVIEW_GROUPS = [
   {label:'Household Information', steps:['Household - House & Location','Household - Vehicles & Income','Morning routine activities']},
   {label:'Individual Information', steps:['Household - Create Your Household']},
   {label:'Travel Diary', steps:['Travel Diary - Register a Trip','Travel Diary - Trip Details']},
-  {label:'Escorting Behavior & Safety', steps:['Escorting - Habit','Escorting - Decision (why)','Escorting - Threat & Coping (PMT)','Escorting - Travel Mode','Escorting - Route & Air Quality','Escorting - School Facilities']},
+  {label:'Escorting Behavior & Safety', steps:['Escorting - Habit','Escorting - Decision (why)','Escorting - Threat & Coping (PMT)','Escorting - Travel Mode','Escorting - Route','Escorting - School Facilities']},
   {label:'School Choice', steps:['School Choice']},
 ];
 let reviewOpenGroup = null;
@@ -1084,7 +1083,7 @@ const DEV_NAV_GROUPS = [
   {label:'Household Information', steps:['Household - House & Location','Household - Vehicles & Income','Morning routine activities']},
   {label:'Individual Information', steps:['Household - Create Your Household']},
   {label:'Travel Diary', steps:['Travel Diary - Register a Trip','Travel Diary - Trip Details']},
-  {label:'Escorting Behavior & Safety', steps:['Escorting - Habit','Escorting - Decision (why)','Escorting - Threat & Coping (PMT)','Escorting - Travel Mode','Escorting - Route & Air Quality','Escorting - School Facilities']},
+  {label:'Escorting Behavior & Safety', steps:['Escorting - Habit','Escorting - Decision (why)','Escorting - Threat & Coping (PMT)','Escorting - Travel Mode','Escorting - Route','Escorting - School Facilities']},
   {label:'School Choice', steps:['School Choice']},
   {label:'Review & Submit', steps:['Review & Submit']},
 ];
@@ -1563,7 +1562,7 @@ const rpSteps = [
   <div class="field"><div class="q-label">${t('If child travels by school bus/songthaew/moto-taxi, how much do you trust the driver?')}</div>${opts('driver_trust',['1','2','3','4','5'])}</div>
   <div class="field"><div class="q-label">${t('If child travels by a ride-hailing app (Grab/Line Man/inDrive/Bolt), how much do you trust the driver?')}</div>${opts('ridehailing_trust',['1','2','3','4','5'])}</div>`},
 
-{name:'Escorting - Route & Air Quality', tag:'Section 4 - Route Physical Characteristics', render:()=>{
+{name:'Escorting - Route', tag:'Section 4 - Route Physical Characteristics', render:()=>{
   const kids = characters.filter(c=>c.kind==='child');
   if(kids.length===0) return `<div class="empty-hint">${t('No child characters created yet.')}</div>`;
   const idx = Math.min(routeChildIdx, kids.length-1);
@@ -1575,7 +1574,7 @@ const rpSteps = [
   <div class="field"><div class="q-label">${t('Is there a pedestrian bridge/signal at that crossing?')}</div>${opts(p+'_crossing_aid',['Yes','No','N/A'])}</div>
   <div class="field"><div class="q-label">${t('Unobstructed footpaths for most of the route?')}</div>${opts(p+'_footpath',['Full','Partial','None'])}</div>
   <div class="field"><div class="q-label">${t('Any incident (near-accident, theft, harassment) on this route in the past year?')}</div>${opts(p+'_incident',['Yes','No','Prefer not to say'])}</div>
-  <div class="field"><div class="q-label">${t("Does PM2.5/dust affect how you choose your child's travel mode?")}</div>${opts(p+'_pm25',['Yes, significantly','Yes, somewhat','No'])}</div>`;
+`;
 }},
 
 {name:'Escorting - School Facilities', tag:'Section 4 - Existing School Facilities', render:()=>{
