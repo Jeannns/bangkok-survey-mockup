@@ -392,6 +392,11 @@ const T = {
 "If safety improvements were made, PT would genuinely be safe":"หากมีการปรับปรุงด้านความปลอดภัย ขนส่งสาธารณะจะปลอดภัยอย่างแท้จริง",
 "My child is already familiar with the route, even without an adult":"บุตรหลานคุ้นเคยกับเส้นทางอยู่แล้ว แม้ไม่มีผู้ใหญ่ไปด้วย",
 "I am familiar with/know other adults along the route who could help":"ฉันคุ้นเคย/รู้จักผู้ใหญ่คนอื่นตามเส้นทางที่สามารถช่วยเหลือได้",
+"Car-use preference / habit":"ความชอบ/ความเคยชินในการใช้รถของครัวเรือน",
+"I feel more comfortable driving than using other ways to get around":"ฉันรู้สึกสะดวกสบายกว่าเมื่อขับรถ เทียบกับการเดินทางด้วยวิธีอื่น",
+"Even when there are other convenient options, I usually choose to drive":"แม้จะมีทางเลือกอื่นที่สะดวกไม่แพ้กัน ฉันก็มักจะเลือกขับรถอยู่ดี",
+"Driving is something I do out of habit, almost without thinking":"การขับรถเป็นสิ่งที่ฉันทำจนเป็นความเคยชิน แทบไม่ต้องคิด",
+"I would find it difficult to give up driving for my daily trips":"ฉันจะรู้สึกลำบากถ้าต้องเลิกขับรถสำหรับการเดินทางในชีวิตประจำวัน",
 "Does your child currently carry a mobile phone during the commute?":"ปัจจุบันบุตรหลานพกโทรศัพท์มือถือระหว่างเดินทางหรือไม่",
 "Would you currently allow this child to travel by BTS/MRT/bus completely alone?":"ปัจจุบันท่านจะอนุญาตให้เด็กคนนี้เดินทางโดย BTS/MRT/รถเมล์เพียงลำพังหรือไม่",
 "Yes, already does":"ใช่ เดินทางเองอยู่แล้ว","Yes, I would allow it":"ใช่ จะอนุญาต","No, not under current conditions":"ไม่ ภายใต้เงื่อนไขปัจจุบัน","No, never regardless":"ไม่ ไม่ว่ากรณีใด",
@@ -1581,6 +1586,8 @@ const rpSteps = [
     ${likert(null,'pmt_severity',['If something bad happened, it would be very serious for our family','It is likely my child would run into danger travelling alone'])}</div>
   <div class="field"><div class="q-label">${t('How well the child/system could cope')}</div>
     ${likert(null,'pmt_coping',['My child knows how to use BTS/MRT/bus safely','My child could handle it if something unexpected happened','If safety improvements were made, PT would genuinely be safe','My child is already familiar with the route, even without an adult','I am familiar with/know other adults along the route who could help'])}</div>
+  <div class="field"><div class="q-label">${t('Car-use preference / habit')}</div>
+    ${likert(null,'car_pref',['I feel more comfortable driving than using other ways to get around','Even when there are other convenient options, I usually choose to drive','Driving is something I do out of habit, almost without thinking','I would find it difficult to give up driving for my daily trips'],'1 = disagree - 5 = agree')}</div>
   <div class="field"><div class="q-label">${t('Would you currently allow this child to travel by BTS/MRT/bus completely alone?')}</div>
     ${opts('allow_independent',['Yes, already does','Yes, I would allow it','No, not under current conditions','No, never regardless'])}</div>
   <div class="field"><div class="q-label">${t('If "No, not under current conditions": which would most change your mind? (top 3)')}</div>
