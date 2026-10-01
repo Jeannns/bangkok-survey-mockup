@@ -407,6 +407,7 @@ const T = {
 "Minimum safety needed before allowing independent travel (rate separately)":"ระดับความปลอดภัยขั้นต่ำที่ต้องการก่อนอนุญาตให้เดินทางเอง (ให้คะแนนแยกแต่ละด้าน)",
 "Traffic danger":"อันตรายจากการจราจร","Crime/stranger risk":"ความเสี่ยงจากอาชญากรรม/คนแปลกหน้า",
 "How do you typically escort your children? (main mode)":"โดยปกติท่านรับส่งบุตรหลานด้วยวิธีใด (รูปแบบหลัก)",
+"Does not personally escort this child (N/A)":"ไม่ได้พาไปส่งด้วยตัวเอง (ไม่เกี่ยวข้อง)",
 "Ride-hailing":"เรียกรถผ่านแอป","Taxi":"แท็กซี่","Taxi meter":"แท็กซี่มิเตอร์","BTS":"BTS",
 "Why this mode? (top 3)":"เหตุใดจึงเลือกวิธีนี้ (เลือก 3 อันดับ)",
 "Same mode as my work commute":"รูปแบบเดียวกับที่ใช้ไปทำงาน","Escort multiple children at once":"รับส่งบุตรหลายคนพร้อมกัน","Most convenient":"สะดวกที่สุด",
@@ -1600,18 +1601,21 @@ const rpSteps = [
   <div class="field"><div class="q-label">${t("Suppose there was a school near your home (closer than your child's current school) with a community volunteer/parent-patrol program along the route, similar to Japan's PTA-style school-route watch programs, to help children travel safely. Would you be willing to move your child there and let them travel independently (e.g. walk or bike) instead of escorting them?")}</div>
     ${opts('nearschool_volunteer_switch',['Yes, definitely','Probably yes','Probably no','No, never','Not applicable (already close to home or already independent)'])}</div>`},
 
-{name:'Escorting - Travel Mode', tag:'Section 4 - Travel Mode', render:()=>`
+{name:'Escorting - Travel Mode', tag:'Section 4 - Travel Mode', render:()=>{
+  const noEscort = val('escort_mode')==='Does not personally escort this child (N/A)';
+  return `
   <div class="field"><div class="q-label">${t('How do you typically escort your children? (main mode)')}</div>
-    ${opts('escort_mode',['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi meter','MRT','BTS','Bus'])}</div>
-  <div class="field"><div class="q-label">${t('Why this mode? (top 3)')}</div>
-    ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare','Combined with own commute/errand (trip-chaining)','Ride-hailing as backup when I cannot escort in person','Physical condition/disability makes independent travel difficult','Destination is far from home','To make sure we arrive on time','Carrying heavy or bulky items','I happen to have extra free time'],true)}</div>
+    ${opts('escort_mode',['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi meter','MRT','BTS','Bus','Does not personally escort this child (N/A)'])}</div>
+  ${noEscort?'':`<div class="field"><div class="q-label">${t('Why this mode? (top 3)')}</div>
+    ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare','Combined with own commute/errand (trip-chaining)','Ride-hailing as backup when I cannot escort in person','Physical condition/disability makes independent travel difficult','Destination is far from home','To make sure we arrive on time','Carrying heavy or bulky items','I happen to have extra free time'],true)}</div>`}
   <div class="field"><div class="q-label">${t('How often does your household use a ride-hailing app (e.g. Grab, Line Man, inDrive, Bolt) to send/pick up your child for school?')}</div>${opts('ridehailing_freq',['Never','Rarely','Sometimes','Often','Always'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used BTS Skytrain on their own, without an adult?')}</div>${opts('used_bts_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used MRT on their own, without an adult?')}</div>${opts('used_mrt_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used a city bus on their own, without an adult?')}</div>${opts('used_bus_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('How safe does it feel to escort your child by motorcycle (vs by car)?')}</div>${opts('moto_safety',['1','2','3','4','5'])}</div>
   <div class="field"><div class="q-label">${t('If child travels by school bus/songthaew/moto-taxi, how much do you trust the driver?')}</div>${opts('driver_trust',['1','2','3','4','5'])}</div>
-  <div class="field"><div class="q-label">${t('If child travels by a ride-hailing app (Grab/Line Man/inDrive/Bolt), how much do you trust the driver?')}</div>${opts('ridehailing_trust',['1','2','3','4','5'])}</div>`},
+  <div class="field"><div class="q-label">${t('If child travels by a ride-hailing app (Grab/Line Man/inDrive/Bolt), how much do you trust the driver?')}</div>${opts('ridehailing_trust',['1','2','3','4','5'])}</div>`;
+}},
 
 {name:'Escorting - Route', tag:'Section 4 - Route Physical Characteristics', render:()=>{
   const kids = characters.filter(c=>c.kind==='child');
