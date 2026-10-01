@@ -415,7 +415,6 @@ const T = {
 "Timely PT schedule":"ตารางเวลาขนส่งสาธารณะตรงเวลา","PT is clean":"ขนส่งสาธารณะสะอาด","More affordable fare":"ค่าโดยสารประหยัดกว่า",
 "Combined with own commute/errand (trip-chaining)":"รวมกับการเดินทางไปทำงาน/ธุระของตัวเอง (เดินทางต่อเนื่อง)",
 "Ride-hailing as backup when I cannot escort in person":"ใช้แอปเรียกรถเป็นทางเลือกสำรองเมื่อไปรับส่งเองไม่ได้",
-"How often does weather (heavy rain/extreme heat) change your usual school-commute mode?":"สภาพอากาศ (ฝนตกหนัก/อากาศร้อนจัด) ทำให้ท่านเปลี่ยนวิธีเดินทางไปโรงเรียนตามปกติบ่อยเพียงใด",
 "How often does your household use a ride-hailing app (e.g. Grab, Line Man, inDrive, Bolt) to send/pick up your child for school?":"ครอบครัวท่านใช้แอปเรียกรถ (เช่น Grab, Line Man, inDrive, Bolt) รับส่งบุตรหลานไปโรงเรียนบ่อยเพียงใด",
 "If child travels by a ride-hailing app (Grab/Line Man/inDrive/Bolt), how much do you trust the driver?":"หากบุตรหลานเดินทางโดยแอปเรียกรถ (Grab/Line Man/inDrive/Bolt) ท่านไว้วางใจคนขับมากเพียงใด",
 "Never":"ไม่เคย","Rarely":"นานๆ ครั้ง","Sometimes":"บางครั้ง","Often":"บ่อยครั้ง","Always":"ทุกครั้ง",
@@ -435,8 +434,7 @@ const T = {
 "Does the school provide facilities for the school commute (e.g. school bus)?":"โรงเรียนมีสิ่งอำนวยความสะดวกด้านการเดินทาง (เช่น รถรับส่งนักเรียน) หรือไม่",
 "school bus use (from Section 2):":"การใช้รถรับส่งนักเรียน (จากส่วนที่ 2):",
 "Not yet answered in Section 2":"ยังไม่ได้ตอบในส่วนที่ 2",
-"If not using school bus, why?":"หากไม่ใช้รถรับส่งนักเรียน เพราะเหตุใด","Type your answer...":"พิมพ์คำตอบของท่าน...",
-"Would a lower school bus fare make you more likely to have your child use the school bus?":"หากค่ารถรับส่งนักเรียนถูกลง จะทำให้ท่านมีแนวโน้มให้บุตรหลานใช้บริการมากขึ้นหรือไม่",
+"Type your answer...":"พิมพ์คำตอบของท่าน...",
 "Yes, definitely":"ใช่ แน่นอน","No, fare is not the reason":"ไม่ ค่าใช้จ่ายไม่ใช่เหตุผล",
 "If yes, what should be improved?":"ถ้าใช่ ควรปรับปรุงเรื่องใด",
 "Does the school actively promote independent travel?":"โรงเรียนส่งเสริมการเดินทางด้วยตนเองอย่างจริงจังหรือไม่",
@@ -596,7 +594,6 @@ const T = {
 "No particular religious affiliation":"ไม่มีความเกี่ยวข้องกับศาสนาใดเป็นการเฉพาะ",
 "Islamic":"อิสลาม",
 "School type collected once here - Sections 4 and 5 will reuse this instead of asking again.":"เก็บข้อมูลประเภทโรงเรียนไว้ที่นี่ที่เดียว ส่วนที่ 4 และ 5 จะนำค่านี้ไปใช้ต่อโดยไม่ถามซ้ำ",
-"Does this child currently use the school bus service?":"ปัจจุบันเด็กคนนี้ใช้บริการรถรับส่งของโรงเรียนหรือไม่",
 "A stop is a place you did something, even briefly - like dropping off or picking up your child. Add a new stop for each one.":"จุดแวะ คือสถานที่ที่ท่านทำกิจกรรมบางอย่าง แม้จะเพียงสั้นๆ เช่น จุดไปส่งหรือไปรับบุตรหลาน ให้เพิ่มจุดแวะใหม่สำหรับแต่ละครั้ง",
 "Just changing transport mode partway through a trip (e.g. switching from a car to the BTS) is NOT a new stop - describe that on the next page instead, in the question about using more than one way of getting there.":"การเปลี่ยนรูปแบบการเดินทางระหว่างทาง (เช่น เปลี่ยนจากรถยนต์เป็น BTS) ไม่ถือเป็นจุดแวะใหม่ ให้ระบุไว้ในคำถามเรื่องการใช้มากกว่าหนึ่งรูปแบบการเดินทางในหน้าถัดไปแทน",
 "Drag the handle on the right to reorder a stop.":"ลากที่จับด้านขวาเพื่อจัดลำดับจุดแวะใหม่",
@@ -1605,7 +1602,6 @@ const rpSteps = [
     ${opts('escort_mode',['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi meter','MRT','BTS','Bus'])}</div>
   <div class="field"><div class="q-label">${t('Why this mode? (top 3)')}</div>
     ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare','Combined with own commute/errand (trip-chaining)','Ride-hailing as backup when I cannot escort in person','Physical condition/disability makes independent travel difficult','Destination is far from home','To make sure we arrive on time','Carrying heavy or bulky items','I happen to have extra free time'],true)}</div>
-  <div class="field"><div class="q-label">${t('How often does weather (heavy rain/extreme heat) change your usual school-commute mode?')}</div>${opts('weather_mode_change',['Never','Rarely','Sometimes','Often','Always'])}</div>
   <div class="field"><div class="q-label">${t('How often does your household use a ride-hailing app (e.g. Grab, Line Man, inDrive, Bolt) to send/pick up your child for school?')}</div>${opts('ridehailing_freq',['Never','Rarely','Sometimes','Often','Always'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used BTS Skytrain on their own, without an adult?')}</div>${opts('used_bts_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used MRT on their own, without an adult?')}</div>${opts('used_mrt_alone',['Yes','No'])}</div>
@@ -1637,9 +1633,6 @@ const rpSteps = [
   return `<div class="q-note">${t('Repeat this question for every school-going child.')}</div>
   ${childTabRow(kids, idx, 'setFacilityChild')}
   <div class="field"><div class="q-label">${t('Does the school provide facilities for the school commute (e.g. school bus)?')}</div>${opts(p+'_school_facility',['Yes','No','Unsure'])}</div>
-  <div class="field"><div class="q-label">${t('Does this child currently use the school bus service?')}</div>${opts(p+'_usesbus',['Yes','No'])}</div>
-  ${val(p+'_usesbus')==='No'?`<div class="field"><div class="q-label">${t('If not using school bus, why?')}</div><textarea placeholder="${t('Type your answer...')}"></textarea></div>`:''}
-  <div class="field"><div class="q-label">${t('Would a lower school bus fare make you more likely to have your child use the school bus?')}</div>${opts(p+'_bus_fare_sensitivity',['Yes, definitely','Maybe','No, fare is not the reason'])}</div>
   <div class="field"><div class="q-label">${t('Does the school actively promote independent travel?')}</div>${opts(p+'_school_promotes',['Yes','No','Unsure'])}</div>`;
 }},
 
