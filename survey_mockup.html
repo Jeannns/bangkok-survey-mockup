@@ -586,8 +586,9 @@ const T = {
 "Don't see yourself listed? Go back and double check the household code.":"ไม่เห็นชื่อตัวเองในรายชื่อใช่ไหม? ย้อนกลับไปตรวจสอบรหัสครัวเรือนอีกครั้ง",
 "A couple of quick questions first":"ก่อนอื่น ขอถามคำถามสั้นๆ สองสามข้อ",
 "Does your household currently have a child attending school, from primary school through high school?":"ครัวเรือนของท่านมีเด็กที่กำลังเรียนอยู่ในปัจจุบัน ตั้งแต่ระดับประถมศึกษาถึงมัธยมศึกษาตอนปลายหรือไม่",
-"Does anyone in your household take this child to or from school in person - by car, motorcycle, walking together, public transport together, or any other way?":"มีสมาชิกในครัวเรือนพาเด็กคนนี้ไปหรือกลับจากโรงเรียนด้วยตนเองหรือไม่ ไม่ว่าจะโดยรถยนต์ มอเตอร์ไซค์ เดินไปด้วยกัน เดินทางด้วยขนส่งสาธารณะไปด้วยกัน หรือวิธีอื่นใดก็ตาม",
-"Thank you for your interest. This survey is currently for households with a school-going child who is accompanied to or from school by a household member, so we won't continue further. You're welcome to close this window.":"ขอบคุณที่สนใจ แบบสอบถามนี้จัดทำขึ้นสำหรับครัวเรือนที่มีเด็กกำลังเรียนและมีสมาชิกในครัวเรือนพาไปหรือกลับจากโรงเรียนเท่านั้น จึงขอยุติแบบสอบถามไว้เพียงเท่านี้ ท่านสามารถปิดหน้าต่างนี้ได้เลย",
+"Does your household currently live within the Bangkok Metropolitan Area?":"ครัวเรือนของท่านอาศัยอยู่ในเขตกรุงเทพมหานครและปริมณฑลในปัจจุบันหรือไม่",
+"Does at least one of these children attend a school located within the Bangkok Metropolitan Area?":"มีเด็กอย่างน้อย 1 คนที่เรียนอยู่ในโรงเรียนที่ตั้งอยู่ในเขตกรุงเทพมหานครและปริมณฑลหรือไม่",
+"Thank you for your interest. This survey is currently for households living in the Bangkok Metropolitan Area with a school-going child attending a school in the Bangkok Metropolitan Area, so we won't continue further. You're welcome to close this window.":"ขอบคุณที่สนใจ แบบสอบถามนี้จัดทำขึ้นสำหรับครัวเรือนที่อาศัยอยู่ในเขตกรุงเทพมหานครและปริมณฑล และมีเด็กกำลังเรียนอยู่ในโรงเรียนในเขตกรุงเทพมหานครและปริมณฑลเท่านั้น จึงขอยุติแบบสอบถามไว้เพียงเท่านี้ ท่านสามารถปิดหน้าต่างนี้ได้เลย",
 "This doesn't need to be a real name - a nickname, initial, or made-up label (e.g. 'Child A') is fine if you'd rather not share it.":"ไม่จำเป็นต้องเป็นชื่อจริง ใช้ชื่อเล่น อักษรย่อ หรือชื่อสมมติ (เช่น \"เด็กคนที่ 1\") ก็ได้ หากไม่สะดวกให้ข้อมูลจริง",
 "Is the school affiliated with a particular religion?":"โรงเรียนนี้มีความเกี่ยวข้องกับศาสนาใดศาสนาหนึ่งเป็นการเฉพาะหรือไม่",
 "This can apply to a public or a private school either way.":"ข้อนี้ใช้ได้ทั้งกับโรงเรียนรัฐบาลและโรงเรียนเอกชน",
@@ -1307,15 +1308,17 @@ let devMode = false;
 const rpSteps = [
 {name:'Screening', customNav:true, render:()=>{
   const q1 = val('screen_haschild');
-  const q2 = val('screen_escorts');
-  const eligible = q1==='Yes' && q2==='Yes';
-  const disqualified = q1==='No' || q2==='No';
+  const q2 = val('screen_bangkok_home');
+  const q3 = val('screen_bangkok_school');
+  const eligible = q1==='Yes' && q2==='Yes' && q3==='Yes';
+  const disqualified = q1==='No' || q2==='No' || q3==='No';
   return `
   <div class="hero"><span class="pill">${t('TDS - School Escorting Survey')}</span>
   <h1>${t('A couple of quick questions first')}</h1></div>
   <div class="field"><div class="q-label">${t('Does your household currently have a child attending school, from primary school through high school?')}</div>${opts('screen_haschild',['Yes','No'])}</div>
-  ${q1==='Yes'?`<div class="field"><div class="q-label">${t('Does anyone in your household take this child to or from school in person - by car, motorcycle, walking together, public transport together, or any other way?')}</div>${opts('screen_escorts',['Yes','No'])}</div>`:''}
-  ${disqualified?`<div class="q-note" style="display:block">${t("Thank you for your interest. This survey is currently for households with a school-going child who is accompanied to or from school by a household member, so we won't continue further. You're welcome to close this window.")}</div>`:''}
+  ${q1==='Yes'?`<div class="field"><div class="q-label">${t('Does your household currently live within the Bangkok Metropolitan Area?')}</div>${opts('screen_bangkok_home',['Yes','No'])}</div>`:''}
+  ${(q1==='Yes'&&q2==='Yes')?`<div class="field"><div class="q-label">${t('Does at least one of these children attend a school located within the Bangkok Metropolitan Area?')}</div>${opts('screen_bangkok_school',['Yes','No'])}</div>`:''}
+  ${disqualified?`<div class="q-note" style="display:block">${t("Thank you for your interest. This survey is currently for households living in the Bangkok Metropolitan Area with a school-going child attending a school in the Bangkok Metropolitan Area, so we won't continue further. You're welcome to close this window.")}</div>`:''}
   <div class="nav-row"><span></span><button class="btn btn-primary" ${eligible?'':'disabled'} onclick="rpIdx=1;renderRP()">${t('Continue ->')}</button></div>
   `;
 }},
