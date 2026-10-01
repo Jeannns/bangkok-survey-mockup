@@ -386,7 +386,14 @@ const T = {
 "How serious/likely it feels":"ความรู้สึกต่อความรุนแรง/ความเป็นไปได้",
 "If something bad happened, it would be very serious for our family":"หากเกิดเหตุร้ายขึ้น จะเป็นเรื่องร้ายแรงมากสำหรับครอบครัวของเรา",
 "It is likely my child would run into danger travelling alone":"มีความเป็นไปได้ที่บุตรหลานจะพบอันตรายหากเดินทางคนเดียว",
-"How well the child/system could cope":"ความสามารถในการรับมือของเด็ก/ระบบ",
+"How well the child/system could cope with traffic risk":"ความสามารถในการรับมือกับความเสี่ยงด้านจราจรของเด็ก/ระบบ",
+"How well the child/system could cope with crime/stranger risk":"ความสามารถในการรับมือกับความเสี่ยงด้านอาชญากรรม/คนแปลกหน้าของเด็ก/ระบบ",
+"My child knows how to cross roads and use footpaths or public transport safely on their own":"ลูกรู้วิธีข้ามถนนและใช้ทางเท้าหรือขนส่งสาธารณะอย่างปลอดภัยด้วยตัวเอง",
+"My child could handle it if something unexpected happened on the way (e.g. getting lost, a minor mishap)":"ลูกรับมือได้ถ้าเจอเรื่องไม่คาดคิดระหว่างทาง (เช่น หลงทาง หรืออุปสรรคเล็กๆ)",
+"If road/footpath safety were improved (e.g. easier crossings, slower traffic), the route would genuinely be safe for my child to travel alone":"ถ้าปรับปรุงความปลอดภัยถนน/ทางเท้า (เช่น ข้ามถนนง่ายขึ้น รถวิ่งช้าลง) เส้นทางนี้จะปลอดภัยจริงสำหรับให้ลูกเดินทางเอง",
+"My child can recognize a dangerous or suspicious situation (e.g. a stranger) and knows what to do":"ลูกรู้จักสังเกตสถานการณ์อันตรายหรือน่าสงสัย (เช่น คนแปลกหน้า) และรู้ว่าต้องทำอะไร",
+"My child could handle it if a stranger approached or bothered them on the way":"ลูกรับมือได้ถ้ามีคนแปลกหน้าเข้ามาก่อกวนระหว่างทาง",
+"If security measures were improved (e.g. CCTV, guards, community patrol), the route/public transport would genuinely be safe for my child to travel alone":"ถ้าปรับปรุงมาตรการความปลอดภัยจากอาชญากรรม (เช่น กล้องวงจรปิด ยาม อาสาสมัครชุมชน) เส้นทาง/ขนส่งสาธารณะนี้จะปลอดภัยจริงสำหรับให้ลูกเดินทางเอง",
 "My child knows how to use BTS/MRT/bus safely":"บุตรหลานรู้วิธีใช้ BTS/MRT/รถเมล์อย่างปลอดภัย",
 "My child could handle it if something unexpected happened":"บุตรหลานสามารถรับมือได้หากเกิดเหตุไม่คาดคิด",
 "If safety improvements were made, PT would genuinely be safe":"หากมีการปรับปรุงด้านความปลอดภัย ขนส่งสาธารณะจะปลอดภัยอย่างแท้จริง",
@@ -1585,8 +1592,10 @@ const rpSteps = [
     ${val('started_independent_never')!=='Not allowed to travel independently at all'?`<input type="number" placeholder="${t('years old')}" style="width:140px;margin-top:8px">`:''}</div>
   <div class="field"><div class="q-label">${t('How serious/likely it feels')}</div>
     ${likert(null,'pmt_severity',['If something bad happened, it would be very serious for our family','It is likely my child would run into danger travelling alone'])}</div>
-  <div class="field"><div class="q-label">${t('How well the child/system could cope')}</div>
-    ${likert(null,'pmt_coping',['My child knows how to use BTS/MRT/bus safely','My child could handle it if something unexpected happened','If safety improvements were made, PT would genuinely be safe','My child is already familiar with the route, even without an adult','I am familiar with/know other adults along the route who could help'])}</div>
+  <div class="field"><div class="q-label">${t('How well the child/system could cope with traffic risk')}</div>
+    ${likert(null,'pmt_coping_traffic',['My child knows how to cross roads and use footpaths or public transport safely on their own','My child is already familiar with the route, even without an adult','My child could handle it if something unexpected happened on the way (e.g. getting lost, a minor mishap)','If road/footpath safety were improved (e.g. easier crossings, slower traffic), the route would genuinely be safe for my child to travel alone'])}</div>
+  <div class="field"><div class="q-label">${t('How well the child/system could cope with crime/stranger risk')}</div>
+    ${likert(null,'pmt_coping_crime',['My child can recognize a dangerous or suspicious situation (e.g. a stranger) and knows what to do','I am familiar with/know other adults along the route who could help','My child could handle it if a stranger approached or bothered them on the way','If security measures were improved (e.g. CCTV, guards, community patrol), the route/public transport would genuinely be safe for my child to travel alone'])}</div>
   <div class="field"><div class="q-label">${t('Car-use preference / habit')}</div>
     ${likert(null,'car_pref',['I feel more comfortable driving than using other ways to get around','Even when there are other convenient options, I usually choose to drive','Driving is something I do out of habit, almost without thinking','I would find it difficult to give up driving for my daily trips'],'1 = disagree - 5 = agree')}</div>
   <div class="field"><div class="q-label">${t('Would you currently allow this child to travel by BTS/MRT/bus completely alone?')}</div>
