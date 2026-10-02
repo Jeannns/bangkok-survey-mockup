@@ -473,6 +473,7 @@ const T = {
 "Travel time":"เวลาเดินทาง","Wait time":"เวลารอ","Cost":"ค่าใช้จ่าย","Traffic risk":"ความเสี่ยงจากการจราจร","Crime risk":"ความเสี่ยงจากอาชญากรรม",
 "Footpath":"ทางเท้า","Companion":"ผู้ร่วมทาง","Driver trust":"ความไว้วางใจคนขับ","Your choice":"ตัวเลือกของท่าน",
 "Escort by car":"รับส่งด้วยรถยนต์","Child travels alone by PT":"เด็กเดินทางเองด้วยขนส่งสาธารณะ","Escort by motorcycle":"รับส่งด้วยรถจักรยานยนต์",
+"Escort together by public transport":"รับส่งโดยนั่งขนส่งสาธารณะไปด้วยกัน",
 "Third-party escort (school bus)":"บุคคลที่สามรับส่ง (รถรับส่งนักเรียน)","Child walks/bikes alone":"เด็กเดินหรือปั่นจักรยานเอง","Third-party escort (songthaew)":"บุคคลที่สามรับส่ง (รถสองแถว)",
 "School buddy":"เพื่อนไปโรงเรียนด้วยกัน","Guardian":"ผู้ปกครอง/ผู้ดูแล","Poor":"แย่","Good":"ดี","Moderate":"ปานกลาง","High":"สูง","Low":"ต่ำ","Medium":"ปานกลาง",
 "Third-party escort (ride-hailing)":"บุคคลที่สามรับส่ง (เรียกรถผ่านแอป)",
@@ -562,7 +563,7 @@ const T = {
 "Companion scheme":"รูปแบบผู้ร่วมทาง",
 "Third-party trust":"ความไว้วางใจบุคคลที่สาม",
 "Walk/bike portion":"ช่วงเดิน/ปั่นจักรยาน",
-"Escorted by parent":"ผู้ปกครองรับส่ง","Travels alone":"เดินทางคนเดียว","Travels with school buddy":"เดินทางกับเพื่อนไปโรงเรียนด้วยกัน","Escorted by guardian on arrival":"มีผู้ดูแลรับที่ปลายทาง","Third-party escort":"รับส่งโดยบุคคลที่สาม",
+"Escorted by parent":"ผู้ปกครองรับส่ง","Escorted by parent (via PT)":"ผู้ปกครองพาไปด้วยขนส่งสาธารณะ","Travels alone":"เดินทางคนเดียว","Travels with school buddy":"เดินทางกับเพื่อนไปโรงเรียนด้วยกัน","Escorted by guardian on arrival":"มีผู้ดูแลรับที่ปลายทาง","Third-party escort":"รับส่งโดยบุคคลที่สาม",
 "Nicely done with Module 1! Now let's look at school choice.":"ทำโมดูล 1 เสร็จแล้ว ต่อไปมาดูเรื่องการเลือกโรงเรียนกันบ้าง",
 "Continue to Module 2 ->":"ไปโมดูล 2 ->",
 "School A (your current school)":"โรงเรียน A (โรงเรียนปัจจุบันของท่าน)","School B (alternative)":"โรงเรียน B (ทางเลือกใหม่)",
@@ -1859,38 +1860,52 @@ function sceneFor(cardIcon, opt){
   return '';
 }
 
-/* Module 1 - Escort/Travel Choice. 9 attributes: 5 control (time, fare, traffic+footpath danger,
+/* Module 1 - Escort/Travel Choice. 10 attributes: 5 control (time, fare, traffic+footpath danger,
    crime danger, companion scheme), 1 non-core universal (wait time), 2 conditional sub-attributes
    (walk/bike portion, third-party trust). The escort option's mode is pivoted by the respondent's
-   own car-vs-motorcycle branch from Pre-SP Setup rather than being an attribute itself. */
+   own car-vs-motorcycle branch from Pre-SP Setup rather than being an attribute itself.
+   2026-10-02 (Concern 10, J decision): added a 5th universal alternative, 'Escort together by
+   public transport' - a household adult accompanies the child on BTS/MRT/bus, as opposed to the
+   existing 'Child travels alone by PT' alternative (no accompanying adult). It reuses the same
+   time/fare attribute levels as the independent-PT alternative in each round (interim simplification;
+   the adult's own fare is not modeled separately), but is given its own, lower traffic/crime danger
+   level per round to reflect the protective effect of adult accompaniment - this also makes the
+   traffic/crime danger attribute explicitly alternative-specific (each option in a round carries its
+   own level) rather than one shared route-level value, matching the fix made to the SP docx the same day. */
 function buildModule1(mode){
   const escortTitle = mode==='Motorbike' ? 'Escort by motorcycle' : 'Escort by car';
   const escortIcon = mode==='Motorbike' ? 'MOTO' : 'CAR';
   return [
     {round:1, options:[
       {title:escortTitle,icon:escortIcon,time:10,fare:0,danger:2,crime:2,companion:'Escorted by parent'},
+      {title:'Escort together by public transport',icon:'BUS',time:40,fare:50,danger:2,crime:2,companion:'Escorted by parent (via PT)',wait:30},
       {title:'Child travels alone by PT',icon:'BUS',time:40,fare:50,danger:4,crime:4,companion:'Travels alone',wait:30,walkbike:8}
     ]},
     {round:2, options:[
       {title:escortTitle,icon:escortIcon,time:40,fare:0,danger:2,crime:2,companion:'Escorted by parent'},
+      {title:'Escort together by public transport',icon:'BUS',time:15,fare:0,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:5},
       {title:'Child travels alone by PT',icon:'BUS',time:15,fare:0,danger:1,crime:1,companion:'Travels with school buddy',wait:5,walkbike:3}
     ]},
     {round:3, options:[
       {title:escortTitle,icon:escortIcon,time:15,fare:0,danger:mode==='Motorbike'?4:2,crime:2,companion:'Escorted by parent'},
+      {title:'Escort together by public transport',icon:'BUS',time:25,fare:15,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:15},
       {title:'Child travels alone by PT',icon:'BUS',time:25,fare:15,danger:3,crime:2,companion:'Escorted by guardian on arrival',wait:15,walkbike:6}
     ]},
     {round:4, options:[
       {title:escortTitle,icon:escortIcon,time:20,fare:0,danger:3,crime:2,companion:'Escorted by parent'},
+      {title:'Escort together by public transport',icon:'BUS',time:20,fare:15,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:10},
       {title:'Child travels alone by PT',icon:'BUS',time:20,fare:15,danger:2,crime:2,companion:'Travels with school buddy',wait:10,walkbike:5},
       {title:'Third-party escort (school bus)',icon:'VAN',time:22,fare:20,danger:2,crime:2,companion:'Third-party escort',trust:'High'}
     ]},
     {round:5, options:[
       {title:escortTitle,icon:escortIcon,time:12,fare:0,danger:mode==='Motorbike'?5:2,crime:mode==='Motorbike'?3:1,companion:'Escorted by parent'},
+      {title:'Escort together by public transport',icon:'BUS',time:30,fare:50,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:15},
       {title:'Third-party escort (songthaew)',icon:'VAN',time:20,fare:15,danger:2,crime:2,companion:'Third-party escort',trust:'Low'},
       {title:'Child travels alone by PT',icon:'BUS',time:30,fare:50,danger:2,crime:2,companion:'Escorted by guardian on arrival',wait:15,walkbike:7}
     ]},
     {round:6, options:[
       {title:escortTitle,icon:escortIcon,time:18,fare:0,danger:2,crime:2,companion:'Escorted by parent'},
+      {title:'Escort together by public transport',icon:'BUS',time:25,fare:20,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:12},
       {title:'Third-party escort (ride-hailing)',icon:'VAN',time:20,fare:60,danger:2,crime:2,companion:'Third-party escort',trust:'Medium'},
       {title:'Child travels alone by PT',icon:'BUS',time:25,fare:20,danger:3,crime:2,companion:'Travels alone',wait:12,walkbike:6}
     ]},
