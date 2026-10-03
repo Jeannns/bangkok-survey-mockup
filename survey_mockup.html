@@ -399,6 +399,13 @@ const T = {
 "If safety improvements were made, PT would genuinely be safe":"หากมีการปรับปรุงด้านความปลอดภัย ขนส่งสาธารณะจะปลอดภัยอย่างแท้จริง",
 "My child is already familiar with the route, even without an adult":"บุตรหลานคุ้นเคยกับเส้นทางอยู่แล้ว แม้ไม่มีผู้ใหญ่ไปด้วย",
 "I am familiar with/know other adults along the route who could help":"ฉันคุ้นเคย/รู้จักผู้ใหญ่คนอื่นตามเส้นทางที่สามารถช่วยเหลือได้",
+"Coping appraisal: belief about escorting itself":"ความเชื่อเกี่ยวกับการไปส่งลูกด้วยตัวเอง",
+"I am confident that I can escort my child to school regularly, regardless of my workload or other commitments.":"ฉันมั่นใจว่าตัวเองจะพาลูกไปโรงเรียนได้อย่างสม่ำเสมอ ไม่ว่าจะมีภาระงานหรือธุระอื่นมากแค่ไหน",
+"I can rearrange my own schedule to escort my child to school, even when something comes up unexpectedly.":"ฉันสามารถปรับตารางเวลาของตัวเองเพื่อไปส่งลูกที่โรงเรียนได้ แม้จะมีเรื่องกะทันหันเกิดขึ้น",
+"My escorting my child to school meaningfully reduces the chance that something bad happens to them on the way.":"การที่ฉันไปส่งลูกที่โรงเรียน ช่วยลดโอกาสที่จะเกิดเรื่องไม่ดีกับลูกระหว่างทางได้จริง",
+"If I stopped escorting my child, their safety on the way to school would be noticeably worse.":"ถ้าฉันเลิกไปส่งลูก ความปลอดภัยของลูกระหว่างทางไปโรงเรียนจะแย่ลงอย่างเห็นได้ชัด",
+"Escorting my child to school takes up a significant amount of my time.":"การไปส่งลูกที่โรงเรียนกินเวลาของฉันไปมากพอสมควร",
+"Escorting my child to school is a burden for me (e.g., extra cost, having to rearrange my schedule, tiredness).":"การไปส่งลูกที่โรงเรียนเป็นภาระกับฉัน (เช่น เสียค่าใช้จ่ายเพิ่ม ต้องจัดตารางใหม่ หรือเหนื่อย)",
 "Car-use preference / habit":"ความชอบ/ความเคยชินในการใช้รถของครัวเรือน",
 "I feel more comfortable driving than using other ways to get around":"ฉันรู้สึกสะดวกสบายกว่าเมื่อขับรถ เทียบกับการเดินทางด้วยวิธีอื่น",
 "Even when there are other convenient options, I usually choose to drive":"แม้จะมีทางเลือกอื่นที่สะดวกไม่แพ้กัน ฉันก็มักจะเลือกขับรถอยู่ดี",
@@ -1597,6 +1604,8 @@ const rpSteps = [
     ${likert(null,'pmt_coping_traffic',['My child knows how to cross roads and use footpaths or public transport safely on their own','My child is already familiar with the route, even without an adult','My child could handle it if something unexpected happened on the way (e.g. getting lost, a minor mishap)','If road/footpath safety were improved (e.g. easier crossings, slower traffic), the route would genuinely be safe for my child to travel alone'])}</div>
   <div class="field"><div class="q-label">${t('How well the child/system could cope with crime/stranger risk')}</div>
     ${likert(null,'pmt_coping_crime',['My child can recognize a dangerous or suspicious situation (e.g. a stranger) and knows what to do','I am familiar with/know other adults along the route who could help','My child could handle it if a stranger approached or bothered them on the way','If security measures were improved (e.g. CCTV, guards, community patrol), the route/public transport would genuinely be safe for my child to travel alone'])}</div>
+  <div class="field"><div class="q-label">${t('Coping appraisal: belief about escorting itself')}</div>
+    ${likert(null,'pmt_coping_appraisal',['I am confident that I can escort my child to school regularly, regardless of my workload or other commitments.','I can rearrange my own schedule to escort my child to school, even when something comes up unexpectedly.','My escorting my child to school meaningfully reduces the chance that something bad happens to them on the way.','If I stopped escorting my child, their safety on the way to school would be noticeably worse.','Escorting my child to school takes up a significant amount of my time.','Escorting my child to school is a burden for me (e.g., extra cost, having to rearrange my schedule, tiredness).'],'1 = disagree - 5 = agree')}</div>
   <div class="field"><div class="q-label">${t('Car-use preference / habit')}</div>
     ${likert(null,'car_pref',['I feel more comfortable driving than using other ways to get around','Even when there are other convenient options, I usually choose to drive','Driving is something I do out of habit, almost without thinking','I would find it difficult to give up driving for my daily trips'],'1 = disagree - 5 = agree')}</div>
   <div class="field"><div class="q-label">${t('Would you currently allow this child to travel by BTS/MRT/bus completely alone?')}</div>
