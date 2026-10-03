@@ -333,7 +333,7 @@ const T = {
 "Who traveled with you on this segment?":"มีใครเดินทางไปด้วยกันในช่วงนี้บ้าง","No other household members yet.":"ยังไม่มีสมาชิกครัวเรือนคนอื่น",
 "Travel mode (main mode for this segment)":"รูปแบบการเดินทาง (รูปแบบหลักของช่วงนี้)",
 "Walk":"เดิน","Bike":"จักรยาน","School bus":"รถรับส่งนักเรียน","Private car":"รถยนต์ส่วนตัว","Private motorbike":"รถจักรยานยนต์ส่วนตัว",
-"Ride-hailing - car":"เรียกรถผ่านแอป - รถยนต์","Ride-hailing - motorbike":"เรียกรถผ่านแอป - มอเตอร์ไซค์","Regular taxi":"แท็กซี่ทั่วไป",
+"Ride-hailing - car":"เรียกรถผ่านแอป - รถยนต์","Ride-hailing - motorbike":"เรียกรถผ่านแอป - มอเตอร์ไซค์","Regular taxi":"แท็กซี่ทั่วไป","Songthaew":"รถสองแถว","Motorcycle taxi":"มอเตอร์ไซค์รับจ้าง (วิน)",
 "MRT":"MRT","BTS Skytrain":"รถไฟฟ้า BTS","Bus":"รถเมล์",
 "Did you use more than one way of getting there? If yes, list them in order":"ท่านใช้วิธีเดินทางมากกว่าหนึ่งรูปแบบหรือไม่ ถ้าใช่ โปรดระบุตามลำดับ",
 "No, one mode only":"ไม่ ใช้รูปแบบเดียว","e.g. walk, then bus, then train":"เช่น เดิน แล้วต่อรถเมล์ แล้วต่อรถไฟ",
@@ -354,8 +354,10 @@ const T = {
 "Q2. Any school-going children who go independently on regular weekdays?":"ข้อ 2 มีบุตรหลานที่เดินทางไปโรงเรียนเองในวันธรรมดาหรือไม่",
 "Which children are escorted to school on most weekdays?":"เด็กคนใดบ้างที่ถูกรับส่งไปโรงเรียนในวันธรรมดาส่วนใหญ่ (แตะเพื่อเลือก)",
 "No child characters created yet.":"ยังไม่ได้สร้างตัวละครเด็ก",
-"Which adults usually do the escorting?":"ผู้ใหญ่คนใดบ้างที่มักเป็นผู้รับส่ง (แตะเพื่อเลือก)",
-"No adult characters created yet.":"ยังไม่ได้สร้างตัวละครผู้ใหญ่",
+"Which household members usually do the escorting? (adults, or anyone aged 15+)":"สมาชิกคนใดในครัวเรือนที่มักเป็นผู้รับส่ง (ผู้ใหญ่ หรือใครก็ตามที่อายุ 15 ปีขึ้นไป)",
+"No eligible household members created yet.":"ยังไม่มีสมาชิกครัวเรือนที่เข้าเกณฑ์",
+"Person outside household":"คนนอกครัวเรือน",
+"Briefly note who this person is (e.g. neighbor, relative, friend)":"ระบุความสัมพันธ์กับบุคคลนี้โดยย่อ (เช่น เพื่อนบ้าน ญาติ เพื่อน)",
 "How often does escorting happen in a week?":"การรับส่งเกิดขึ้นบ่อยเพียงใดในหนึ่งสัปดาห์",
 "Morning":"ช่วงเช้า","Afternoon":"ช่วงบ่าย","Mon":"จ.","Tue":"อ.","Wed":"พ.","Thu":"พฤ.","Fri":"ศ.",
 "is currently marked as":"ถูกระบุว่า","escorted":"ได้รับการรับส่ง","not escorted":"เดินทางเอง",
@@ -1031,7 +1033,7 @@ let maintActivities = [{name:''}];
 let tripPerson = null;
 let tripsByPerson = {}; // personId -> saved stops snapshot, once "Save trip" is pressed
 let multimodeLegs = {}; // segment key (ns) -> [{mode,time,fare}], one entry per extra mode used mid-segment
-const MULTIMODE_OPTIONS = ['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'];
+const MULTIMODE_OPTIONS = ['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','Songthaew','Motorcycle taxi','MRT','BTS Skytrain','Bus'];
 window.addMultimodeLeg = (ns)=>{ if(!multimodeLegs[ns]) multimodeLegs[ns]=[]; multimodeLegs[ns].push({mode:'',time:'',fare:''}); renderRP(); };
 window.removeMultimodeLeg = (ns,idx)=>{ multimodeLegs[ns].splice(idx,1); renderRP(); };
 window.setMultimodeLeg = (ns,idx,field,value)=>{ multimodeLegs[ns][idx][field]=value; };
@@ -1482,14 +1484,22 @@ const rpSteps = [
       <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Arrival time')}</div><input type="time" value="${val('arrtime_'+ns,'')}" oninput="A['arrtime_${ns}']=this.value"></div>
     </div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Who traveled with you on this segment?')}</div>
-      <div class="opt-row">${characters.filter(c=>c.id!==tripPerson).map(c=>{
-        const nm = A[c.id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'));
-        const key = 'seg_'+ns+'_companion_'+c.id;
-        const on = val(key,false)?'checked':'';
-        return `<label class="opt ${on}" onclick="A['${key}']=!A['${key}'];this.classList.toggle('checked')">${nm}</label>`;
-      }).join('') || `<span class="q-help">${t('No other household members yet.')}</span>`}</div></div>
+      <div class="opt-row">${(()=>{
+        const others = characters.filter(c=>c.id!==tripPerson);
+        const memberOpts = others.map(c=>{
+          const nm = A[c.id+'_name']||(c.kind==='adult'?t('Adult'):t('Child'));
+          const key = 'seg_'+ns+'_companion_'+c.id;
+          const on = val(key,false)?'checked':'';
+          return `<label class="opt ${on}" onclick="A['${key}']=!A['${key}'];this.classList.toggle('checked')">${nm}</label>`;
+        }).join('');
+        const outsideKey = 'seg_'+ns+'_companion_outside';
+        const outsideOn = val(outsideKey,false)?'checked':'';
+        const outsideOpt = `<label class="opt ${outsideOn}" onclick="A['${outsideKey}']=!A['${outsideKey}'];renderRP()">${t('Person outside household')}</label>`;
+        return (others.length===0?`<span class="q-help">${t('No other household members yet.')}</span>`:memberOpts) + outsideOpt;
+      })()}</div>
+      ${val('seg_'+ns+'_companion_outside')?`<input type="text" placeholder="${t('Briefly note who this person is (e.g. neighbor, relative, friend)')}" style="margin-top:8px;width:100%" value="${val('seg_'+ns+'_outside_detail','')}" oninput="A['seg_${ns}_outside_detail']=this.value">`:''}</div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Travel mode (main mode for this segment)')}</div>
-      ${opts('mode_'+ns,['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','MRT','BTS Skytrain','Bus'])}</div>
+      ${opts('mode_'+ns,['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing - car','Ride-hailing - motorbike','Regular taxi','Songthaew','Motorcycle taxi','MRT','BTS Skytrain','Bus'])}</div>
     <div class="field" style="border:none;padding:0;margin-bottom:10px"><div class="q-label" style="font-size:13px">${t('Did you change to a different transport mode partway through this trip (before reaching')} ${stops[i+1].place||'?'})? <span class="q-help">${t('(e.g. took a motorcycle taxi partway before reaching the station)')}</span></div>
       ${opts('multimode_'+ns,['No, one mode only','Yes'])}</div>
     ${val('multimode_'+ns)==='Yes'?`
@@ -1548,11 +1558,13 @@ const rpSteps = [
     }).join('')||`<span class="q-help">${t('No child characters created yet.')}</span>`}</div></div>
   <div class="field"><div class="q-label">${t("Do you also regularly escort any child(ren) who are NOT members of your household (e.g. a neighbor's child, or as part of a carpool)?")}</div>${opts('escorts_nonhousehold',['Yes','No'])}
     ${val('escorts_nonhousehold')==='Yes'?`<input type="text" placeholder="${t('Briefly note the relationship and school for each')}" style="margin-top:8px;width:100%" value="${val('nonhousehold_detail','')}" oninput="A['nonhousehold_detail']=this.value">`:''}</div>
-  <div class="field"><div class="q-label">${t('Which adults usually do the escorting?')}</div>
-    <div class="opt-row">${characters.filter(c=>c.kind==='adult').map(c=>{
+  <div class="field"><div class="q-label">${t('Which household members usually do the escorting? (adults, or anyone aged 15+)')}</div>
+    <div class="opt-row">${characters.filter(c=>c.kind==='adult'||(A[c.id+'_age']!==undefined && A[c.id+'_age']!=='' && Number(A[c.id+'_age'])>=15)).map(c=>{
       const on = val('escorts_adult_'+c.id,false)?'checked':'';
-      return `<label class="opt ${on}" onclick="toggleEscortingAdult('${c.id}')">${adultName(c)}</label>`;
-    }).join('')||`<span class="q-help">${t('No adult characters created yet.')}</span>`}</div></div>
+      const age = A[c.id+'_age'];
+      const label = adultName(c) + (c.kind==='child' && age!==undefined && age!==''?` (${age} ${t('yrs')})`:'');
+      return `<label class="opt ${on}" onclick="toggleEscortingAdult('${c.id}')">${label}</label>`;
+    }).join('')||`<span class="q-help">${t('No eligible household members created yet.')}</span>`}</div></div>
   <div class="field"><div class="q-label">${t('How often does escorting happen in a week?')}</div>
     <div class="q-help">${t('Morning')}</div>${opts('esc_morning_days',['Mon','Tue','Wed','Thu','Fri'],true)}
     <div class="q-help" style="margin-top:8px">${t('Afternoon')}</div>${opts('esc_afternoon_days',['Mon','Tue','Wed','Thu','Fri'],true)}</div>
@@ -1624,7 +1636,7 @@ const rpSteps = [
   const noEscort = val('escort_mode')==='Does not personally escort this child (N/A)';
   return `
   <div class="field"><div class="q-label">${t('How do you typically escort your children? (main mode)')}</div>
-    ${opts('escort_mode',['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi meter','MRT','BTS','Bus','Does not personally escort this child (N/A)'])}</div>
+    ${opts('escort_mode',['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi meter','Songthaew','Motorcycle taxi','MRT','BTS','Bus','Does not personally escort this child (N/A)'])}</div>
   ${noEscort?'':`<div class="field"><div class="q-label">${t('Why this mode? (top 3)')}</div>
     ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare','Combined with own commute/errand (trip-chaining)','Ride-hailing as backup when I cannot escort in person','Physical condition/disability makes independent travel difficult','Destination is far from home','To make sure we arrive on time','Carrying heavy or bulky items','I happen to have extra free time'],true)}</div>`}
   <div class="field"><div class="q-label">${t('How often does your household use a ride-hailing app (e.g. Grab, Line Man, inDrive, Bolt) to send/pick up your child for school?')}</div>${opts('ridehailing_freq',['Never','Rarely','Sometimes','Often','Always'])}</div>
