@@ -488,7 +488,7 @@ const T = {
 "Footpath":"ทางเท้า","Companion":"ผู้ร่วมทาง","Driver trust":"ความไว้วางใจคนขับ","Your choice":"ตัวเลือกของท่าน",
 "Escort by car":"รับส่งด้วยรถยนต์","Child travels alone by PT":"เด็กเดินทางเองด้วยขนส่งสาธารณะ","Escort by motorcycle":"รับส่งด้วยรถจักรยานยนต์",
 "Escort together by public transport":"รับส่งโดยนั่งขนส่งสาธารณะไปด้วยกัน",
-"Third-party escort (school bus)":"บุคคลที่สามรับส่ง (รถรับส่งนักเรียน)","Child walks/bikes alone":"เด็กเดินหรือปั่นจักรยานเอง","Third-party escort (songthaew)":"บุคคลที่สามรับส่ง (รถสองแถว)",
+"Third-party escort (school bus)":"บุคคลที่สามรับส่ง (รถรับส่งนักเรียน)","Child walks/bikes alone":"เด็กเดินหรือปั่นจักรยานเอง","Walk or bike together with your child":"พาลูกเดินหรือปั่นจักรยานไปด้วยกัน","Escorted by parent (walking/cycling)":"ผู้ปกครองพาเดินหรือปั่นไปด้วยกัน","Third-party escort (songthaew)":"บุคคลที่สามรับส่ง (รถสองแถว)",
 "School buddy":"เพื่อนไปโรงเรียนด้วยกัน","Guardian":"ผู้ปกครอง/ผู้ดูแล","Poor":"แย่","Good":"ดี","Moderate":"ปานกลาง","High":"สูง","Low":"ต่ำ","Medium":"ปานกลาง",
 "Third-party escort (ride-hailing)":"บุคคลที่สามรับส่ง (เรียกรถผ่านแอป)",
 "Next round ->":"รอบถัดไป ->",
@@ -1871,6 +1871,15 @@ function illustThirdParty(trust){
   const badge = `<circle cx="190" cy="22" r="14" fill="${trustColor}"/><text x="190" y="27" font-size="10" fill="#fff" text-anchor="middle" font-weight="700">${trustGlyph}</text>`;
   return sceneWrap(`${van}${badge}`, '#f0fdf4');
 }
+function illustWalk(danger, crime, withAdult){
+  const path = `<rect x="0" y="86" width="220" height="24" fill="#d6d3d1"/><rect x="0" y="82" width="220" height="5" fill="#a8a29e"/>`;
+  const trees = `<circle cx="196" cy="56" r="11" fill="#86efac"/><rect x="193" y="64" width="6" height="18" fill="#a16207"/>`;
+  const child = `<g transform="translate(${withAdult?104:80},50)"><circle cx="10" cy="0" r="8" fill="#fbbf24"/><rect x="3" y="8" width="14" height="22" rx="6" fill="#f97316"/><rect x="2" y="12" width="16" height="12" rx="3" fill="#2563eb"/></g>`;
+  const adult = withAdult ? `<g transform="translate(66,34)"><circle cx="12" cy="0" r="10" fill="#fbbf24"/><rect x="2" y="10" width="20" height="36" rx="8" fill="#7c3aed"/></g>` : '';
+  const crimeOverlay = crime>=4 ? `<rect width="220" height="110" rx="14" fill="#1e293b" opacity="0.32"/>` : '';
+  const crimeMark = crime>=3 ? `<circle cx="196" cy="20" r="12" fill="#a855f7"/><text x="196" y="24" font-size="9" fill="#fff" text-anchor="middle" font-weight="700">!</text>` : '';
+  return sceneWrap(`${path}${trees}${adult}${child}${crimeOverlay}${hazardMarks(danger,'#ef4444')}${crimeMark}`, '#fef3c7');
+}
 function illustSchool(letter, accent){
   const building = `<rect x="58" y="42" width="104" height="54" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/><polygon points="58,42 110,16 162,42" fill="${accent}"/><rect x="96" y="66" width="28" height="30" fill="${accent}"/><rect x="68" y="54" width="16" height="16" fill="#bae6fd"/><rect x="136" y="54" width="16" height="16" fill="#bae6fd"/>`;
   const badge = `<circle cx="190" cy="22" r="16" fill="${accent}"/><text x="190" y="28" font-size="15" fill="#fff" text-anchor="middle" font-weight="800">${letter}</text>`;
@@ -1882,6 +1891,7 @@ function sceneFor(cardIcon, opt){
   if(cardIcon==='MOTO') return illustDrive(opt.danger||0, true);
   if(cardIcon==='BUS') return illustPT(opt.danger||0, opt.crime||0);
   if(cardIcon==='VAN') return illustThirdParty(opt.trust||'Medium');
+  if(cardIcon==='WALK') return illustWalk(opt.danger||0, opt.crime||0, /^Escorted by parent/.test(opt.companion||''));
   if(cardIcon==='A') return illustSchool('A', '#3b82f6');
   if(cardIcon==='B') return illustSchool('B', '#f97316');
   return '';
@@ -1899,6 +1909,13 @@ function sceneFor(cardIcon, opt){
    level per round to reflect the protective effect of adult accompaniment - this also makes the
    traffic/crime danger attribute explicitly alternative-specific (each option in a round carries its
    own level) rather than one shared route-level value, matching the fix made to the SP docx the same day. */
+/* 2026-10-04 (RQ3b, J decision): added Option 6, 'Walk or bike together with your child' (a household
+   adult walks or cycles with the child; shown under 'A household adult takes the child'), and the docx's
+   existing Option 4, 'Child walks/bikes alone', which the mockup had not shown yet. Both only belong in
+   short-distance scenarios (docx distance branch); the mockup has no distance branch yet, so rounds 2-3
+   stand in for short-distance scenarios. Walk options share the walk/bike travel time (Sub-Attribute 1),
+   have no fare, wait, walk/bike-portion or trust rows, and carry their own traffic/crime danger levels
+   (lower for the accompanied option). */
 function buildModule1(mode){
   const escortTitle = mode==='Motorbike' ? 'Escort by motorcycle' : 'Escort by car';
   const escortIcon = mode==='Motorbike' ? 'MOTO' : 'CAR';
@@ -1911,12 +1928,16 @@ function buildModule1(mode){
     {round:2, options:[
       {title:escortTitle,icon:escortIcon,time:40,fare:0,danger:2,crime:2,companion:'Escorted by parent'},
       {title:'Escort together by public transport',icon:'BUS',time:15,fare:0,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:5},
-      {title:'Child travels alone by PT',icon:'BUS',time:15,fare:0,danger:1,crime:1,companion:'Travels with school buddy',wait:5,walkbike:3}
+      {title:'Child travels alone by PT',icon:'BUS',time:15,fare:0,danger:1,crime:1,companion:'Travels with school buddy',wait:5,walkbike:3},
+      {title:'Walk or bike together with your child',icon:'WALK',time:15,danger:2,crime:1,companion:'Escorted by parent (walking/cycling)'},
+      {title:'Child walks/bikes alone',icon:'WALK',time:15,danger:3,crime:2,companion:'Travels alone'}
     ]},
     {round:3, options:[
       {title:escortTitle,icon:escortIcon,time:15,fare:0,danger:mode==='Motorbike'?4:2,crime:2,companion:'Escorted by parent'},
       {title:'Escort together by public transport',icon:'BUS',time:25,fare:15,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:15},
-      {title:'Child travels alone by PT',icon:'BUS',time:25,fare:15,danger:3,crime:2,companion:'Escorted by guardian on arrival',wait:15,walkbike:6}
+      {title:'Child travels alone by PT',icon:'BUS',time:25,fare:15,danger:3,crime:2,companion:'Escorted by guardian on arrival',wait:15,walkbike:6},
+      {title:'Walk or bike together with your child',icon:'WALK',time:30,danger:1,crime:1,companion:'Escorted by parent (walking/cycling)'},
+      {title:'Child walks/bikes alone',icon:'WALK',time:30,danger:2,crime:2,companion:'Travels with school buddy'}
     ]},
     {round:4, options:[
       {title:escortTitle,icon:escortIcon,time:20,fare:0,danger:3,crime:2,companion:'Escorted by parent'},
@@ -1943,7 +1964,7 @@ function m1Rows(o){
   const rows = [{icon:'TIME',label:'Travel time',ctrl:true,value:o.time+' '+unit}];
   if(o.wait!==undefined) rows.push({icon:'WAIT',label:'Wait time',value:o.wait+' '+unit});
   if(o.walkbike!==undefined) rows.push({icon:'WALK',label:'Walk/bike portion',value:o.walkbike+' '+unit});
-  rows.push({icon:'FARE',label:'PT fare',ctrl:true,value:o.fare+' THB'});
+  if(o.fare!==undefined) rows.push({icon:'FARE',label:'PT fare',ctrl:true,value:o.fare+' THB'});
   rows.push({icon:'TRAF',label:'Traffic & footpath danger',ctrl:true,bar:dangerBar(o.danger)});
   rows.push({icon:'CRIME',label:'Crime danger',ctrl:true,bar:dangerBar(o.crime)});
   rows.push({icon:'COMP',label:'Companion scheme',ctrl:true,value:t(o.companion)});
