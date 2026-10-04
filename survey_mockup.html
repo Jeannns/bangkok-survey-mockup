@@ -577,8 +577,9 @@ const T = {
 "Continue to Module 2 ->":"ไปโมดูล 2 ->",
 "School A (your current school)":"โรงเรียน A (โรงเรียนปัจจุบันของท่าน)","School B (alternative)":"โรงเรียน B (ทางเลือกใหม่)",
 "(reference only - based on your earlier answers)":"(สำหรับอ้างอิง - จากคำตอบก่อนหน้านี้)",
-"Same as usual":"เหมือนเดิม","As usual":"เหมือนเดิม","Safer route":"เส้นทางปลอดภัยกว่า","Some risk":"มีความเสี่ยงบ้าง",
-"Tuition":"ค่าเทอม","Academic reputation":"ชื่อเสียงด้านวิชาการ","Class size":"ขนาดชั้นเรียน","Required travel mode":"รูปแบบการเดินทางที่ต้องใช้","Route/area safety":"ความปลอดภัยของเส้นทาง/พื้นที่",
+"Same as usual":"เหมือนเดิม",
+"Tuition":"ค่าเทอม","Academic reputation":"ชื่อเสียงด้านวิชาการ",
+"Assume School B would be reached the same way as your child's current school, and that its route and surrounding area would feel just as safe as they do today. Only the features shown differ.":"ให้สมมติว่าการเดินทางไปโรงเรียน B ใช้วิธีเดียวกับโรงเรียนปัจจุบันของบุตรหลาน และเส้นทางกับพื้นที่รอบโรงเรียน B ปลอดภัยเท่ากับตอนนี้ ต่างกันเฉพาะลักษณะที่แสดงเท่านั้น",
 "For this school choice, which would you choose for your child?":"สำหรับการเลือกโรงเรียนนี้ ท่านจะเลือกแบบใดให้บุตรหลาน",
 "Thinking about your school choice above, which factor mattered to you the most?":"จากตัวเลือกโรงเรียนข้างต้น ปัจจัยใดสำคัญกับท่านมากที่สุด",
 "Academic reputation/quality":"ชื่อเสียง/คุณภาพวิชาการ","Tuition cost":"ค่าเทอม","Distance/travel time":"ระยะทาง/เวลาเดินทาง",
@@ -1993,9 +1994,6 @@ function schoolARef(){
     // real diary-derived minutes when available; falls back to a placeholder
     // string when the respondent hasn't filled in a matching segment's times yet.
     time: realTimeMin!=null ? realTimeMin : 'Same as usual',
-    classSize: '30-40',
-    mode: 'Same as usual',
-    safety: 'As usual',
   };
 }
 /* Interim (non-D-efficient) pivot for School B's reputation and tuition, relative
@@ -2021,7 +2019,7 @@ function pivotReputation(aReputation, offset){
 }
 function buildModule2(){
   const ref = schoolARef();
-  const schoolA = {title:'School A (your current school)',icon:'A',fixed:true,time:ref.time,tuition:ref.tuition,reputation:ref.reputation,type:ref.type,classSize:ref.classSize,mode:ref.mode,safety:ref.safety};
+  const schoolA = {title:'School A (your current school)',icon:'A',fixed:true,time:ref.time,tuition:ref.tuition,reputation:ref.reputation,type:ref.type};
   // per-round tuition multiplier / flat-step-if-free, matching the docx's -50%/-20%/+30%/+100%
   const TUITION_ROUNDS = [
     {mult:1.3, flat:2000},  // round1: +30%
@@ -2037,30 +2035,32 @@ function buildModule2(){
   // independent DCE attribute. Varying an attribute with no coefficient of its own
   // would let it leak into the error term and risk biasing the attributes that
   // ARE being estimated (time, desirability/reputation, tuition).
+  // 2026-10-04 (Concern 7): required travel mode and route/area safety removed for
+  // the same reason (not in the Stage 1 utility; safety is modelled only in Stage 2);
+  // class size had already been dropped from the docx on 2026-09-23. An instruction
+  // (M2_ASSUME) holds mode and safety equal to School A instead.
   return [
     {round:1, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:15,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[0].mult,TUITION_ROUNDS[0].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[0]),type:ref.type,classSize:'20-30',mode:'Walk',safety:'Safer route'}
+      {title:'School B (alternative)',icon:'B',time:15,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[0].mult,TUITION_ROUNDS[0].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[0]),type:ref.type}
     ]},
     {round:2, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:30,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[1].mult,TUITION_ROUNDS[1].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[1]),type:ref.type,classSize:'40-50',mode:'School bus',safety:'Some risk'}
+      {title:'School B (alternative)',icon:'B',time:30,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[1].mult,TUITION_ROUNDS[1].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[1]),type:ref.type}
     ]},
     {round:3, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:10,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[2].mult,TUITION_ROUNDS[2].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[2]),type:ref.type,classSize:'15-20',mode:'Escort by car',safety:'Safer route'}
+      {title:'School B (alternative)',icon:'B',time:10,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[2].mult,TUITION_ROUNDS[2].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[2]),type:ref.type}
     ]},
     {round:4, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:25,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[3].mult,TUITION_ROUNDS[3].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[3]),type:ref.type,classSize:'30-40',mode:'Bus',safety:'As usual'}
+      {title:'School B (alternative)',icon:'B',time:25,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[3].mult,TUITION_ROUNDS[3].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[3]),type:ref.type}
     ]},
   ];
 }
+const M2_ASSUME = "Assume School B would be reached the same way as your child's current school, and that its route and surrounding area would feel just as safe as they do today. Only the features shown differ.";
 function m2Rows(o){
   return [
     {icon:'TIME',label:'Travel time',ctrl:true,value:t(String(o.time))},
     {icon:'FEE',label:'Tuition',ctrl:true,value:t(o.tuition)},
     {icon:'REP',label:'Academic reputation',ctrl:true,value:o.reputation+'/5'},
     {icon:'TYPE',label:'School type',value:t(o.type)},
-    {icon:'SIZE',label:'Class size',value:o.classSize},
-    {icon:'MODE',label:'Required travel mode',value:t(o.mode)},
-    {icon:'SAFE',label:'Route/area safety',value:t(o.safety)},
   ];
 }
 
@@ -2180,10 +2180,10 @@ function renderSP(){
       <button class="btn btn-primary" onclick="spPhase='m2';spRoundIdx=0;renderSP()">${t('Continue to Module 2 ->')}</button></div>`;
   } else if(spPhase==='m2'){
     body = renderModuleRound('m2', m2rounds, m2Rows, 'For this school choice, which would you choose for your child?', `spPhase='debrief';renderSP()`);
-    body = `<div class="sp-round-label" style="margin-bottom:10px">${t('Module 2 of 2: School Choice')}</div>` + body;
+    body = `<div class="sp-round-label" style="margin-bottom:10px">${t('Module 2 of 2: School Choice')}</div><div class="q-help" style="margin-bottom:10px">${t(M2_ASSUME)}</div>` + body;
   } else if(spPhase==='debrief'){
     const factors1 = ['Travel time','PT fare','Traffic & footpath danger','Crime danger','Companion scheme','Having a companion','Trust in the driver','Something else'];
-    const factors2 = ['Academic reputation/quality','Tuition cost','Distance/travel time','Class size','Route/area safety','Required travel mode','Something else'];
+    const factors2 = ['Academic reputation/quality','Tuition cost','Distance/travel time','Something else'];
     body = `
       <div class="sp-round-label">Debrief</div>
       <div class="sp-question">${t('Thinking about the choices you just made, which factor mattered to you the most?')}</div>
