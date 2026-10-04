@@ -352,6 +352,8 @@ const T = {
 "Drop-off / pick-up point":"จุดส่ง / จุดรับ","After arriving, how long do you usually wait?":"หลังจากถึงแล้ว โดยปกติต้องรอนานเท่าใด",
 "Fare/cost (THB, 0 if free)":"ค่าโดยสาร (บาท ใส่ 0 หากไม่เสียค่าใช้จ่าย)",
 "Draft saved ":"บันทึกฉบับร่างแล้ว ","Next segment ->":"ช่วงถัดไป ->","Finish trip ->":"เสร็จสิ้นการเดินทาง ->",
+"Children who travel to school without a household adult":"เด็กที่เดินทางไปโรงเรียนโดยไม่มีผู้ใหญ่ในบ้านไปด้วย",
+"For each child below: what kind of mode does this child typically take for the school commute?":"สำหรับเด็กแต่ละคนด้านล่าง: ปกติเด็กคนนี้เดินทางไปโรงเรียนด้วยวิธีใด",
 "Q1. Do you typically escort your children to school on regular weekdays?":"ข้อ 1 โดยปกติท่านไปรับส่งบุตรหลานไปโรงเรียนในวันธรรมดาหรือไม่",
 "Q2. Any school-going children who go independently on regular weekdays?":"ข้อ 2 มีบุตรหลานที่เดินทางไปโรงเรียนเองในวันธรรมดาหรือไม่",
 "Which children are escorted to school on most weekdays?":"เด็กคนใดบ้างที่ถูกรับส่งไปโรงเรียนในวันธรรมดาส่วนใหญ่ (แตะเพื่อเลือก)",
@@ -907,6 +909,21 @@ function isCharDone(ch){
   }
   return !!A[p+'_schooltype'] && !!A[p+'_schoolreligion'];
 }
+/* 2026-10-05 (docx row 32): mode of each child who is NOT escorted by a household adult.
+   Shown when Q1 = No (household does not escort) or Q2 = Yes (some children go independently);
+   asked once per child not ticked in "Which children are escorted". Stored as A['indep_mode_<childId>']. */
+const INDEP_MODES = ['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi meter','Songthaew','Motorcycle taxi','MRT','BTS','Bus'];
+function indepChildren(){
+  if(!(val('q1')==='No' || val('q2')==='Yes')) return [];
+  return characters.filter(c=>c.kind==='child' && !val('escorted_'+c.id,false));
+}
+function indepModeBlock(){
+  const kids = indepChildren();
+  if(!kids.length) return '';
+  return `<div class="field"><div class="q-label">${t('Children who travel to school without a household adult')}</div>
+    <div class="q-help">${t('For each child below: what kind of mode does this child typically take for the school commute?')}</div>
+    ${kids.map(c=>`<div style="margin-top:10px"><div class="q-help"><b>${childName(c)}</b></div>${opts('indep_mode_'+c.id, INDEP_MODES)}</div>`).join('')}</div>`;
+}
 function childName(ch){ return A[ch.id+'_name'] || t('Child'); }
 function adultName(ch){ return A[ch.id+'_name'] || t('Adult'); }
 /* School type is now two questions (top-level type + religious affiliation, per the
@@ -1132,7 +1149,7 @@ function isStepComplete(step){
     case 'Escorting - Habit': return val('q1')!==undefined;
     case 'Escorting - Decision (why)': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(kidDecisionDone); }
     case 'Escorting - Threat & Coping (PMT)': return val('allow_independent')!==undefined;
-    case 'Escorting - Travel Mode': return val('escort_mode')!==undefined;
+    case 'Escorting - Travel Mode': return val('escort_mode')!==undefined && indepChildren().every(c=>val('indep_mode_'+c.id)!==undefined);
     case 'Escorting - Route': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(c=>val(c.id+'_major_road')!==undefined); }
     case 'Escorting - School Facilities': { const kids=characters.filter(c=>c.kind==='child'); return kids.length===0 || kids.every(c=>val(c.id+'_school_facility')!==undefined); }
     case 'School Choice': { const kids=characters.filter(c=>c.kind==='child'); const tuitionOk = kids.length===0 || kids.every(c=>val('tuition_'+c.id)!==undefined); return val('route_relation')!==undefined && tuitionOk; }
@@ -1648,6 +1665,7 @@ const rpSteps = [
     ${opts('escort_mode',['Walk','Bike','School bus','Private car','Private motorbike','Ride-hailing','Taxi meter','Songthaew','Motorcycle taxi','MRT','BTS','Bus','Does not personally escort this child (N/A)'])}</div>
   ${noEscort?'':`<div class="field"><div class="q-label">${t('Why this mode? (top 3)')}</div>
     ${opts('mode_reason',['Same mode as my work commute','Escort multiple children at once','Most convenient','Quality time with children','Only mode available','Flexible work schedule','Proximity to station (home)','Proximity to station (school)','Comfortable sidewalk access','Timely PT schedule','PT is clean','More affordable fare','Combined with own commute/errand (trip-chaining)','Ride-hailing as backup when I cannot escort in person','Physical condition/disability makes independent travel difficult','Destination is far from home','To make sure we arrive on time','Carrying heavy or bulky items','I happen to have extra free time'],true)}</div>`}
+  ${indepModeBlock()}
   <div class="field"><div class="q-label">${t('How often does your household use a ride-hailing app (e.g. Grab, Line Man, inDrive, Bolt) to send/pick up your child for school?')}</div>${opts('ridehailing_freq',['Never','Rarely','Sometimes','Often','Always'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used BTS Skytrain on their own, without an adult?')}</div>${opts('used_bts_alone',['Yes','No'])}</div>
   <div class="field"><div class="q-label">${t('Has your child ever used MRT on their own, without an adult?')}</div>${opts('used_mrt_alone',['Yes','No'])}</div>
