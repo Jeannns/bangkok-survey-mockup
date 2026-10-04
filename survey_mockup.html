@@ -2046,6 +2046,14 @@ function pivotReputation(aReputation, offset){
   const base = parseInt(aReputation,10) || 3;
   return String(Math.max(1, Math.min(5, base+offset)));
 }
+/* 2026-10-05: School B travel time is now a % pivot off School A's real time (-20% / same / +30% / +60%),
+   matching the SP docx; when School A's time is unknown, the pivot is shown as a percentage of the usual time. */
+const TIME_ROUNDS = [30, -20, 60, 0];
+function pivotTime(aTime, pct){
+  if(typeof aTime==='number' && isFinite(aTime)) return Math.max(1, Math.round(aTime*(1+pct/100)));
+  if(pct===0) return lang==='th' ? 'เท่าเวลาปกติ' : 'Same as usual';
+  return lang==='th' ? ('เวลาปกติ '+(pct>0?'+':'')+pct+'%') : ('Usual time '+(pct>0?'+':'')+pct+'%');
+}
 function buildModule2(){
   const ref = schoolARef();
   const schoolA = {title:'School A (your current school)',icon:'A',fixed:true,time:ref.time,tuition:ref.tuition,reputation:ref.reputation,type:ref.type};
@@ -2070,16 +2078,16 @@ function buildModule2(){
   // (M2_ASSUME) holds mode and safety equal to School A instead.
   return [
     {round:1, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:15,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[0].mult,TUITION_ROUNDS[0].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[0]),type:ref.type}
+      {title:'School B (alternative)',icon:'B',time:pivotTime(ref.time,TIME_ROUNDS[0]),tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[0].mult,TUITION_ROUNDS[0].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[0]),type:ref.type}
     ]},
     {round:2, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:30,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[1].mult,TUITION_ROUNDS[1].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[1]),type:ref.type}
+      {title:'School B (alternative)',icon:'B',time:pivotTime(ref.time,TIME_ROUNDS[1]),tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[1].mult,TUITION_ROUNDS[1].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[1]),type:ref.type}
     ]},
     {round:3, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:10,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[2].mult,TUITION_ROUNDS[2].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[2]),type:ref.type}
+      {title:'School B (alternative)',icon:'B',time:pivotTime(ref.time,TIME_ROUNDS[2]),tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[2].mult,TUITION_ROUNDS[2].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[2]),type:ref.type}
     ]},
     {round:4, options:[schoolA,
-      {title:'School B (alternative)',icon:'B',time:25,tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[3].mult,TUITION_ROUNDS[3].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[3]),type:ref.type}
+      {title:'School B (alternative)',icon:'B',time:pivotTime(ref.time,TIME_ROUNDS[3]),tuition:pivotTuition(ref.tuition,TUITION_ROUNDS[3].mult,TUITION_ROUNDS[3].flat),reputation:pivotReputation(ref.reputation,REPUTATION_ROUNDS[3]),type:ref.type}
     ]},
   ];
 }
