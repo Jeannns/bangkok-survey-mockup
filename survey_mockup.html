@@ -571,6 +571,9 @@ const T = {
 "Dedicated trip":"ทริปเฉพาะ","Chained with another errand":"รวมกับธุระอื่น",
 "Based on your earlier answers, travel modes you said are not available to you (e.g. no motorcycle license, no school bus service) are excluded from the choices below.":"จากคำตอบก่อนหน้านี้ รูปแบบการเดินทางที่ท่านระบุว่าไม่สามารถใช้ได้ (เช่น ไม่มีใบขับขี่รถจักรยานยนต์ ไม่มีรถรับส่งนักเรียน) จะถูกตัดออกจากตัวเลือกด้านล่าง",
 "Start Module 1 ->":"เริ่มโมดูล 1 ->",
+"For escorting trips, you mainly use:":"สำหรับการรับส่ง ท่านใช้:",
+"Motorcycle (based on your earlier answer)":"รถจักรยานยนต์ (ตามคำตอบก่อนหน้า)","Car (based on your earlier answer)":"รถยนต์ (ตามคำตอบก่อนหน้า)",
+"Module 1 is only asked of households that currently escort this child by private car or motorbike. Based on your earlier answer, this section does not apply to you.":"โมดูล 1 ถามเฉพาะครัวเรือนที่ปัจจุบันพาบุตรคนนี้ไปด้วยรถยนต์ส่วนตัวหรือรถจักรยานยนต์ จากคำตอบก่อนหน้าของท่าน ส่วนนี้ไม่เกี่ยวข้องกับท่าน",
 "PT fare":"ค่าโดยสารขนส่งสาธารณะ",
 "Traffic & footpath danger":"อันตรายจากการจราจรและทางเท้า",
 "Crime danger":"อันตรายจากอาชญากรรม",
@@ -2109,6 +2112,11 @@ window.setSpChild = (id)=>{ spChildId = id; renderSP(); };
 window.setSpMode = (m)=>{ spMode = m; renderSP(); };
 window.setSpTripType = (tt)=>{ spTripType = tt; renderSP(); };
 window.startModule1 = ()=>{ spSetupDone = true; spPhase = 'm1'; spRoundIdx = 0; renderSP(); };
+function spEligible(){
+  const m = val('escort_mode');
+  return m==='Private car' || m==='Private motorbike';
+}
+window.skipToModule2 = ()=>{ spSetupDone = true; spPhase = 'm2'; spRoundIdx = 0; renderSP(); };
 
 function renderSPCode(){
   return `
@@ -2147,6 +2155,11 @@ function renderSPWhoAmI(){
 
 function renderSPSetup(){
   const kids = characters.filter(c=>c.kind==='child');
+  const eligible = spEligible();
+  if(eligible && !spMode){
+    const m = val('escort_mode');
+    spMode = m==='Private motorbike' ? 'Motorbike' : 'Car';
+  }
   return `
     <div class="hero" style="padding:20px"><h1 style="font-size:22px">${t('Before we begin: a few quick setup questions')}</h1></div>
     ${kids.length>1?`<div class="field"><div class="q-label">${t('Which child is this stated-preference exercise about?')}</div>
@@ -2154,18 +2167,20 @@ function renderSPSetup(){
         const on = spChildId===c.id?'checked':'';
         return `<label class="opt ${on}" onclick="setSpChild('${c.id}')">${childName(c)}</label>`;
       }).join('')}</div></div>`:''}
-    <div class="field"><div class="q-label">${t('For escorting trips, do you mainly use a car or a motorcycle?')}</div>
-      <div class="opt-row">${['Car','Motorbike'].map(m=>{
-        const on = spMode===m?'checked':'';
-        return `<label class="opt ${on}" onclick="setSpMode('${m}')">${t(m)}</label>`;
-      }).join('')}</div></div>
+    ${eligible?`
+    <div class="field"><div class="q-label">${t('For escorting trips, you mainly use:')}</div>
+      <div class="q-note" style="display:block">${t(spMode==='Motorbike'?'Motorcycle (based on your earlier answer)':'Car (based on your earlier answer)')}</div></div>
     <div class="field"><div class="q-label">${t('Is this usually a dedicated trip just for escorting, or chained with another errand (e.g. on the way to work)?')}</div>
       <div class="opt-row">${['Dedicated trip','Chained with another errand'].map(o=>{
         const on = spTripType===o?'checked':'';
         return `<label class="opt ${on}" onclick="setSpTripType('${o}')">${t(o)}</label>`;
       }).join('')}</div></div>
     <div class="q-note" style="display:block">${t('Based on your earlier answers, travel modes you said are not available to you (e.g. no motorcycle license, no school bus service) are excluded from the choices below.')}</div>
-    <div class="nav-row"><button class="btn btn-ghost" onclick="spPhase='whoami';renderSP()">${t('<- Back')}</button><button class="btn btn-primary" ${(!spMode||!spTripType)?'disabled':''} onclick="startModule1()">${t('Start Module 1 ->')}</button></div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="spPhase='whoami';renderSP()">${t('<- Back')}</button><button class="btn btn-primary" ${(!spTripType)?'disabled':''} onclick="startModule1()">${t('Start Module 1 ->')}</button></div>
+    `:`
+    <div class="field"><div class="q-note" style="display:block">${t('Module 1 is only asked of households that currently escort this child by private car or motorbike. Based on your earlier answer, this section does not apply to you.')}</div></div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="spPhase='whoami';renderSP()">${t('<- Back')}</button><button class="btn btn-primary" onclick="skipToModule2()">${t('Continue to Module 2 ->')}</button></div>
+    `}
   `;
 }
 
@@ -2195,7 +2210,7 @@ function renderModuleRound(moduleName,rounds,rowsFn,question,onDone){
     ${moduleName==='m1' ? m1GroupedCards(sc,rowsFn,selKey) : `<div class="option-row">${sc.options.map((o,oi)=>scenarioCard(o.title,o.icon,rowsFn(o),selKey,oi,o.fixed?t('(reference only - based on your earlier answers)'):null,o)).join('')}</div>`}
     <div class="sp-footer">${t('Tap a card to choose. You can change your answer before moving on.')}</div>
     <div class="nav-row">
-      <button class="btn btn-ghost" onclick="${spRoundIdx===0?('spPhase=\''+(moduleName==='m1'?'setup':'m1-transition')+'\';'):'spRoundIdx--;'}renderSP()">${t('<- Back')}</button>
+      <button class="btn btn-ghost" onclick="${spRoundIdx===0?('spPhase=\''+(moduleName==='m1'?'setup':(spEligible()?'m1-transition':'setup'))+'\';'):'spRoundIdx--;'}renderSP()">${t('<- Back')}</button>
       <button class="btn btn-primary" onclick="${spRoundIdx<rounds.length-1?'spRoundIdx++;renderSP()':onDone}" ${A[selKey]===undefined?'disabled':''}>${spRoundIdx<rounds.length-1?t('Next round ->'):t('Continue ->')}</button>
     </div>`;
 }
@@ -2227,11 +2242,11 @@ function renderSP(){
     const factors2 = ['Academic reputation/quality','Tuition cost','Distance/travel time','Something else'];
     body = `
       <div class="sp-round-label">Debrief</div>
-      <div class="sp-question">${t('Thinking about the choices you just made, which factor mattered to you the most?')}</div>
+      ${spEligible()?`<div class="sp-question">${t('Thinking about the choices you just made, which factor mattered to you the most?')}</div>
       <div class="debrief-list">${factors1.map(f=>{
         const on = A['debrief1']===f;
         return `<label class="opt ${on?'checked':''}" onclick="A['debrief1']='${f}';renderSP()">${t(f)}</label>`;
-      }).join('')}</div>
+      }).join('')}</div>`:''}
       <div class="sp-question" style="margin-top:26px">${t('Thinking about your school choice above, which factor mattered to you the most?')}</div>
       <div class="debrief-list">${factors2.map(f=>{
         const on = A['debrief2']===f;
@@ -2239,18 +2254,18 @@ function renderSP(){
       }).join('')}</div>
       <div class="nav-row">
         <button class="btn btn-ghost" onclick="spPhase='m2';spRoundIdx=${m2rounds.length-1};renderSP()">${t('<- Back')}</button>
-        <button class="btn btn-primary" onclick="spPhase='summary';renderSP()" ${(!A['debrief1']||!A['debrief2'])?'disabled':''}>${t('See summary ->')}</button>
+        <button class="btn btn-primary" onclick="spPhase='summary';renderSP()" ${((spEligible()&&!A['debrief1'])||!A['debrief2'])?'disabled':''}>${t('See summary ->')}</button>
       </div>`;
   } else {
     const chosen1 = m1rounds.map((sc,i)=>{ const o = sc.options[A['m1_'+i]]; return o ? t(o.title) : '-'; });
     const chosen2 = m2rounds.map((sc,i)=>{ const o = sc.options[A['m2_'+i]]; return o ? t(o.title) : '-'; });
     body = `
       <div class="hero"><h1>${t('Complete!')}</h1></div>
-      <div class="summary-box">
+      ${spEligible()?`<div class="summary-box">
         <b>${t('Module 1 choices (Escort / Travel)')}</b><br>
         ${chosen1.map((c,i)=>`<div style="margin:4px 0"><b>${t('Round')} ${i+1}:</b> ${c}</div>`).join('')}
         <div style="margin-top:8px"><b>${t('Most important factor:')}</b> ${t(A['debrief1'])}</div>
-      </div>
+      </div>`:''}
       <div class="summary-box">
         <b>${t('Module 2 choices (School Choice)')}</b><br>
         ${chosen2.map((c,i)=>`<div style="margin:4px 0"><b>${t('Round')} ${i+1}:</b> ${c}</div>`).join('')}
