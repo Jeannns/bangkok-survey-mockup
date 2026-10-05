@@ -650,6 +650,20 @@ const T = {
 "Screening":"คัดกรองคุณสมบัติ",
 "Dev navigation":"เมนูนำทาง (dev)",
 "Jump to any section":"กดเพื่อไปยังส่วนใดก็ได้",
+"SP Survey":"แบบสอบถาม SP",
+"Who am I":"ฉันคือใคร",
+"Setup":"ตั้งค่าเริ่มต้น",
+"Module 1":"โมดูล 1",
+"Module 1 -> 2 transition":"ช่วงเปลี่ยนจากโมดูล 1 ไปโมดูล 2",
+"Module 2":"โมดูล 2",
+"Debrief":"สรุปความเห็น",
+"Summary":"สรุปผล",
+"Reset all answers":"รีเซ็ตคำตอบทั้งหมด",
+"Reset all answers?":"รีเซ็ตคำตอบทั้งหมด?",
+"This clears every RP and SP answer in this browser and switches to a new respondent code, so nothing you answered before will come back. This cannot be undone.":"การทำเช่นนี้จะล้างคำตอบ RP และ SP ทั้งหมดในเบราว์เซอร์นี้ และเปลี่ยนไปใช้รหัสผู้ตอบแบบสอบถามใหม่ ทำให้คำตอบเดิมจะไม่กลับมาอีก การกระทำนี้ไม่สามารถย้อนกลับได้",
+"Cancel":"ยกเลิก",
+"Yes, reset everything":"ใช่ รีเซ็ตทั้งหมด",
+"All answers have been reset. You are starting fresh with a new respondent code.":"รีเซ็ตคำตอบทั้งหมดแล้ว เริ่มต้นใหม่ด้วยรหัสผู้ตอบแบบสอบถามใหม่",
 "If each of the following existed along your route, how much safer would you feel letting them travel independently?":"ถ้าเส้นทางของบุตรหลานมีสิ่งต่อไปนี้ ท่านจะรู้สึกปลอดภัยขึ้นแค่ไหนที่จะให้เดินทางเอง",
 "A clearly marked crosswalk right in front of the school":"ทางม้าลายที่ชัดเจนหน้าโรงเรียน",
 "CCTV cameras along the whole route":"กล้องวงจรปิดตลอดเส้นทาง",
@@ -680,12 +694,11 @@ function renderTabLabels(){
 }
 
 /* ================= TAB SWITCH ================= */
-document.querySelectorAll('.tab[data-tab]').forEach(t2=>t2.addEventListener('click',()=>{
-  document.querySelectorAll('.tab[data-tab]').forEach(x=>x.classList.remove('active'));
-  t2.classList.add('active');
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-'+t2.dataset.tab).classList.add('active');
-}));
+function switchTab(tabName){
+  document.querySelectorAll('.tab[data-tab]').forEach(x=>x.classList.toggle('active', x.dataset.tab===tabName));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+tabName));
+}
+document.querySelectorAll('.tab[data-tab]').forEach(t2=>t2.addEventListener('click',()=>switchTab(t2.dataset.tab)));
 
 /* ================= SHARED HELPERS ================= */
 const A = {};
@@ -1179,7 +1192,57 @@ const DEV_NAV_GROUPS = [
   {label:'School Choice', steps:['School Choice']},
   {label:'Review & Submit', steps:['Review & Submit']},
 ];
-window.devNavGoto = (idx)=>{ rpIdx = idx; renderRP(); };
+window.devNavGoto = (idx)=>{ switchTab('rp'); rpIdx = idx; renderRP(); };
+
+// SP phases live in their own spPhase state machine, not in rpSteps, so they get their own
+// small jump table instead of going through stepIdxByName below.
+const DEV_NAV_SP_PHASES = [
+  {phase:'code', label:'Household code'},
+  {phase:'whoami', label:'Who am I'},
+  {phase:'setup', label:'Setup'},
+  {phase:'m1', label:'Module 1'},
+  {phase:'m1-transition', label:'Module 1 -> 2 transition'},
+  {phase:'m2', label:'Module 2'},
+  {phase:'debrief', label:'Debrief'},
+  {phase:'summary', label:'Summary'},
+];
+window.devNavGotoSP = (phase)=>{ switchTab('sp'); spPhase = phase; spRoundIdx = 0; renderSP(); };
+
+window.openResetConfirm = ()=>{
+  document.getElementById('modal-title').textContent = t('Reset all answers?');
+  document.getElementById('modal-body').innerHTML = `
+    <p class="q-help">${t('This clears every RP and SP answer in this browser and switches to a new respondent code, so nothing you answered before will come back. This cannot be undone.')}</p>
+    <div class="nav-row" style="justify-content:center;gap:14px;margin-bottom:6px">
+      <button class="btn btn-ghost" style="border:1px solid var(--line)" onclick="document.getElementById('modal-overlay').classList.remove('open')">${t('Cancel')}</button>
+      <button class="btn btn-primary" onclick="resetAllAnswers()">${t('Yes, reset everything')}</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+};
+window.resetAllAnswers = ()=>{
+  Object.keys(A).forEach(k=>delete A[k]);
+  characters = []; charSeq = 0; nAdultsTarget = 2; nChildrenTarget = 1; activeCharId = null;
+  stopSeq = 0; stops = [newStop('Home'), newStop('School'), newStop('Home')];
+  maintActivities = [{name:''}]; tripPerson = null; tripsByPerson = {}; multimodeLegs = {};
+  diaryDate = ''; reviewOpenGroup = null; tripConfirmed = false; segIdx = 0;
+  showTripDonePrompt = false; dragSrcIdx = null; lastSavedAt = null;
+  routeChildIdx = 0; facilityChildIdx = 0; tuitionChildIdx = 0; scRatingChildIdx = 0; decisionChildIdx = 0;
+  rpIdx = 0;
+  spCodeError = null; spCodeLoading = false; spRespondentId = null; spSetupDone = false;
+  spChildId = null; spMode = null; spTripType = null; spPhase = 'code'; spRoundIdx = 0;
+  backendStatus = null; alreadySubmitted = false;
+  // Forget this browser's saved draft: a fresh respondent code means tryAutoResume() (which
+  // runs again on next reload) won't find any existing draft to pull back in, so reloading
+  // after a reset starts truly blank instead of re-fetching the old answers from the backend.
+  localStorage.removeItem('bkk_survey_submitted_'+respondentCode);
+  respondentCode = genRespondentCode();
+  localStorage.setItem('bkk_survey_code', respondentCode);
+  document.getElementById('modal-overlay').classList.remove('open');
+  switchTab('rp');
+  renderRP();
+  alert(t('All answers have been reset. You are starting fresh with a new respondent code.'));
+};
+
 function renderDevNav(){
   const el = document.getElementById('dev-nav');
   if(!el) return;
@@ -1197,7 +1260,14 @@ function renderDevNav(){
     }).join('');
     return `<h4>${t(g.label)}</h4>${itemsHtml}`;
   }).join('');
-  el.innerHTML = `<div class="dn-head">${t('Dev navigation')}</div><div class="dn-sub">${t('Jump to any section')}</div>${groupsHtml}`;
+  const spItemsHtml = DEV_NAV_SP_PHASES.map(it=>{
+    const active = it.phase===spPhase ? ' active' : '';
+    return `<span class="dn-item${active}" onclick="devNavGotoSP('${it.phase}')">${t(it.label)}</span>`;
+  }).join('');
+  const spGroupHtml = `<h4>${t('SP Survey')}</h4>${spItemsHtml}`;
+  el.innerHTML = `<div class="dn-head">${t('Dev navigation')}</div><div class="dn-sub">${t('Jump to any section')}</div>
+    <button class="btn btn-ghost" style="border:1px solid var(--line);width:100%;margin-bottom:10px" onclick="openResetConfirm()">${t('Reset all answers')}</button>
+    ${groupsHtml}${spGroupHtml}`;
 }
 
 window.openIncentivePrompt = ()=>{
@@ -2300,6 +2370,7 @@ function renderSP(){
       <div class="nav-row"><span></span><button class="btn btn-primary" onclick="spSetupDone=false;spRespondentId=null;spCodeError=null;spPhase='code';spRoundIdx=0;renderSP()">${t('Restart demo')}</button></div>`;
   }
   document.getElementById('sp-card').innerHTML = body;
+  renderDevNav();
 }
 renderSP();
 </script>
