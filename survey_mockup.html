@@ -490,9 +490,8 @@ const T = {
 "Footpath":"ทางเท้า","Companion":"ผู้ร่วมทาง","Driver trust":"ความไว้วางใจคนขับ","Your choice":"ตัวเลือกของท่าน",
 "Escort by car":"รับส่งด้วยรถยนต์","Child travels alone by PT":"เด็กเดินทางเองด้วยขนส่งสาธารณะ","Escort by motorcycle":"รับส่งด้วยรถจักรยานยนต์",
 "Escort together by public transport":"รับส่งโดยนั่งขนส่งสาธารณะไปด้วยกัน",
-"Third-party escort (school bus)":"บุคคลที่สามรับส่ง (รถรับส่งนักเรียน)","Child walks/bikes alone":"เด็กเดินหรือปั่นจักรยานเอง","Walk or bike together with your child":"พาลูกเดินหรือปั่นจักรยานไปด้วยกัน","Escorted by parent (walking/cycling)":"ผู้ปกครองพาเดินหรือปั่นไปด้วยกัน","Third-party escort (songthaew)":"บุคคลที่สามรับส่ง (รถสองแถว)",
+"Child walks/bikes alone":"เด็กเดินหรือปั่นจักรยานเอง","Walk or bike together with your child":"พาลูกเดินหรือปั่นจักรยานไปด้วยกัน","Escorted by parent (walking/cycling)":"ผู้ปกครองพาเดินหรือปั่นไปด้วยกัน","Third-party escort (songthaew)":"บุคคลที่สามรับส่ง (รถสองแถว)",
 "School buddy":"เพื่อนไปโรงเรียนด้วยกัน","Guardian":"ผู้ปกครอง/ผู้ดูแล","Poor":"แย่","Good":"ดี","Moderate":"ปานกลาง","High":"สูง","Low":"ต่ำ","Medium":"ปานกลาง",
-"Third-party escort (ride-hailing)":"บุคคลที่สามรับส่ง (เรียกรถผ่านแอป)",
 "Next round ->":"รอบถัดไป ->",
 "Thinking about the choices you just made, which factor mattered to you the most?":"จากตัวเลือกที่ท่านเพิ่งเลือก ปัจจัยใดสำคัญกับท่านมากที่สุด",
 "Cost (fare)":"ค่าใช้จ่าย (ค่าโดยสาร)","Traffic safety":"ความปลอดภัยด้านการจราจร","Crime & stranger safety":"ความปลอดภัยจากอาชญากรรมและคนแปลกหน้า",
@@ -658,6 +657,9 @@ const T = {
 "Module 2":"โมดูล 2",
 "Debrief":"สรุปความเห็น",
 "Summary":"สรุปผล",
+"Hired service (school van, songthaew, motorcycle taxi, ride-hailing)":"บริการรับจ้าง (รถรับส่งนักเรียน สองแถว วินมอเตอร์ไซค์ เรียกรถผ่านแอป)",
+"Dev mode: distance branch (near-home households also see walk/cycle options)":"โหมดนักพัฒนา: branch ระยะทาง (บ้านใกล้เห็นทางเลือกเดิน/ปั่นด้วย)",
+"Near home":"ใกล้บ้าน","Far from home":"ไกลจากบ้าน",
 "Dev mode: choose the Module 1 branch":"โหมดนักพัฒนา: เลือก branch ของ Module 1",
 "Reset all answers":"รีเซ็ตคำตอบทั้งหมด",
 "Reset all answers?":"รีเซ็ตคำตอบทั้งหมด?",
@@ -1230,7 +1232,7 @@ window.resetAllAnswers = ()=>{
   routeChildIdx = 0; facilityChildIdx = 0; tuitionChildIdx = 0; scRatingChildIdx = 0; decisionChildIdx = 0;
   rpIdx = 0;
   spCodeError = null; spCodeLoading = false; spRespondentId = null; spSetupDone = false;
-  spChildId = null; spMode = null; spTripType = null; spPhase = 'code'; spRoundIdx = 0;
+  spChildId = null; spMode = null; spTripType = null; spDistOverride = null; spPhase = 'code'; spRoundIdx = 0;
   backendStatus = null; alreadySubmitted = false;
   // Forget this browser's saved draft: a fresh respondent code means tryAutoResume() (which
   // runs again on next reload) won't find any existing draft to pull back in, so reloading
@@ -2029,48 +2031,69 @@ function sceneFor(cardIcon, opt){
    stand in for short-distance scenarios. Walk options share the walk/bike travel time (Sub-Attribute 1),
    have no fare, wait, walk/bike-portion or trust rows, and carry their own traffic/crime danger levels
    (lower for the accompanied option). */
-function buildModule1(mode){
-  const escortTitle = mode==='Motorbike' ? 'Escort by motorcycle' : 'Escort by car';
-  const escortIcon = mode==='Motorbike' ? 'MOTO' : 'CAR';
-  return [
-    {round:1, options:[
-      {title:escortTitle,icon:escortIcon,time:10,fare:0,danger:2,crime:2,companion:'Escorted by parent'},
-      {title:'Escort together by public transport',icon:'BUS',time:40,fare:50,danger:2,crime:2,companion:'Escorted by parent (via PT)',wait:30},
-      {title:'Child travels alone by PT',icon:'BUS',time:40,fare:50,danger:4,crime:4,companion:'Travels alone',wait:30,walkbike:8}
-    ]},
-    {round:2, options:[
-      {title:escortTitle,icon:escortIcon,time:40,fare:0,danger:2,crime:2,companion:'Escorted by parent'},
-      {title:'Escort together by public transport',icon:'BUS',time:15,fare:0,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:5},
-      {title:'Child travels alone by PT',icon:'BUS',time:15,fare:0,danger:1,crime:1,companion:'Travels with school buddy',wait:5,walkbike:3},
-      {title:'Walk or bike together with your child',icon:'WALK',time:15,danger:2,crime:1,companion:'Escorted by parent (walking/cycling)'},
-      {title:'Child walks/bikes alone',icon:'WALK',time:15,danger:3,crime:2,companion:'Travels alone'}
-    ]},
-    {round:3, options:[
-      {title:escortTitle,icon:escortIcon,time:15,fare:0,danger:mode==='Motorbike'?4:2,crime:2,companion:'Escorted by parent'},
-      {title:'Escort together by public transport',icon:'BUS',time:25,fare:15,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:15},
-      {title:'Child travels alone by PT',icon:'BUS',time:25,fare:15,danger:3,crime:2,companion:'Escorted by guardian on arrival',wait:15,walkbike:6},
-      {title:'Walk or bike together with your child',icon:'WALK',time:30,danger:1,crime:1,companion:'Escorted by parent (walking/cycling)'},
-      {title:'Child walks/bikes alone',icon:'WALK',time:30,danger:2,crime:2,companion:'Travels with school buddy'}
-    ]},
-    {round:4, options:[
-      {title:escortTitle,icon:escortIcon,time:20,fare:0,danger:3,crime:2,companion:'Escorted by parent'},
-      {title:'Escort together by public transport',icon:'BUS',time:20,fare:15,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:10},
-      {title:'Child travels alone by PT',icon:'BUS',time:20,fare:15,danger:2,crime:2,companion:'Travels with school buddy',wait:10,walkbike:5},
-      {title:'Third-party escort (school bus)',icon:'VAN',time:22,fare:20,danger:2,crime:2,companion:'Third-party escort',trust:'High'}
-    ]},
-    {round:5, options:[
-      {title:escortTitle,icon:escortIcon,time:12,fare:0,danger:mode==='Motorbike'?5:2,crime:mode==='Motorbike'?3:1,companion:'Escorted by parent'},
-      {title:'Escort together by public transport',icon:'BUS',time:30,fare:50,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:15},
-      {title:'Third-party escort (songthaew)',icon:'VAN',time:20,fare:15,danger:2,crime:2,companion:'Third-party escort',trust:'Low'},
-      {title:'Child travels alone by PT',icon:'BUS',time:30,fare:50,danger:2,crime:2,companion:'Escorted by guardian on arrival',wait:15,walkbike:7}
-    ]},
-    {round:6, options:[
-      {title:escortTitle,icon:escortIcon,time:18,fare:0,danger:2,crime:2,companion:'Escorted by parent'},
-      {title:'Escort together by public transport',icon:'BUS',time:25,fare:20,danger:1,crime:1,companion:'Escorted by parent (via PT)',wait:12},
-      {title:'Third-party escort (ride-hailing)',icon:'VAN',time:20,fare:60,danger:2,crime:2,companion:'Third-party escort',trust:'Medium'},
-      {title:'Child travels alone by PT',icon:'BUS',time:25,fare:20,danger:3,crime:2,companion:'Travels alone',wait:12,walkbike:6}
-    ]},
+/* Module 1 choice set (2026-10-15, matches the nested-structure figure). The alternative set is FIXED for a
+   respondent and identical in every round; only the attribute levels change from round to round (as in the
+   D-efficient design: one design per branch, same alternatives in every set).
+     Household adult travels (escorted): own escort vehicle (car OR motorcycle, never both), PT with parent,
+                                         walk/cycle with parent (near-home households only)
+     No household adult travels:         child PT alone, child walk/cycle alone (near-home only),
+                                         ONE pooled hired service (school van, songthaew, motorcycle taxi, ride-hailing)
+   so a household sees at most 6 options per round: 6 if near, 4 if far.
+   Per-round levels below are demo values; existing demo values were kept, new cells filled in. */
+const M1_HIRED_TITLE = 'Hired service (school van, songthaew, motorcycle taxi, ride-hailing)';
+function buildModule1(mode, near){
+  const moto = mode==='Motorbike';
+  const escortTitle = moto ? 'Escort by motorcycle' : 'Escort by car';
+  const escortIcon = moto ? 'MOTO' : 'CAR';
+  const R = [
+    {esc:{time:10,danger:2,crime:2},
+     ptp:{time:40,fare:50,danger:2,crime:2,wait:30},
+     wp:{time:30,danger:2,crime:1},
+     pta:{time:40,fare:50,danger:4,crime:4,wait:30,walkbike:8,comp:'Travels alone'},
+     wa:{time:30,danger:3,crime:3,comp:'Travels alone'},
+     hs:{time:25,fare:40,danger:2,crime:2,trust:'Medium'}},
+    {esc:{time:40,danger:2,crime:2},
+     ptp:{time:15,fare:0,danger:1,crime:1,wait:5},
+     wp:{time:15,danger:2,crime:1},
+     pta:{time:15,fare:0,danger:1,crime:1,wait:5,walkbike:3,comp:'Travels with school buddy'},
+     wa:{time:15,danger:3,crime:2,comp:'Travels alone'},
+     hs:{time:20,fare:20,danger:2,crime:2,trust:'High'}},
+    {esc:{time:15,danger:moto?4:2,crime:2},
+     ptp:{time:25,fare:15,danger:1,crime:1,wait:15},
+     wp:{time:30,danger:1,crime:1},
+     pta:{time:25,fare:15,danger:3,crime:2,wait:15,walkbike:6,comp:'Escorted by guardian on arrival'},
+     wa:{time:30,danger:2,crime:2,comp:'Travels with school buddy'},
+     hs:{time:25,fare:15,danger:3,crime:2,trust:'Low'}},
+    {esc:{time:20,danger:3,crime:2},
+     ptp:{time:20,fare:15,danger:1,crime:1,wait:10},
+     wp:{time:5,danger:1,crime:1},
+     pta:{time:20,fare:15,danger:2,crime:2,wait:10,walkbike:5,comp:'Travels with school buddy'},
+     wa:{time:5,danger:2,crime:2,comp:'Travels with school buddy'},
+     hs:{time:22,fare:20,danger:2,crime:2,trust:'High'}},
+    {esc:{time:12,danger:moto?5:2,crime:moto?3:1},
+     ptp:{time:30,fare:50,danger:1,crime:1,wait:15},
+     wp:{time:30,danger:2,crime:2},
+     pta:{time:30,fare:50,danger:2,crime:2,wait:15,walkbike:7,comp:'Escorted by guardian on arrival'},
+     wa:{time:30,danger:4,crime:3,comp:'Travels alone'},
+     hs:{time:20,fare:15,danger:2,crime:2,trust:'Low'}},
+    {esc:{time:18,danger:2,crime:2},
+     ptp:{time:25,fare:20,danger:1,crime:1,wait:12},
+     wp:{time:15,danger:1,crime:1},
+     pta:{time:25,fare:20,danger:3,crime:2,wait:12,walkbike:6,comp:'Travels alone'},
+     wa:{time:15,danger:2,crime:1,comp:'Travels with school buddy'},
+     hs:{time:20,fare:60,danger:2,crime:2,trust:'Medium'}},
   ];
+  return R.map((r,i)=>{
+    const o = [
+      {title:escortTitle,icon:escortIcon,time:r.esc.time,fare:0,danger:r.esc.danger,crime:r.esc.crime,companion:'Escorted by parent'},
+      {title:'Escort together by public transport',icon:'BUS',time:r.ptp.time,fare:r.ptp.fare,danger:r.ptp.danger,crime:r.ptp.crime,companion:'Escorted by parent (via PT)',wait:r.ptp.wait}
+    ];
+    if(near) o.push({title:'Walk or bike together with your child',icon:'WALK',time:r.wp.time,danger:r.wp.danger,crime:r.wp.crime,companion:'Escorted by parent (walking/cycling)'});
+    o.push({title:'Child travels alone by PT',icon:'BUS',time:r.pta.time,fare:r.pta.fare,danger:r.pta.danger,crime:r.pta.crime,companion:r.pta.comp,wait:r.pta.wait,walkbike:r.pta.walkbike});
+    if(near) o.push({title:'Child walks/bikes alone',icon:'WALK',time:r.wa.time,danger:r.wa.danger,crime:r.wa.crime,companion:r.wa.comp});
+    o.push({title:M1_HIRED_TITLE,icon:'VAN',time:r.hs.time,fare:r.hs.fare,danger:r.hs.danger,crime:r.hs.crime,companion:'Third-party escort',trust:r.hs.trust});
+    return {round:i+1, options:o};
+  });
 }
 function m1Rows(o){
   const unit = lang==='th' ? 'นาที' : 'min';
@@ -2235,6 +2258,28 @@ function spEligible(){
   const m = val('escort_mode');
   return m==='Private car' || m==='Private motorbike';
 }
+/* Near/far branch (2026-10-15): near-home households also see the walk/cycle options in Module 1.
+   Straight-line home-school distance from the confirmed pins; SP_NEAR_KM is a PLACEHOLDER because the near/far
+   cutoff is not decided yet (survey concern.md Concern 16 item 2). Unknown distance counts as near. Dev mode
+   can override it on the setup page. */
+const SP_NEAR_KM = 1.5;
+let spDistOverride = null; // null | 'near' | 'far'
+function spDistKm(){
+  const kid = spChildId ? characters.find(c=>c.id===spChildId) : (characters.find(c=>c.kind==='child')||null);
+  if(!kid) return null;
+  const la1 = parseFloat(A['home_lat']), lo1 = parseFloat(A['home_lng']);
+  const la2 = parseFloat(A[kid.id+'_school_lat']), lo2 = parseFloat(A[kid.id+'_school_lng']);
+  if([la1,lo1,la2,lo2].some(x=>!isFinite(x))) return null;
+  const rad = Math.PI/180, dLa = (la2-la1)*rad, dLo = (lo2-lo1)*rad;
+  const a = Math.sin(dLa/2)**2 + Math.cos(la1*rad)*Math.cos(la2*rad)*Math.sin(dLo/2)**2;
+  return 6371*2*Math.asin(Math.min(1,Math.sqrt(a)));
+}
+function spIsNear(){
+  if(spDistOverride) return spDistOverride==='near';
+  const d = spDistKm();
+  return d==null ? true : d<=SP_NEAR_KM;
+}
+window.setSpDist = (v)=>{ spDistOverride = v; renderSP(); };
 window.skipToModule2 = ()=>{ spSetupDone = true; spPhase = 'm2'; spRoundIdx = 0; renderSP(); };
 
 function renderSPCode(){
@@ -2290,7 +2335,9 @@ function renderSPSetup(){
     <div class="field"><div class="q-label">${t('For escorting trips, you mainly use:')}</div>
       <div class="q-note" style="display:block">${t(spMode==='Motorbike'?'Motorcycle (based on your earlier answer)':'Car (based on your earlier answer)')}</div>
       ${devMode?`<div class="q-note" style="display:block;margin-top:8px">${t('Dev mode: choose the Module 1 branch')}</div>
-      <div class="opt-row">${['Car','Motorbike'].map(m=>`<label class="opt ${(spMode||'Car')===m?'checked':''}" onclick="setSpMode('${m}')">${t(m)}</label>`).join('')}</div>`:''}</div>
+      <div class="opt-row">${['Car','Motorbike'].map(m=>`<label class="opt ${(spMode||'Car')===m?'checked':''}" onclick="setSpMode('${m}')">${t(m)}</label>`).join('')}</div>
+      <div class="q-note" style="display:block;margin-top:8px">${t('Dev mode: distance branch (near-home households also see walk/cycle options)')}</div>
+      <div class="opt-row">${['near','far'].map(v=>`<label class="opt ${(spIsNear()?'near':'far')===v?'checked':''}" onclick="setSpDist('${v}')">${t(v==='near'?'Near home':'Far from home')}</label>`).join('')}</div>`:''}</div>
     <div class="field"><div class="q-label">${t('Is this usually a dedicated trip just for escorting, or chained with another errand (e.g. on the way to work)?')}</div>
       <div class="opt-row">${['Dedicated trip','Chained with another errand'].map(o=>{
         const on = spTripType===o?'checked':'';
@@ -2338,7 +2385,7 @@ function renderModuleRound(moduleName,rounds,rowsFn,question,onDone){
 
 function renderSP(){
   let body='';
-  const m1rounds = buildModule1(spMode||'Car');
+  const m1rounds = buildModule1(spMode||'Car', spIsNear());
   const m2rounds = buildModule2();
 
   if(spPhase==='code'){
