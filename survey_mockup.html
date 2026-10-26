@@ -253,12 +253,8 @@ textarea{resize:vertical;min-height:60px}
 /* ================= LANGUAGE TOGGLE ================= */
 let lang = 'en';
 const T = {
-"Which of the following would NOT be a realistic way to get to school for this trip, regardless of cost or safety? (mark all that apply)":"สำหรับการเดินทางไปโรงเรียนครั้งนี้ วิธีใดต่อไปนี้ที่ไม่สมจริงสำหรับบ้านคุณ ไม่ว่าค่าใช้จ่ายหรือความปลอดภัยจะเป็นอย่างไร (เลือกได้หลายข้อ)",
-"Ways you mark here are removed from the choices that follow.":"วิธีที่เลือกตรงนี้จะไม่แสดงในตัวเลือกถัดไป",
-"Motorcycle":"มอเตอร์ไซค์",
-"BTS or MRT":"BTS หรือ MRT",
-"Walk or bike":"เดินหรือปั่นจักรยาน",
-"School bus or songthaew":"รถโรงเรียนหรือสองแถว",
+"The questions that follow are about your youngest child:":"คำถามต่อจากนี้เป็นเรื่องของลูกคนเล็กของคุณ:",
+"Dev mode: change the child":"Dev mode: เปลี่ยนเด็ก",
 "Your progress code:":"รหัสความคืบหน้าของคุณ:","write this down if you plan to continue later on a different device.":"จดรหัสนี้ไว้หากต้องการทำต่อในภายหลังจากอุปกรณ์อื่น",
 "Already started on another device? Enter your code to resume:":"เริ่มทำจากอุปกรณ์อื่นไว้แล้ว? กรอกรหัสของคุณเพื่อทำต่อ:","Resume":"ทำต่อ",
 "Draft loaded - continuing where you left off.":"โหลดฉบับร่างสำเร็จ - ทำต่อจากจุดที่ค้างไว้","No saved draft found for that code.":"ไม่พบฉบับร่างที่บันทึกไว้สำหรับรหัสนี้",
@@ -572,7 +568,6 @@ const T = {
 "Module 1 of 2: Escort / Travel Choice":"โมดูล 1 จาก 2: การเลือกวิธีรับส่ง/เดินทาง",
 "Module 2 of 2: School Choice":"โมดูล 2 จาก 2: การเลือกโรงเรียน",
 "Before we begin: a few quick setup questions":"ก่อนเริ่ม: คำถามตั้งค่าสั้นๆ",
-"Which child is this stated-preference exercise about?":"แบบฝึกหัดนี้เกี่ยวกับบุตรคนใด",
 "For escorting trips, do you mainly use a car or a motorcycle?":"สำหรับการรับส่ง ท่านใช้รถยนต์หรือรถจักรยานยนต์เป็นหลัก",
 "Is this usually a dedicated trip just for escorting, or chained with another errand (e.g. on the way to work)?":"การเดินทางนี้เป็นทริปเฉพาะสำหรับรับส่ง หรือรวมกับธุระอื่น (เช่น ระหว่างไปทำงาน)",
 "Dedicated trip":"ทริปเฉพาะ","Chained with another errand":"รวมกับธุระอื่น",
@@ -1886,7 +1881,7 @@ function spAdminSeed(){
     charSeq++; characters.push({id:'ch'+charSeq, kind:'child'}); A['ch'+charSeq+'_name'] = 'Test child'; A['ch'+charSeq+'_age'] = 8;
   }
   if(!spRespondentId){ const a = characters.find(c=>c.kind==='adult'); if(a) spRespondentId = a.id; }
-  if(!spChildId){ const k = characters.find(c=>c.kind==='child'); if(k) spChildId = k.id; }
+  if(!spChildId){ const k = spYoungestChild(); if(k) spChildId = k.id; }
 }
 function spAdminEnter(){
   devMode = true;
@@ -1926,6 +1921,14 @@ window.setSpRespondent = (id)=>{ spRespondentId = id; renderSP(); };
 /* Pre-SP Setup state: which child, car-vs-motorcycle branch, dedicated-vs-chained trip */
 let spSetupDone = false;
 let spChildId = null;
+/* 2026-10-26 (J decision): in households with more than one child, the SP is about the YOUNGEST child
+   (lowest age in Section 2; a child with no age entered counts as oldest; ties keep household order). */
+function spYoungestChild(){
+  const kids = characters.filter(c=>c.kind==='child');
+  if(!kids.length) return null;
+  const ageOf = c=>{ const a = Number(A[c.id+'_age']); return (A[c.id+'_age']===undefined || A[c.id+'_age']==='' || !isFinite(a)) ? Infinity : a; };
+  return kids.reduce((best,c)=> ageOf(c) < ageOf(best) ? c : best, kids[0]);
+}
 let spMode = null;
 let spTripType = null;
 
@@ -2053,9 +2056,9 @@ const M1_HIRED_TITLE = 'Hired service (school van, songthaew, motorcycle taxi, r
    with parent); wait 5 / 15 / 30 min; traffic and crime danger per option on 1 / 3 / 5; companion None /
    buddy / guardian; trust Low / Medium / High. The hired service carries only the docx attributes
    (danger, crime, trust): no time or fare, and the old 'walk/bike portion' row is gone (not a docx
-   attribute). Options ticked as unrealistic in Pre-SP Setup are removed (docx Pre-SP rows):
-   both 'BTS or MRT' and 'Bus' -> no PT options; 'Walk or bike' -> no walk/cycle options;
-   both 'School bus or songthaew' and 'Ride-hailing' -> no hired service. */
+   attribute). The option set depends only on the distance branch: 6 near, 4 far, the same in every round
+   (no Pre-SP question on unrealistic modes: J removed it on 2026-10-26, since respondents could mark
+   options they merely dislike, hiding the switching this module measures). */
 const M1_TIME_PCT = [30, -20, 60, 0, -20, 30];
 const M1_PT_PCT   = [0, 60, -20, 30, 30, -20];
 const M1_WALK     = [15, 5, 30, 15, 30, 5];
@@ -2073,10 +2076,8 @@ const M1_DANGER = [
   {esc:[5,3], ptp:[1,1], wp:[3,3], pta:[3,3], wa:[5,3], hs:[3,1]},
   {esc:[1,1], ptp:[1,1], wp:[1,1], pta:[3,1], wa:[3,1], hs:[3,3]},
 ];
-const M1_UNREAL = ['Car','Motorcycle','BTS or MRT','Bus','Walk or bike','School bus or songthaew','Ride-hailing'];
-function spUnreal(m){ return !!val('sp_unreal_'+m, false); }
 function spChildTripMin(){
-  const kid = spChildId ? characters.find(c=>c.id===spChildId) : (characters.find(c=>c.kind==='child')||null);
+  const kid = spChildId ? characters.find(c=>c.id===spChildId) : spYoungestChild();
   return kid ? findSchoolTripMinutesForChild(kid.id) : null;
 }
 function pivotTimePT(base, pct){
@@ -2089,20 +2090,17 @@ function buildModule1(mode, near){
   const escortTitle = moto ? 'Escort by motorcycle' : 'Escort by car';
   const escortIcon = moto ? 'MOTO' : 'CAR';
   const base = spChildTripMin();
-  const noPT = spUnreal('BTS or MRT') && spUnreal('Bus');
-  const noWalk = spUnreal('Walk or bike');
-  const noHired = spUnreal('School bus or songthaew') && spUnreal('Ride-hailing');
   const fares = M1_FARES[near?'near':'far'];
   return M1_TIME_PCT.map((pct,i)=>{
     const d = M1_DANGER[i];
     const ptTime = pivotTimePT(null, M1_PT_PCT[i]);
     const fare = fares[M1_FARE_IDX[i]];
     const o = [{title:escortTitle,icon:escortIcon,time:pivotTime(base,pct),danger:d.esc[0],crime:d.esc[1],companion:'Escorted by parent'}];
-    if(!noPT) o.push({title:'Escort together by public transport',icon:'BUS',time:ptTime,fare,danger:d.ptp[0],crime:d.ptp[1],companion:'Escorted by parent (via PT)',wait:M1_WAIT[i]});
-    if(near && !noWalk) o.push({title:'Walk or bike together with your child',icon:'WALK',time:M1_WALK[i],danger:d.wp[0],crime:d.wp[1],companion:'Escorted by parent (walking/cycling)'});
-    if(!noPT) o.push({title:'Child travels alone by PT',icon:'BUS',time:ptTime,fare,danger:d.pta[0],crime:d.pta[1],companion:M1_COMP[i],wait:M1_WAIT[i]});
-    if(near && !noWalk) o.push({title:'Child walks/bikes alone',icon:'WALK',time:M1_WALK[i],danger:d.wa[0],crime:d.wa[1],companion:M1_COMP[(i+1)%6]});
-    if(!noHired) o.push({title:M1_HIRED_TITLE,icon:'VAN',danger:d.hs[0],crime:d.hs[1],companion:'Third-party escort',trust:M1_TRUST[i]});
+    o.push({title:'Escort together by public transport',icon:'BUS',time:ptTime,fare,danger:d.ptp[0],crime:d.ptp[1],companion:'Escorted by parent (via PT)',wait:M1_WAIT[i]});
+    if(near) o.push({title:'Walk or bike together with your child',icon:'WALK',time:M1_WALK[i],danger:d.wp[0],crime:d.wp[1],companion:'Escorted by parent (walking/cycling)'});
+    o.push({title:'Child travels alone by PT',icon:'BUS',time:ptTime,fare,danger:d.pta[0],crime:d.pta[1],companion:M1_COMP[i],wait:M1_WAIT[i]});
+    if(near) o.push({title:'Child walks/bikes alone',icon:'WALK',time:M1_WALK[i],danger:d.wa[0],crime:d.wa[1],companion:M1_COMP[(i+1)%6]});
+    o.push({title:M1_HIRED_TITLE,icon:'VAN',danger:d.hs[0],crime:d.hs[1],companion:'Third-party escort',trust:M1_TRUST[i]});
     return {round:i+1, options:o};
   });
 }
@@ -2277,7 +2275,7 @@ function spEligible(){
 const SP_NEAR_KM = 1.5;
 let spDistOverride = null; // null | 'near' | 'far'
 function spDistKm(){
-  const kid = spChildId ? characters.find(c=>c.id===spChildId) : (characters.find(c=>c.kind==='child')||null);
+  const kid = spChildId ? characters.find(c=>c.id===spChildId) : spYoungestChild();
   if(!kid) return null;
   const la1 = parseFloat(A['home_lat']), lo1 = parseFloat(A['home_lng']);
   const la2 = parseFloat(A[kid.id+'_school_lat']), lo2 = parseFloat(A[kid.id+'_school_lng']);
@@ -2331,6 +2329,7 @@ function renderSPWhoAmI(){
 
 function renderSPSetup(){
   const kids = characters.filter(c=>c.kind==='child');
+  if(!devMode || !spChildId){ const y = spYoungestChild(); if(y) spChildId = y.id; }
   const eligible = spEligible();
   if(eligible && !spMode){
     const m = val('escort_mode');
@@ -2338,11 +2337,12 @@ function renderSPSetup(){
   }
   return `
     <div class="hero" style="padding:20px"><h1 style="font-size:22px">${t('Before we begin: a few quick setup questions')}</h1></div>
-    ${kids.length>1?`<div class="field"><div class="q-label">${t('Which child is this stated-preference exercise about?')}</div>
+    ${kids.length>1?`<div class="field"><div class="q-note" style="display:block">${t('The questions that follow are about your youngest child:')} <b>${childName(characters.find(c=>c.id===spChildId)||spYoungestChild())}</b></div>
+      ${devMode?`<div class="q-note" style="display:block;margin-top:8px">${t('Dev mode: change the child')}</div>
       <div class="opt-row">${kids.map(c=>{
         const on = spChildId===c.id?'checked':'';
         return `<label class="opt ${on}" onclick="setSpChild('${c.id}')">${childName(c)}</label>`;
-      }).join('')}</div></div>`:''}
+      }).join('')}</div>`:''}</div>`:''}
     ${eligible?`
     <div class="field"><div class="q-label">${t('For escorting trips, you mainly use:')}</div>
       <div class="q-note" style="display:block">${t(spMode==='Motorbike'?'Motorcycle (based on your earlier answer)':'Car (based on your earlier answer)')}</div>
@@ -2355,9 +2355,6 @@ function renderSPSetup(){
         const on = spTripType===o?'checked':'';
         return `<label class="opt ${on}" onclick="setSpTripType('${o}')">${t(o)}</label>`;
       }).join('')}</div></div>
-    <div class="field"><div class="q-label">${t('Which of the following would NOT be a realistic way to get to school for this trip, regardless of cost or safety? (mark all that apply)')}</div>
-      <div class="q-note" style="display:block">${t('Ways you mark here are removed from the choices that follow.')}</div>
-      ${opts('sp_unreal', M1_UNREAL, true)}</div>
     <div class="nav-row"><button class="btn btn-ghost" onclick="spPhase='whoami';renderSP()">${t('<- Back')}</button><button class="btn btn-primary" ${(!spTripType && !devMode)?'disabled':''} onclick="startModule1()">${t('Start Module 1 ->')}</button></div>
     `:`
     <div class="field"><div class="q-note" style="display:block">${t('Module 1 is only asked of households that currently escort this child by private car or motorbike. Based on your earlier answer, this section does not apply to you.')}</div></div>
