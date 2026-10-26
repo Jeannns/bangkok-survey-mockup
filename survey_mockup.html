@@ -2263,10 +2263,17 @@ window.setSpChild = (id)=>{ spChildId = id; renderSP(); };
 window.setSpMode = (m)=>{ spMode = m; renderSP(); };
 window.setSpTripType = (tt)=>{ spTripType = tt; renderSP(); };
 window.startModule1 = ()=>{ spSetupDone = true; spPhase = 'm1'; spRoundIdx = 0; renderSP(); };
+/* 2026-10-26 (J): Module 1 eligibility is checked for the SP child (the youngest child): that child must be
+   ticked as escorted in Section 4 AND the household's main escort mode must be private car or motorbike.
+   A household that drives an older child but whose youngest travels without an adult does not get Module 1.
+   Limitation: the RP asks one main escort mode per household, not per child. */
 function spEligible(){
   if(devMode) return true; /* dev/admin: always show Module 1 */
   const m = val('escort_mode');
-  return m==='Private car' || m==='Private motorbike';
+  const vehicle = m==='Private car' || m==='Private motorbike';
+  const kid = spChildId ? characters.find(c=>c.id===spChildId) : spYoungestChild();
+  if(!kid) return vehicle;
+  return vehicle && !!val('escorted_'+kid.id, false);
 }
 /* Near/far branch (2026-10-15): near-home households also see the walk/cycle options in Module 1.
    Straight-line home-school distance from the confirmed pins; SP_NEAR_KM is a PLACEHOLDER because the near/far
