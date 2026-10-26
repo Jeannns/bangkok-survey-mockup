@@ -2266,14 +2266,28 @@ window.startModule1 = ()=>{ spSetupDone = true; spPhase = 'm1'; spRoundIdx = 0; 
 /* 2026-10-26 (J): Module 1 eligibility is checked for the SP child (the youngest child): that child must be
    ticked as escorted in Section 4 AND the household's main escort mode must be private car or motorbike.
    A household that drives an older child but whose youngest travels without an adult does not get Module 1.
-   Limitation: the RP asks one main escort mode per household, not per child. */
+   Per-child mode: taken from the trip diary segment where an adult escorts THIS child (purpose 'School escort',
+   child ticked as companion), so it is per child; the household's main escort mode is only a fallback when
+   the diary has no such segment. */
+function spChildEscortMode(childId){
+  for(const personId of Object.keys(tripsByPerson)){
+    const snap = tripsByPerson[personId];
+    if(snap==='NO_TRIP' || !Array.isArray(snap)) continue;
+    for(let i=0;i<snap.length-1;i++){
+      const ns = personId+'_'+i;
+      if(A['purpose_'+ns]==='School escort' && !!A['seg_'+ns+'_companion_'+childId] && A['mode_'+ns]) return A['mode_'+ns];
+    }
+  }
+  return null;
+}
 function spEligible(){
   if(devMode) return true; /* dev/admin: always show Module 1 */
-  const m = val('escort_mode');
-  const vehicle = m==='Private car' || m==='Private motorbike';
   const kid = spChildId ? characters.find(c=>c.id===spChildId) : spYoungestChild();
-  if(!kid) return vehicle;
-  return vehicle && !!val('escorted_'+kid.id, false);
+  const isVeh = m => m==='Private car' || m==='Private motorbike';
+  if(!kid) return isVeh(val('escort_mode'));
+  const dm = spChildEscortMode(kid.id);
+  if(dm) return isVeh(dm);
+  return isVeh(val('escort_mode')) && !!val('escorted_'+kid.id, false);
 }
 /* Near/far branch (2026-10-15): near-home households also see the walk/cycle options in Module 1.
    Straight-line home-school distance from the confirmed pins; SP_NEAR_KM is a PLACEHOLDER because the near/far
@@ -2339,7 +2353,7 @@ function renderSPSetup(){
   if(!devMode || !spChildId){ const y = spYoungestChild(); if(y) spChildId = y.id; }
   const eligible = spEligible();
   if(eligible && !spMode){
-    const m = val('escort_mode');
+    const m = (spChildId && spChildEscortMode(spChildId)) || val('escort_mode');
     spMode = m==='Private motorbike' ? 'Motorbike' : 'Car';
   }
   return `
