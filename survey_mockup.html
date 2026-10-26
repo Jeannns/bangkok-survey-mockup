@@ -253,6 +253,12 @@ textarea{resize:vertical;min-height:60px}
 /* ================= LANGUAGE TOGGLE ================= */
 let lang = 'en';
 const T = {
+"Which of the following would NOT be a realistic way to get to school for this trip, regardless of cost or safety? (mark all that apply)":"สำหรับการเดินทางไปโรงเรียนครั้งนี้ วิธีใดต่อไปนี้ที่ไม่สมจริงสำหรับบ้านคุณ ไม่ว่าค่าใช้จ่ายหรือความปลอดภัยจะเป็นอย่างไร (เลือกได้หลายข้อ)",
+"Ways you mark here are removed from the choices that follow.":"วิธีที่เลือกตรงนี้จะไม่แสดงในตัวเลือกถัดไป",
+"Motorcycle":"มอเตอร์ไซค์",
+"BTS or MRT":"BTS หรือ MRT",
+"Walk or bike":"เดินหรือปั่นจักรยาน",
+"School bus or songthaew":"รถโรงเรียนหรือสองแถว",
 "Your progress code:":"รหัสความคืบหน้าของคุณ:","write this down if you plan to continue later on a different device.":"จดรหัสนี้ไว้หากต้องการทำต่อในภายหลังจากอุปกรณ์อื่น",
 "Already started on another device? Enter your code to resume:":"เริ่มทำจากอุปกรณ์อื่นไว้แล้ว? กรอกรหัสของคุณเพื่อทำต่อ:","Resume":"ทำต่อ",
 "Draft loaded - continuing where you left off.":"โหลดฉบับร่างสำเร็จ - ทำต่อจากจุดที่ค้างไว้","No saved draft found for that code.":"ไม่พบฉบับร่างที่บันทึกไว้สำหรับรหัสนี้",
@@ -570,7 +576,6 @@ const T = {
 "For escorting trips, do you mainly use a car or a motorcycle?":"สำหรับการรับส่ง ท่านใช้รถยนต์หรือรถจักรยานยนต์เป็นหลัก",
 "Is this usually a dedicated trip just for escorting, or chained with another errand (e.g. on the way to work)?":"การเดินทางนี้เป็นทริปเฉพาะสำหรับรับส่ง หรือรวมกับธุระอื่น (เช่น ระหว่างไปทำงาน)",
 "Dedicated trip":"ทริปเฉพาะ","Chained with another errand":"รวมกับธุระอื่น",
-"Based on your earlier answers, travel modes you said are not available to you (e.g. no motorcycle license, no school bus service) are excluded from the choices below.":"จากคำตอบก่อนหน้านี้ รูปแบบการเดินทางที่ท่านระบุว่าไม่สามารถใช้ได้ (เช่น ไม่มีใบขับขี่รถจักรยานยนต์ ไม่มีรถรับส่งนักเรียน) จะถูกตัดออกจากตัวเลือกด้านล่าง",
 "Start Module 1 ->":"เริ่มโมดูล 1 ->",
 "For escorting trips, you mainly use:":"สำหรับการรับส่ง ท่านใช้:",
 "Motorcycle (based on your earlier answer)":"รถจักรยานยนต์ (ตามคำตอบก่อนหน้า)","Car (based on your earlier answer)":"รถยนต์ (ตามคำตอบก่อนหน้า)",
@@ -580,7 +585,7 @@ const T = {
 "Crime danger":"อันตรายจากอาชญากรรม",
 "Companion scheme":"รูปแบบผู้ร่วมทาง",
 "Third-party trust":"ความไว้วางใจบุคคลที่สาม",
-"Walk/bike portion":"ช่วงเดิน/ปั่นจักรยาน",
+
 "Escorted by parent":"ผู้ปกครองรับส่ง","Escorted by parent (via PT)":"ผู้ปกครองพาไปด้วยขนส่งสาธารณะ","Travels alone":"เดินทางคนเดียว","Travels with school buddy":"เดินทางกับเพื่อนไปโรงเรียนด้วยกัน","Escorted by guardian on arrival":"มีผู้ดูแลรับที่ปลายทาง","Third-party escort":"รับส่งโดยบุคคลที่สาม",
 "Nicely done with Module 1! Now let's look at school choice.":"ทำโมดูล 1 เสร็จแล้ว ต่อไปมาดูเรื่องการเลือกโรงเรียนกันบ้าง",
 "Continue to Module 2 ->":"ไปโมดูล 2 ->",
@@ -2041,65 +2046,72 @@ function sceneFor(cardIcon, opt){
    so a household sees at most 6 options per round: 6 if near, 4 if far.
    Per-round levels below are demo values; existing demo values were kept, new cells filled in. */
 const M1_HIRED_TITLE = 'Hired service (school van, songthaew, motorcycle taxi, ride-hailing)';
+/* 2026-10-26 (sync with the SP docx, Concern 16 level table): demo rounds now use only the docx levels.
+   Escort and PT travel time: -20% / actual / +30% / +60% of this child's real school-trip time (PT time has
+   no own estimate yet, so it is shown as a % of the usual PT time); walk/cycle time 5 / 15 / 30 min (near
+   only, reused for walk-together); BTS/MRT fare 10 / 15 / 50 THB near, 20 / 35 / 60 THB far (reused for PT
+   with parent); wait 5 / 15 / 30 min; traffic and crime danger per option on 1 / 3 / 5; companion None /
+   buddy / guardian; trust Low / Medium / High. The hired service carries only the docx attributes
+   (danger, crime, trust): no time or fare, and the old 'walk/bike portion' row is gone (not a docx
+   attribute). Options ticked as unrealistic in Pre-SP Setup are removed (docx Pre-SP rows):
+   both 'BTS or MRT' and 'Bus' -> no PT options; 'Walk or bike' -> no walk/cycle options;
+   both 'School bus or songthaew' and 'Ride-hailing' -> no hired service. */
+const M1_TIME_PCT = [30, -20, 60, 0, -20, 30];
+const M1_PT_PCT   = [0, 60, -20, 30, 30, -20];
+const M1_WALK     = [15, 5, 30, 15, 30, 5];
+const M1_WAIT     = [15, 5, 30, 5, 15, 30];
+const M1_FARE_IDX = [1, 0, 2, 0, 2, 1];
+const M1_FARES    = {near:[10,15,50], far:[20,35,60]};
+const M1_COMP  = ['Travels alone','Travels with school buddy','Escorted by guardian on arrival','Travels with school buddy','Travels alone','Escorted by guardian on arrival'];
+const M1_TRUST = ['Medium','High','Low','High','Low','Medium'];
+// [traffic, crime] per option and round, levels 1 / 3 / 5 only
+const M1_DANGER = [
+  {esc:[3,1], ptp:[1,1], wp:[3,1], pta:[5,3], wa:[3,3], hs:[3,1]},
+  {esc:[3,1], ptp:[1,1], wp:[1,1], pta:[1,1], wa:[3,3], hs:[3,3]},
+  {esc:[5,3], ptp:[1,1], wp:[1,1], pta:[3,3], wa:[3,1], hs:[3,3]},
+  {esc:[3,3], ptp:[1,1], wp:[1,1], pta:[3,1], wa:[3,3], hs:[1,1]},
+  {esc:[5,3], ptp:[1,1], wp:[3,3], pta:[3,3], wa:[5,3], hs:[3,1]},
+  {esc:[1,1], ptp:[1,1], wp:[1,1], pta:[3,1], wa:[3,1], hs:[3,3]},
+];
+const M1_UNREAL = ['Car','Motorcycle','BTS or MRT','Bus','Walk or bike','School bus or songthaew','Ride-hailing'];
+function spUnreal(m){ return !!val('sp_unreal_'+m, false); }
+function spChildTripMin(){
+  const kid = spChildId ? characters.find(c=>c.id===spChildId) : (characters.find(c=>c.kind==='child')||null);
+  return kid ? findSchoolTripMinutesForChild(kid.id) : null;
+}
+function pivotTimePT(base, pct){
+  if(typeof base==='number' && isFinite(base)) return Math.max(1, Math.round(base*(1+pct/100)));
+  if(pct===0) return lang==='th' ? 'เท่าเวลานั่ง PT ปกติ' : 'Same as usual PT time';
+  return lang==='th' ? ('เวลานั่ง PT ปกติ '+(pct>0?'+':'')+pct+'%') : ('Usual PT time '+(pct>0?'+':'')+pct+'%');
+}
 function buildModule1(mode, near){
   const moto = mode==='Motorbike';
   const escortTitle = moto ? 'Escort by motorcycle' : 'Escort by car';
   const escortIcon = moto ? 'MOTO' : 'CAR';
-  const R = [
-    {esc:{time:10,danger:2,crime:2},
-     ptp:{time:40,fare:50,danger:2,crime:2,wait:30},
-     wp:{time:30,danger:2,crime:1},
-     pta:{time:40,fare:50,danger:4,crime:4,wait:30,walkbike:8,comp:'Travels alone'},
-     wa:{time:30,danger:3,crime:3,comp:'Travels alone'},
-     hs:{time:25,fare:40,danger:2,crime:2,trust:'Medium'}},
-    {esc:{time:40,danger:2,crime:2},
-     ptp:{time:15,fare:0,danger:1,crime:1,wait:5},
-     wp:{time:15,danger:2,crime:1},
-     pta:{time:15,fare:0,danger:1,crime:1,wait:5,walkbike:3,comp:'Travels with school buddy'},
-     wa:{time:15,danger:3,crime:2,comp:'Travels alone'},
-     hs:{time:20,fare:20,danger:2,crime:2,trust:'High'}},
-    {esc:{time:15,danger:moto?4:2,crime:2},
-     ptp:{time:25,fare:15,danger:1,crime:1,wait:15},
-     wp:{time:30,danger:1,crime:1},
-     pta:{time:25,fare:15,danger:3,crime:2,wait:15,walkbike:6,comp:'Escorted by guardian on arrival'},
-     wa:{time:30,danger:2,crime:2,comp:'Travels with school buddy'},
-     hs:{time:25,fare:15,danger:3,crime:2,trust:'Low'}},
-    {esc:{time:20,danger:3,crime:2},
-     ptp:{time:20,fare:15,danger:1,crime:1,wait:10},
-     wp:{time:5,danger:1,crime:1},
-     pta:{time:20,fare:15,danger:2,crime:2,wait:10,walkbike:5,comp:'Travels with school buddy'},
-     wa:{time:5,danger:2,crime:2,comp:'Travels with school buddy'},
-     hs:{time:22,fare:20,danger:2,crime:2,trust:'High'}},
-    {esc:{time:12,danger:moto?5:2,crime:moto?3:1},
-     ptp:{time:30,fare:50,danger:1,crime:1,wait:15},
-     wp:{time:30,danger:2,crime:2},
-     pta:{time:30,fare:50,danger:2,crime:2,wait:15,walkbike:7,comp:'Escorted by guardian on arrival'},
-     wa:{time:30,danger:4,crime:3,comp:'Travels alone'},
-     hs:{time:20,fare:15,danger:2,crime:2,trust:'Low'}},
-    {esc:{time:18,danger:2,crime:2},
-     ptp:{time:25,fare:20,danger:1,crime:1,wait:12},
-     wp:{time:15,danger:1,crime:1},
-     pta:{time:25,fare:20,danger:3,crime:2,wait:12,walkbike:6,comp:'Travels alone'},
-     wa:{time:15,danger:2,crime:1,comp:'Travels with school buddy'},
-     hs:{time:20,fare:60,danger:2,crime:2,trust:'Medium'}},
-  ];
-  return R.map((r,i)=>{
-    const o = [
-      {title:escortTitle,icon:escortIcon,time:r.esc.time,fare:0,danger:r.esc.danger,crime:r.esc.crime,companion:'Escorted by parent'},
-      {title:'Escort together by public transport',icon:'BUS',time:r.ptp.time,fare:r.ptp.fare,danger:r.ptp.danger,crime:r.ptp.crime,companion:'Escorted by parent (via PT)',wait:r.ptp.wait}
-    ];
-    if(near) o.push({title:'Walk or bike together with your child',icon:'WALK',time:r.wp.time,danger:r.wp.danger,crime:r.wp.crime,companion:'Escorted by parent (walking/cycling)'});
-    o.push({title:'Child travels alone by PT',icon:'BUS',time:r.pta.time,fare:r.pta.fare,danger:r.pta.danger,crime:r.pta.crime,companion:r.pta.comp,wait:r.pta.wait,walkbike:r.pta.walkbike});
-    if(near) o.push({title:'Child walks/bikes alone',icon:'WALK',time:r.wa.time,danger:r.wa.danger,crime:r.wa.crime,companion:r.wa.comp});
-    o.push({title:M1_HIRED_TITLE,icon:'VAN',time:r.hs.time,fare:r.hs.fare,danger:r.hs.danger,crime:r.hs.crime,companion:'Third-party escort',trust:r.hs.trust});
+  const base = spChildTripMin();
+  const noPT = spUnreal('BTS or MRT') && spUnreal('Bus');
+  const noWalk = spUnreal('Walk or bike');
+  const noHired = spUnreal('School bus or songthaew') && spUnreal('Ride-hailing');
+  const fares = M1_FARES[near?'near':'far'];
+  return M1_TIME_PCT.map((pct,i)=>{
+    const d = M1_DANGER[i];
+    const ptTime = pivotTimePT(null, M1_PT_PCT[i]);
+    const fare = fares[M1_FARE_IDX[i]];
+    const o = [{title:escortTitle,icon:escortIcon,time:pivotTime(base,pct),danger:d.esc[0],crime:d.esc[1],companion:'Escorted by parent'}];
+    if(!noPT) o.push({title:'Escort together by public transport',icon:'BUS',time:ptTime,fare,danger:d.ptp[0],crime:d.ptp[1],companion:'Escorted by parent (via PT)',wait:M1_WAIT[i]});
+    if(near && !noWalk) o.push({title:'Walk or bike together with your child',icon:'WALK',time:M1_WALK[i],danger:d.wp[0],crime:d.wp[1],companion:'Escorted by parent (walking/cycling)'});
+    if(!noPT) o.push({title:'Child travels alone by PT',icon:'BUS',time:ptTime,fare,danger:d.pta[0],crime:d.pta[1],companion:M1_COMP[i],wait:M1_WAIT[i]});
+    if(near && !noWalk) o.push({title:'Child walks/bikes alone',icon:'WALK',time:M1_WALK[i],danger:d.wa[0],crime:d.wa[1],companion:M1_COMP[(i+1)%6]});
+    if(!noHired) o.push({title:M1_HIRED_TITLE,icon:'VAN',danger:d.hs[0],crime:d.hs[1],companion:'Third-party escort',trust:M1_TRUST[i]});
     return {round:i+1, options:o};
   });
 }
 function m1Rows(o){
   const unit = lang==='th' ? 'นาที' : 'min';
-  const rows = [{icon:'TIME',label:'Travel time',ctrl:true,value:o.time+' '+unit}];
+  const tm = v => typeof v==='number' ? v+' '+unit : v;
+  const rows = [];
+  if(o.time!==undefined) rows.push({icon:'TIME',label:'Travel time',ctrl:true,value:tm(o.time)});
   if(o.wait!==undefined) rows.push({icon:'WAIT',label:'Wait time',value:o.wait+' '+unit});
-  if(o.walkbike!==undefined) rows.push({icon:'WALK',label:'Walk/bike portion',value:o.walkbike+' '+unit});
   if(o.fare!==undefined) rows.push({icon:'FARE',label:'PT fare',ctrl:true,value:o.fare+' THB'});
   rows.push({icon:'TRAF',label:'Traffic & footpath danger',ctrl:true,bar:dangerBar(o.danger)});
   rows.push({icon:'CRIME',label:'Crime danger',ctrl:true,bar:dangerBar(o.crime)});
@@ -2343,7 +2355,9 @@ function renderSPSetup(){
         const on = spTripType===o?'checked':'';
         return `<label class="opt ${on}" onclick="setSpTripType('${o}')">${t(o)}</label>`;
       }).join('')}</div></div>
-    <div class="q-note" style="display:block">${t('Based on your earlier answers, travel modes you said are not available to you (e.g. no motorcycle license, no school bus service) are excluded from the choices below.')}</div>
+    <div class="field"><div class="q-label">${t('Which of the following would NOT be a realistic way to get to school for this trip, regardless of cost or safety? (mark all that apply)')}</div>
+      <div class="q-note" style="display:block">${t('Ways you mark here are removed from the choices that follow.')}</div>
+      ${opts('sp_unreal', M1_UNREAL, true)}</div>
     <div class="nav-row"><button class="btn btn-ghost" onclick="spPhase='whoami';renderSP()">${t('<- Back')}</button><button class="btn btn-primary" ${(!spTripType && !devMode)?'disabled':''} onclick="startModule1()">${t('Start Module 1 ->')}</button></div>
     `:`
     <div class="field"><div class="q-note" style="display:block">${t('Module 1 is only asked of households that currently escort this child by private car or motorbike. Based on your earlier answer, this section does not apply to you.')}</div></div>
